@@ -4,21 +4,11 @@ import matplotlib.colors as colors
 import numpy as np
 import math
 
-infile = open("input.txt",'r')
-
-#make colorcode array
-color = []
-color_code = 0xFF0000
+infile = open("dummy.txt",'r')
+color_file = open("color.txt",'r')
+color=[]
 for i in range(0,80):
-	color.append(color_code)
-	if(i%5==0):
-		color_code-=0x03FFFC
-		#color_code-=0x040000
-		#color_code+=0x000004
-	else:
-		color_code-=0x02FFFD
-		#color_code-=0x030000
-		#color_code+=0x000003
+	color.append(int(color_file.readline()))
 	
 time = 10
 distance = 10
