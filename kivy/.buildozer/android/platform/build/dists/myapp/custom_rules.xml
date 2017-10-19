@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="CustomRules">
+    <target name="-pre-build">
+        <copy todir="tmp-src">
+            
+            <fileset dir="src">
+                <exclude name="org/kivy/android/ProjectAdapter.java" />
+                <exclude name="org/kivy/android/ProjectChooser.java" />
+            </fileset>
+            
+            
+        </copy>
+    </target>
+    <target name="-post-build">
+        <delete dir="tmp-src" />
+    </target>
+</project>
