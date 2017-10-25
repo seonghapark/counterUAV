@@ -1,0 +1,5 @@
+Read linked referenced in setup section:
+https://www.quantopian.com/posts/kalman-filters-best-practices
+
+official pykalman document (0.9.2):
+https://pykalman.github.io/
