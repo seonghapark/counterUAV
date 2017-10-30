@@ -1,1 +1,0 @@
-{"recipes": ["hostpython2", "sdl2_image", "sdl2_mixer", "sdl2_ttf", "python2", "sdl2", "six", "pyjnius", "kivy", "matplotlib"], "dist_name": "myapp", "archs": ["armeabi-v7a"], "bootstrap": "sdl2"}

@@ -1,5 +1,0 @@
-#!/home/spark/Purdue/Fall2017/IITP/master/counterUAV/kivy/.buildozer/android/platform/build/build/other_builds/python2/armeabi-v7a/python2/python-install/bin/python2.7
-import sys
-from lib2to3.main import main
-
-sys.exit(main("lib2to3.fixes"))
