@@ -37,3 +37,31 @@ Tracking pedestrians for self driving cars
 	- Signals from GPS
 		* 자동차 엔진 회전 속도계, 고도계, 평형측정계 등에서 얻은 정보를 종합하여 차의 위치를 알아냄.
 		
+5. LIDAR vs. RADAR
+	- LIDAR
+		* 레이저 사용
+		* point cloud를 생성함 
+		* 20m~40m 근처에 있는 물체를 매우 높은 정확도로 탐지.
+		* 날씨와 센서 상태(오염정도)의 영향을 받음.
+		
+	- RADAR
+		* 위치와 속도 추정값 제공 가능.
+		* ~200m 정도 떨어진 물체 탐지 가능. 
+		* 날씨 조건에 영향을 받음.
+		
+6. Kalman Filter Algorithm
+	(0) Initialize Step
+		- 보행자의 상태를 4차원 벡터로 가짐
+		- (pos_x pos_y vel_x vel_y)
+		
+	(1) Prediction Step
+		- 현재 측정값을 기반으로 보행자가 다음 축정 시간에 어디에 위치할지 예측함.
+		- 현재 속도와 위치를 기반으로 현재 속도를 유지하며 움직인다고 가정.
+			* vx' = vx
+			* px' = px + vx * dt
+		
+	(2) Update Step
+		센서 데이터를 이용해 estimate를 update
+		두 단계 무한 반복 
+		
+		
