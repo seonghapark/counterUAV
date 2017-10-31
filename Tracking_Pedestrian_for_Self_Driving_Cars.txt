@@ -1,2 +1,20 @@
 Tracking pedestrians for self driving cars
 (link: )
+
+1. Self Driving Car
+	- 자율 주행을 위해 위치 및 주변 움직이는 물체의 상태 탐지가 필요함.
+	- 일정한 시간 간격을 두고 정확한 탐지가 요구됨.
+	- Google에서 Extended Kalman Filter를 적용하여 개발 중에 있음.
+	- 현재 측정값만 가지고 계산하는 것보다 정확함.
+	
+2. Extended Kalman Filter
+	- non-linear version of Kalman Filter
+	- Kalman Filter에 선형화 알고리즘을 적용한다. 
+	
+3. Kalman Filter
+	- discrete real time interval에서 측정되는, noise가 있는 데이터로부터 dynamic system의 미지의 상태 변수를 최적으로 추정하기 위한 선형 재귀 알고리즘.
+	- 특징 
+		* 물체 측정값에 확률적 오차를 포함. 
+		* 이전 측정값과 현재 측정값에 선형적인 관계가 있음. 
+	- 역할: 움직이는 보행자의 위치와 속도를 시간에 따라 추적할 수 있음.
+	
