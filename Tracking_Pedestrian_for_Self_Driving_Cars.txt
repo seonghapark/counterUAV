@@ -1,5 +1,5 @@
 Tracking pedestrians for self driving cars
-(link: )
+(link: https://medium.com/towards-data-science/tracking-pedestrians-for-self-driving-cars )
 
 1. Self Driving Car
 	- 자율 주행을 위해 위치 및 주변 움직이는 물체의 상태 탐지가 필요함.
@@ -56,12 +56,24 @@ Tracking pedestrians for self driving cars
 		
 	(1) Prediction Step
 		- 현재 측정값을 기반으로 보행자가 다음 축정 시간에 어디에 위치할지 예측함.
-		- 현재 속도와 위치를 기반으로 현재 속도를 유지하며 움직인다고 가정.
+		- 현재 속도와 위치를 기반으로 현재 속도를 유지하며(constant) 움직인다고 가정.
 			* vx' = vx
 			* px' = px + vx * dt
 		
 	(2) Update Step
-		센서 데이터를 이용해 estimate를 update
-		두 단계 무한 반복 
+		- 센서 데이터를 이용해 (1)단계에서 추정한 값을 업데이트 함.
 		
+	(3) repetition
+		- 두 단계 무한 반복 
+		
+7. Additional Point of KF Algorithm
+	- 센서로 측정값이 넘어올텐데 굳이 다음 상태를 prediction하는 이유는?
+		* 센서를 통한 측정값이 정확하다는 보장이 없기 때문(uncertainty를 가짐)
+		* 장비 자체의 부정확함
+		* 날씨 혹은 기타 조건 등 
+
+	- 가지고 있는 정보(가우시안 분포 값으로 예측한 결과 + 장비를 통해 측정한 값)를 종합함으로써 더 정확한 값을 생성할 수 있음.
+		* uncertainty가 낮아짐.
+		
+- end -
 		
