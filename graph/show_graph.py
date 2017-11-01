@@ -1,3 +1,5 @@
+# execute in terminal
+# python3 show_graph.py filename.wav
 
 import sys
 
