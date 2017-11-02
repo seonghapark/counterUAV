@@ -13,8 +13,8 @@ time_ndarray.txt, val_ndarray.txt를 읽어와 각 시간에 대해서 max값의 index를 .txt
 ## "maxplot.py" 
 max.py에서 만든 .txt를 이용하여 (시간, max값의 index) 그래프를 그림
 
-##v1과의 차이
-* input_handler.py와 fft.py를 fft.py로 합침
-* draw_graph.py의 데이터 처리과정을 (데이터를 저장하지 않음으로써)빠르게함
-* minmaxavg.py를 max값만 구하는 max.py로 바꿈
-* minmaxplot.py를 max값에 대한 그래프만 그리는 maxplot.py로 바꿈
+## v1과의 차이
+* 'input_handler.py'와 'fft.py'를 'fft.py'로 합침
+* 'draw_graph.py'의 데이터 처리과정을 (데이터를 저장하지 않음으로써)빠르게함
+* 'minmaxavg.py'를 max값만 구하는 'max.py'로 바꿈
+* 'minmaxplot.py'를 max값에 대한 그래프만 그리는 'maxplot.py'로 바꿈
