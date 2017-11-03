@@ -3,12 +3,12 @@ noise cancelling
 .wav -> noise cancel -> find max -> draw max graph
 -
 ## range_test2_compare.jpg
-'range_test2.wav'ÆÄÀÏÀ» ÀÌ¿ëÇÏ¿© °¢ ½Ã°£¿¡ ´ëÇÑ max°ªÀ» graph·Î ³ªÅ¸³½ °á°ú
-* "by_time"Àº 'ignore_befor_5sec'Æú´õ ³»ÀÇ ÆÄÀÏÀ» ½ÇÇà½ÃÅ² °á°ú
-* "by_range"´Â 'ignore_under_2.5m'Æú´õ ³»ÀÇ ÆÄÀÏÀ» ½ÇÇà½ÃÅ² °á°ú
-'range_test2_colorgraph.jpg'¿Í ºñ±³ÇÏ¸é ³ëÀÌÁî°¡ ´õ ¸¹À½¿¡µµ ºÒ±¸ÇÏ°í "by_range"°¡ Á¤È®ÇÑ °Å¸®¿¡ ´ëÇÑ °á°ú¸¦ ³»´Â°ÍÀ¸·Î º¸ÀÎ´Ù.
+'range_test2.wav'íŒŒì¼ì„ ì´ìš©í•˜ì—¬ ê° ì‹œê°„ì— ëŒ€í•œ maxê°’ì„ graphë¡œ ë‚˜íƒ€ë‚¸ ê²°ê³¼
+* "by_time"ì€ 'ignore_befor_5sec'í´ë” ë‚´ì˜ íŒŒì¼ì„ ì‹¤í–‰ì‹œí‚¨ ê²°ê³¼
+* "by_range"ëŠ” 'ignore_under_2.5m'í´ë” ë‚´ì˜ íŒŒì¼ì„ ì‹¤í–‰ì‹œí‚¨ ê²°ê³¼
+* 'range_test2_colorgraph.jpg'ì™€ ë¹„êµí•˜ë©´ ë…¸ì´ì¦ˆê°€ ë” ë§ìŒì—ë„ ë¶ˆêµ¬í•˜ê³  "by_range"ê°€ ì •í™•í•œ ê±°ë¦¬ì— ëŒ€í•œ ê²°ê³¼ë¥¼ ë‚´ëŠ”ê²ƒìœ¼ë¡œ ë³´ì¸ë‹¤.
 
 ## range_test2_colorgraph.jpg
-'range_test2.wav'ÆÄÀÏÀ» colorgraph·Î ³ªÅ¸³½ °á°ú
+'range_test2.wav'íŒŒì¼ì„ colorgraphë¡œ ë‚˜íƒ€ë‚¸ ê²°ê³¼
 
 
