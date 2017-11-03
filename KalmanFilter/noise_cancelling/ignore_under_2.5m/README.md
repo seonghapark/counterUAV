@@ -3,7 +3,7 @@ noise cancelling
 .wav -> noise cancel -> find max -> draw max graph
 -
 ## 노이즈 캔슬링 방법
-데이터 중에서 2.5m 아래에 있는 데이터를 모두 삭제한다.
+데이터 중에서 2.5m 아래에 있는 데이터를 모두 무시한다.
 
 ## "script.sh" 
 노이즈 캔슬링 후 max값의 그래프를 그려줌

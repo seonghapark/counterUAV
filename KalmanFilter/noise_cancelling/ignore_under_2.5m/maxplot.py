@@ -21,7 +21,7 @@ for i in range(0, wav_time):
 	n_time = len(data_t)
 
 	split_line = in_maxindex.readline().split()
-	split_line = [(ignore*max_y/y_val+float (k)*max_y/1738) for k in split_line]
+	split_line = [(ignore*max_y/y_val+float (k)*max_y/y_val) for k in split_line]
 	data_maxindex = data_maxindex + split_line
 
 
