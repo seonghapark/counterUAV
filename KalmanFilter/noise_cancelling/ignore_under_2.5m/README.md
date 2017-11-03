@@ -14,3 +14,5 @@ time_ndarray.txt, val_ndarray.txt를 읽어와 노이즈를 제거한 후 각 시간에 대해서 m
 ## "maxplot.py" 
 max.py에서 만든 .txt를 이용하여 (시간, max값의 index) 그래프를 그림
 
+##range_test2_result.jpg
+'range_test2.wav'파일을 이용하여 얻은 결과

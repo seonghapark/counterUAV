@@ -11,7 +11,7 @@ wav_time = int(sys.argv[1])
 max_y = 3E8/(2*(2590E6-2260E6))*882/2 
 y_val = 1764
 
-ignore = int(2.5*y_val/max_y)
+ignore_range = int(2.5*y_val/max_y)
 
 for i in range (0, wav_time-1):
 	data_t = []
@@ -24,7 +24,7 @@ for i in range (0, wav_time-1):
 
 	for j in range (0, n_time):
 		split_line = in_val.readline().split()
-		split_line = split_line[ignore:]
+		split_line = split_line[ignore_range:]
 		split_line = [float(k) for k in split_line]
 		data_val.append(split_line)
 		n_val = len(split_line)
