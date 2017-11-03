@@ -2,18 +2,18 @@ noise cancelling
 ===============
 .wav -> noise cancel -> find max -> draw max graph
 -
-## ³ëÀÌÁî Äµ½½¸µ ¹æ¹ý
-Ã³À½¿¡ µé¾î¿À´Â 5ÃÊ µ¿¾ÈÀÇ °¢°¢ÀÇ °Å¸®¿¡ ´ëÇÑ °ªÀ» Æò±Õ³½´Ù. 5ÃÊ ÀÌÈÄ·Î´Â ¾ÕÀÇ Æò±ÕÀ» »« °ªÀ» »ç¿ëÇÑ´Ù.
+## ë…¸ì´ì¦ˆ ìº”ìŠ¬ë§ ë°©ë²•
+ì²˜ìŒì— ë“¤ì–´ì˜¤ëŠ” 5ì´ˆ ë™ì•ˆì˜ ê°ê°ì˜ ê±°ë¦¬ì— ëŒ€í•œ ê°’ì„ í‰ê· ë‚¸ë‹¤. 5ì´ˆ ì´í›„ë¡œëŠ” ì•žì˜ í‰ê· ì„ ëº€ ê°’ì„ ì‚¬ìš©í•œë‹¤.
 
 ## "script.sh" 
-³ëÀÌÁî Äµ½½¸µ ÈÄ max°ªÀÇ ±×·¡ÇÁ¸¦ ±×·ÁÁÜ
+ë…¸ì´ì¦ˆ ìº”ìŠ¬ë§ í›„ maxê°’ì˜ ê·¸ëž˜í”„ë¥¼ ê·¸ë ¤ì¤Œ
 ## "fft.py" 
-wavÆÄÀÏÀÇ µ¥ÀÌÅÍ¸¦ fftº¯È¯, dbvº¯È¯ ÈÄ °á°ú¸¦ time_ndarray.txt, val_ndarray.txt¿¡ ÀúÀå
+wavíŒŒì¼ì˜ ë°ì´í„°ë¥¼ fftë³€í™˜, dbvë³€í™˜ í›„ ê²°ê³¼ë¥¼ time_ndarray.txt, val_ndarray.txtì— ì €ìž¥
 ## "max.py" 
-time_ndarray.txt, val_ndarray.txt¸¦ ÀÐ¾î¿Í ³ëÀÌÁî¸¦ Á¦°ÅÇÑ ÈÄ °¢ ½Ã°£¿¡ ´ëÇØ¼­ max°ªÀÇ index¸¦ .txtÆÄÀÏ¿¡ ÀúÀå
+time_ndarray.txt, val_ndarray.txtë¥¼ ì½ì–´ì™€ ë…¸ì´ì¦ˆë¥¼ ì œê±°í•œ í›„ ê° ì‹œê°„ì— ëŒ€í•´ì„œ maxê°’ì˜ indexë¥¼ .txtíŒŒì¼ì— ì €ìž¥
 ## "maxplot.py" 
-max.py¿¡¼­ ¸¸µç .txt¸¦ ÀÌ¿ëÇÏ¿© (½Ã°£, max°ªÀÇ index) ±×·¡ÇÁ¸¦ ±×¸²
+max.pyì—ì„œ ë§Œë“  .txtë¥¼ ì´ìš©í•˜ì—¬ (ì‹œê°„, maxê°’ì˜ index) ê·¸ëž˜í”„ë¥¼ ê·¸ë¦¼
 
-##range_test2_result.jpg
-'range_test2.wav'ÆÄÀÏÀ» ÀÌ¿ëÇÏ¿© ¾òÀº °á°ú
+## range_test2_result.jpg
+'range_test2.wav'íŒŒì¼ì„ ì´ìš©í•˜ì—¬ ì–»ì€ ê²°ê³¼
 
