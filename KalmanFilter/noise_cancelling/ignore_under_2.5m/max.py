@@ -35,7 +35,7 @@ for i in range (0, wav_time-1):
 		for j in range(0, n_time-1):
 			t = (data_t[j]+data_t[j+1])/2
 			max_index = np.argmax(data_val[j])
-
+			max_index = (ignore_range*max_y/y_val+max_index*max_y/y_val)
 			out_t.write(str(t)+' ')
 			out_maxindex.write(str(max_index)+' ')
 		out_t.write("\n")
