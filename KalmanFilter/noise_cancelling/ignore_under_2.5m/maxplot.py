@@ -2,8 +2,8 @@ import numpy as np
 import sys
 import matplotlib.pyplot as plt
 
-in_t = open("mma_time.txt", "r")
-in_maxindex = open("max_index.txt", "r")
+in_t = open("max_time.txt", "r")
+in_maxindex = open("max_distance.txt", "r")
 
 data_t = []
 data_maxindex = []

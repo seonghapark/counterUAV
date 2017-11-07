@@ -3,8 +3,8 @@ import sys
 
 in_t = open("time_ndarray.txt", "r")
 in_val = open("val_ndarray.txt", "r")
-out_t = open("mma_time.txt", "w")
-out_maxindex = open("max_index.txt", "w")
+out_t = open("max_time.txt", "w")
+out_maxindex = open("max_distance.txt", "w")
 
 wav_time = int(sys.argv[1])
 
