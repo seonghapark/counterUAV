@@ -45,4 +45,3 @@ obs  = plt.plot(data_t, data_maxindex,marker='x', color='b', label='observations
 pred = plt.plot(data_t, states_pred[:, 0], linestyle='-', marker='o', color='r', label='predictions')
 
 pl.show()
-
