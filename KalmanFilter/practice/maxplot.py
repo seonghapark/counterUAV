@@ -2,8 +2,8 @@ import numpy as np
 import sys
 import matplotlib.pyplot as plt
 
-in_t = open("max_time.txt", "r")
-in_maxindex = open("max_distance.txt", "r")
+in_t = open("max_time_kf.txt", "r")
+in_maxindex = open("max_distance_kf.txt", "r")
 
 data_t = []
 data_maxindex = []
@@ -30,6 +30,8 @@ data_maxindex = np.array(data_maxindex)
 
 plt.plot(data_t, data_maxindex, 'r')
 
+#obs = plt.plot(data_t, data_maxindex, marker='x', color='b',label='observations')
+pred = plt.plot(data_t, data_maxindex, linestyle='-', marker='o', color='r',label='predictions')
 
 plt.show()
 
