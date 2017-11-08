@@ -1,9 +1,13 @@
 import numpy as np
 import sys
-import matplotlib.pyplot as plt
+import pylab as pl
+
+from pykalman import KalmanFilter
 
 in_t = open("max_time.txt", "r")
 in_maxindex = open("max_distance.txt", "r")
+out_t = open("max_time_kf.txt", "w")
+out_maxindex = open("max_distance_kf.txt", "w")
 
 data_t = []
 data_maxindex = []
@@ -24,14 +28,19 @@ for i in range(0, wav_time):
 	split_line = [float(k) for k in split_line]
 	data_maxindex = data_maxindex + split_line
 
-
 data_t = np.array(data_t)
 data_maxindex = np.array(data_maxindex)
 
-plt.plot(data_t, data_maxindex, 'r')
+kf = KalmanFilter(transition_matrices=np.array([[1, 1], [0, 1]]),
+                  transition_covariance=0.01 * np.eye(2))
 
+states_pred = kf.em(data_maxindex).smooth(data_maxindex)[0]
 
-plt.show()
-
-
-
+for j in range(0, n_time-1):
+	t = (data_t[j]+data_t[j+1])/2
+	max_index = np.argmax(data_maxindex[j])
+	max_index = (ignore_range*max_y/y_val+max_index*max_y/y_val)
+	out_t.write(str(t)+' ')
+	out_maxindex.write(str(max_index)+' ')
+out_t.write("\n")
+out_maxindex.write("\n")
