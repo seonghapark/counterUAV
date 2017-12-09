@@ -1,6 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+'''
+this file does not import pykalman but using kalman filter.
+execute this file using "python3"
+change the 32th line "R" value to see the change
+the origin value is just random value
+'''
+
 plt.rcParams['figure.figsize'] = (10, 8)
 
 # intial parameters
