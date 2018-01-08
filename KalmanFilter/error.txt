@@ -1,0 +1,10 @@
+Q. When using pykalman (Python Kalman filter), what data type does loglikelihood function take?
+
+
+A. Add this
+"observation=observation.filled()"
+just before line 168 of the pykalman.standard.py package file
+
+>>
+https://stackoverflow.com/questions/37730850/
+when-using-pykalman-python-kalman-filter-what-data-type-does-loglikelihood-fu
