@@ -4,7 +4,7 @@ import sys
 import zmq
 from scipy.io import wavfile
 from scipy.fftpack import fft
-from queue import Queue
+from multiprocessing import Queue
 
 fs = 44100
 
