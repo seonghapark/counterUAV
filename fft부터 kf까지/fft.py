@@ -82,14 +82,14 @@ class fft_handler:
 def main():
 	#inwav part
 	print("start inwav part")
-	file_name = './'+sys.argv[1]
-	inwav = inwav_handler(file_name)
+	file_name = './'+sys.argv[1]	#sys.argv[0]은 자기 자신의 파일명 풀패스, sys.argv[1]은 첫번째 옵션, sys.argv[2]는 두번째 옵션...
+	inwav = inwav_handler(file_name)	#wave 파일을 읽어서 데이터 저장 및 초기화
 	print("end inwav part")
 
 
 	#fft part
 	print("start fft part")
-	fft = fft_handler()
+	fft = fft_handler()		#
 	count = 0
 	while(1):
 		raw = inwav.get_chunk()
