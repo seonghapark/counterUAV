@@ -13,9 +13,9 @@ class colorgraph_handler:
 		self.max_detect = 3E8/(2*(self.lfm[1]-self.lfm[0]))*self.n/2 
 		self.set_t = int(sys.argv[1])
 
-		self.y = np.linspace(0,self.max_detect, int(self.zpad/2))
+		self.y = np.linspace(0,self.max_detect, int(self.zpad/2))	#시작점과 끝점을 균일 간격으로 나눈 점들을 생성한다.
 		self.data_tlen = 0
-		self.data_t =np.zeros((300))
+		self.data_t =np.zeros((300))	#괄호 안에 쓴 숫자만큼의 '0', '1', '비어있는 배열' 공간을 만든다.
 		self.data_val = np.zeros((300, self.y.shape[0]))
 
 		self.in_t = open("time_ndarray.txt","r")
