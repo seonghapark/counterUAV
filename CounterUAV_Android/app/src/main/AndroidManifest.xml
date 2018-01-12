@@ -2,6 +2,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="kr.ac.cnu.counteruav">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    //소켓 통신을 하기위해서 꼭 필요한 권한
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    //소켓 통신을 하기위한 부수적 권한
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    //소켓 통신을 하기위한 부수적 권한
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    //소켓 통신을 하기위한 부수적 권한
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -16,11 +24,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".ChartActivity"></activity>
     </application>
-
-    <uses-permission android:name="android.permission.INTERNET"/> //소켓 통신을 하기위해서 꼭 필요한 권한
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/> //소켓 통신을 하기위한 부수적 권한
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>//소켓 통신을 하기위한 부수적 권한
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>//소켓 통신을 하기위한 부수적 권한
 
 </manifest>

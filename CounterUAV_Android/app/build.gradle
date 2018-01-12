@@ -27,4 +27,5 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     implementation files('libs/jnacl-0.1.0.jar')
     implementation files('libs/jeromq-0.4.3.jar')
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.0.3'
 }
