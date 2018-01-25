@@ -1,0 +1,3 @@
+#!/bin/bash
+
+curl beehive1.mcs.anl.gov/live-nodes.txt
