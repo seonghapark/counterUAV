@@ -18,9 +18,6 @@ case ${option} in
 	2)
 		python3 fft.py ${wav_name}
 		python3 max.py ${wav_time}
-		printf "Enter initial_time and initial_distance above(initial_time[Enter]initial_distance[Enter])\n"
-		read initial_time
-		read initial_distance
 		python3 newplot.py ${wav_time} ${initial_time} ${initial_distance}
 		;;
 esac
