@@ -1,10 +1,6 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import sys
-import zmq
 from scipy.io import wavfile
-from scipy.fftpack import fft
-from queue import Queue
 
 fs = 44100
 
@@ -45,7 +41,7 @@ class fft_handler:
 	def data_process(self):
 		count = 0
 		time = [] # time is a list
-		for ii in range(11, int((self.start.shape[0]-self.n))): 
+		for ii in range(11, int((self.start.shape[0]-self.n))):
 		    if (self.start[ii] == True) & (self.start[ii-11:ii-1].mean() == 0): # if start[ii] is true and the mean of from start[ii-11] to start[ii-1] is zero
 		        self.fsif[count,:] = self.rightarray[ii:ii+self.n] # then copy rightarray from ii to ii+n and paste them to sif[count] --> sif[count] is a list
 		        time.append((ii + int(self.start.shape[0])*self.opp) * 1. / self.fs) # append time, the time is ii/fs --> few micro seconds (0.0001 sec or so)
@@ -59,7 +55,7 @@ class fft_handler:
 		v=self.dbv(np.fft.ifft(sif, zpad,1)) # Do fft calculation, and convert results to decibel through dbv function
 		s=v[:,0:int(v.shape[1]/2)] 
 		m=s.max() 
-		self.s= s-m
+		self.s = s-m
 
 		self.time = self.time[:50]
 		self.s = self.s[:50]
@@ -82,8 +78,7 @@ class fft_handler:
 def main():
 	#inwav part
 	print("start inwav part")
-	file_name = './'+sys.argv[1]
-	inwav = inwav_handler(file_name)
+	inwav = inwav_handler("range_test2.wav")
 	print("end inwav part")
 
 
@@ -101,6 +96,5 @@ def main():
 		print("in fft", count, time.shape, result.shape)
 		count+=1
 	print("end fft part")
-
 
 main()

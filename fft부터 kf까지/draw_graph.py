@@ -1,5 +1,5 @@
-import numpy as np
 import sys
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import matplotlib.animation as animation
@@ -11,7 +11,7 @@ class colorgraph_handler:
 		self.zpad = 3528
 		self.lfm = [2260E6, 2590E6]
 		self.max_detect = 3E8/(2*(self.lfm[1]-self.lfm[0]))*self.n/2 
-		self.set_t = int(sys.argv[1])
+		self.set_t = int(25)
 
 		self.y = np.linspace(0,self.max_detect, int(self.zpad/2))
 		self.data_tlen = 0
