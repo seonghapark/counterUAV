@@ -62,7 +62,7 @@ class zeroMQ(threading.Thread):
 
         context = zmq.Context()
         self.socket = context.socket(zmq.SUB)
-        self.socket.connect("tcp://192.168.43.43:%s" % port)  # raspberry pi ip address
+        self.socket.connect("tcp://127.0.0.1:%s" % port)  # raspberry pi ip address
 
         topicfilter = b""
         self.socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
@@ -71,10 +71,17 @@ class zeroMQ(threading.Thread):
         global flag
         while True:
             string = self.socket.recv()
+
             print(string)
-            c = 0
-            f = 0
-            t = 0
+            temp = np.fromstring(string, dtype=np.int16)
+            print(temp)
+            c = int(len(temp) / 883) + 1
+            f = temp[:882][:c]
+            t = (temp.T)[:c][:1]
+
+            print(c)
+            print(np.shape(f))
+            print(np.shape(t))
 
             if flag is not 0:
                 self.temp_tail.add_prev(c, f, t)
