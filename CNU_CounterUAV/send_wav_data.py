@@ -60,7 +60,7 @@ class fft_handler:
 def main():
     # inwav part
     print("start inwav part")
-    file_name = './range_test2.wav'
+    file_name = './wav/range_test2.wav'
     inwav = inwav_handler(file_name)
     print("end inwav part")
 
@@ -91,15 +91,13 @@ def main():
         for i in range (0,count): # time copy to time_array
             time_array[i][0] = time[i]
 
-
+        print(new_f)
         data_array = np.concatenate((new_f,time_array),1) # make send data_array
-
-        print(np.shape(data_array))
         print(data_array)
-
-        print((data_array.ravel()).tobytes())
-
-        socket.send(data_array.ravel()) # send data_array
+        c = (data_array.ravel()).tobytes()
+        t = np.fromstring(c, dtype=np.int16)
+        print(t)
+        socket.send(c) # send data_array
 
         print("in fft", count_fft)
 
