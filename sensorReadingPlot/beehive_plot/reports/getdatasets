@@ -15,19 +15,29 @@ rm sensor_data_set.csv
 rm 201*.csv.*
 for i in `seq 0 $how_long`;
 do
-    wget_output=$(wget "http://beehive1.mcs.anl.gov/datasets/2/"$which_node/"$(date  --date="$(($i + $how_long_ago)) days ago" +%Y-%m-%d).csv.gz")
-    if [ $? == 0 ]; then
-        dtrx "$(date  --date="$(($i + $how_long_ago)) days ago" +%Y-%m-%d).csv.gz" 
-        rm "$(date  --date="$(($i + $how_long_ago)) days ago" +%Y-%m-%d).csv.gz"
+    if [[ "$(uname)" == "Darwin" ]]; then
+        echo "system is Mac"
+        wget_output=$(wget "http://beehive1.mcs.anl.gov/datasets/2/"$which_node/"$(gdate  --gdate="$(($i + $how_long_ago)) days ago" +%Y-%m-%d).csv.gz")
+        # if [ $? == 0 ]; then
+        #     dtrx "$(gdate  --gdate="$(($i + $how_long_ago)) days ago" +%Y-%m-%d).csv.gz"
+        #     rm "$(gdate  --gdate="$(($i + $how_long_ago)) days ago" +%Y-%m-%d).csv.gz"
+        # fi
+        exit 1
+    elif [[ "$(uname)" == "Linux" ]]; then
+        wget_output=$(wget "http://beehive1.mcs.anl.gov/datasets/2/"$which_node/"$(date  --date="$(($i + $how_long_ago)) days ago" +%Y-%m-%d).csv.gz")
+        if [ $? == 0 ]; then
+            dtrx "$(date  --date="$(($i + $how_long_ago)) days ago" +%Y-%m-%d).csv.gz"
+            rm "$(date  --date="$(($i + $how_long_ago)) days ago" +%Y-%m-%d).csv.gz"
+        fi
     fi
-done     
+done
 cat $(ls 201*.csv | sort -V)  |  tr " " "_" | tr "\/" "_" > sensor_data_set.csv
 rm -rf 201*.csv
 echo "Downloaded files and created source dataset..."
 else
 echo "Unable to find node "$1
 fi
-else 
+else
 echo "!!! Several ports found, please be more specific with node details ..."$which_port
 fi
 

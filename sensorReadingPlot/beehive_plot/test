@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [[ "$(uname)" == "Darwin" ]]; then
+    echo "mac"
+    echo "$(uname)"
+else
+    echo "must be linux"
+fi

@@ -44,7 +44,7 @@ def plot_pressrue(nodeNAME, nodeLoc, data_dict):
 		plt.subplot().xaxis.set_major_formatter(majorFormatter)
 		plt.gcf().autofmt_xdate()
 		pressure1.show()
-		# plt.savefig('pressure'+nodeNAME[i]+nodeLoc[i]+'.png',bbox_inches='tight')
+		plt.savefig('pressure'+nodeNAME[i]+nodeLoc[i]+'.png',bbox_inches='tight')
 
 	# #*********************************************************************************************Pressrue2
 
@@ -284,6 +284,7 @@ def plot_data(nodeNAME, nodeLoc, data_dict, args_plot):
 			os.remove('./'+item)
 
 	if args_plot[0] == False and args_plot[1] == False and args_plot[2] == False:
+		print(nodeNANE, nodeLoc)
 		plot_temperature(nodeNAME, nodeLoc, data_dict)
 		plot_humidity(nodeNAME, nodeLoc, data_dict)
 		plot_pressrue(nodeNAME, nodeLoc, data_dict)
