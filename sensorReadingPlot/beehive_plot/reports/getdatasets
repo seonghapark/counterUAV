@@ -16,18 +16,20 @@ rm 201*.csv.*
 for i in `seq 0 $how_long`;
 do
     if [[ "$(uname)" == "Darwin" ]]; then
-        echo "system is Mac"
-        wget_output=$(wget "http://beehive1.mcs.anl.gov/datasets/2/"$which_node/"$(gdate  --gdate="$(($i + $how_long_ago)) days ago" +%Y-%m-%d).csv.gz")
-        # if [ $? == 0 ]; then
-        #     dtrx "$(gdate  --gdate="$(($i + $how_long_ago)) days ago" +%Y-%m-%d).csv.gz"
-        #     rm "$(gdate  --gdate="$(($i + $how_long_ago)) days ago" +%Y-%m-%d).csv.gz"
-        # fi
-        exit 1
+        echo "The operation system is Mac"
+        wget_output=$(wget "http://beehive1.mcs.anl.gov/datasets/2/"$which_node/"$(date  -v -"$(($i + $how_long_ago))"d +%Y-%m-%d).csv.gz")
+        if [ $? == 0 ]; then
+            dtrx "$(date  -v -"$(($i + $how_long_ago))" +%Y-%m-%d).csv.gz"
+            rm "$(date  -v -"$(($i + $how_long_ago))" +%Y-%m-%d).csv.gz"
+        fi
     elif [[ "$(uname)" == "Linux" ]]; then
+        echo "The operation system is Linux"
         wget_output=$(wget "http://beehive1.mcs.anl.gov/datasets/2/"$which_node/"$(date  --date="$(($i + $how_long_ago)) days ago" +%Y-%m-%d).csv.gz")
         if [ $? == 0 ]; then
             dtrx "$(date  --date="$(($i + $how_long_ago)) days ago" +%Y-%m-%d).csv.gz"
             rm "$(date  --date="$(($i + $how_long_ago)) days ago" +%Y-%m-%d).csv.gz"
+    else
+        echo "The operatoin system is not Linux nor Mac; un-noticed system"
         fi
     fi
 done

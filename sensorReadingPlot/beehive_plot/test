@@ -6,3 +6,10 @@ if [[ "$(uname)" == "Darwin" ]]; then
 else
     echo "must be linux"
 fi
+
+i=1
+j=2
+z=$(($i+$j))
+echo $z
+echo $(date -v -"$(($i+$j))"d)
+echo $(date -v -1d +%Y-%m-%d)
