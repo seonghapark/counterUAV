@@ -1,4 +1,5 @@
 #!/bin/bash
+### wget, dtrx command neccessary
 if [ "$#" -ne 3 ]; then
     echo "Not enough information provided..."
     exit 1
@@ -13,27 +14,35 @@ if [ ! -z "$which_node" ];then
 rm 201*.csv
 rm sensor_data_set.csv
 rm 201*.csv.*
-for i in `seq 0 $how_long`;
-do
-    if [[ "$(uname)" == "Darwin" ]]; then
+
+if [[ "$(uname)" == "Darwin" ]]; then
+    for i in `seq 0 $how_long`;
+    do
         echo "The operation system is Mac"
         wget_output=$(wget "http://beehive1.mcs.anl.gov/datasets/2/"$which_node/"$(date  -v -"$(($i + $how_long_ago))"d +%Y-%m-%d).csv.gz")
         if [ $? == 0 ]; then
-            dtrx "$(date  -v -"$(($i + $how_long_ago))" +%Y-%m-%d).csv.gz"
-            rm "$(date  -v -"$(($i + $how_long_ago))" +%Y-%m-%d).csv.gz"
+            dtrx "$(date  -v -"$(($i + $how_long_ago))"d +%Y-%m-%d).csv.gz"
+            rm "$(date  -v -"$(($i + $how_long_ago))"d +%Y-%m-%d).csv.gz"
         fi
-    elif [[ "$(uname)" == "Linux" ]]; then
+    done
+    echo "done downloading data"
+    cat $(ls 201*.csv | sort -f)  |  tr " " "_" | tr "\/" "_" > sensor_data_set.csv
+    echo "done changing file name"
+elif [[ "$(uname)" == "Linux" ]]; then
+    for i in `seq 0 $how_long`;
+    do
         echo "The operation system is Linux"
         wget_output=$(wget "http://beehive1.mcs.anl.gov/datasets/2/"$which_node/"$(date  --date="$(($i + $how_long_ago)) days ago" +%Y-%m-%d).csv.gz")
         if [ $? == 0 ]; then
             dtrx "$(date  --date="$(($i + $how_long_ago)) days ago" +%Y-%m-%d).csv.gz"
             rm "$(date  --date="$(($i + $how_long_ago)) days ago" +%Y-%m-%d).csv.gz"
-    else
-        echo "The operatoin system is not Linux nor Mac; un-noticed system"
         fi
-    fi
-done
-cat $(ls 201*.csv | sort -V)  |  tr " " "_" | tr "\/" "_" > sensor_data_set.csv
+    done
+    cat $(ls 201*.csv | sort -V)  |  tr " " "_" | tr "\/" "_" > sensor_data_set.csv
+else
+    echo "The operatoin system is not Linux nor Mac; un-noticed system"
+fi
+
 rm -rf 201*.csv
 echo "Downloaded files and created source dataset..."
 else

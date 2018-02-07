@@ -4,6 +4,11 @@
 import os
 
 import matplotlib
+
+from sys import platform
+if platform == "darwin":
+	matplotlib.use('TkAgg')
+
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
@@ -44,7 +49,7 @@ def plot_pressrue(nodeNAME, nodeLoc, data_dict):
 		plt.subplot().xaxis.set_major_formatter(majorFormatter)
 		plt.gcf().autofmt_xdate()
 		pressure1.show()
-		plt.savefig('./pressure_'+nodeNAME[i]+'.png',bbox_inches='tight')
+		plt.savefig('./figure/pressure_'+nodeNAME[i]+'.png',bbox_inches='tight')
 
 	# #*********************************************************************************************Pressrue2
 
@@ -85,7 +90,7 @@ def plot_pressrue(nodeNAME, nodeLoc, data_dict):
 		plt.subplot().xaxis.set_major_formatter(majorFormatter)
 		plt.gcf().autofmt_xdate()
 		pressureCMP.show()
-		plt.savefig('./pressure_all.png',bbox_inches='tight')
+		plt.savefig('./figure/pressure_all.png',bbox_inches='tight')
 
 
 	#************************************************************************************************************Humidity1
@@ -126,7 +131,7 @@ def plot_humidity(nodeNAME, nodeLoc, data_dict):
 		plt.subplot().xaxis.set_major_formatter(majorFormatter)
 		plt.gcf().autofmt_xdate()
 		humid1.show()
-		plt.savefig('humidity_'+nodeNAME[i]+'.png',bbox_inches='tight')
+		plt.savefig('./figure/humidity_'+nodeNAME[i]+'.png',bbox_inches='tight')
 
 	#************************************************************************************************************Humidity2
 	if len(nodeNAME) > 1:
@@ -168,7 +173,7 @@ def plot_humidity(nodeNAME, nodeLoc, data_dict):
 		plt.subplot().xaxis.set_major_formatter(majorFormatter)
 		plt.gcf().autofmt_xdate()
 		humidCMP.show()
-		plt.savefig('./humidity_all.png',bbox_inches='tight')
+		plt.savefig('./figure/humidity_all.png',bbox_inches='tight')
 
 
 	#********************************************************************************************************Temperature1
@@ -224,7 +229,7 @@ def plot_temperature(nodeNAME, nodeLoc, data_dict):
 		plt.subplot().xaxis.set_major_formatter(majorFormatter)
 		plt.gcf().autofmt_xdate()
 		temper1.show()
-		plt.savefig('temperature_'+nodeNAME[i]+'.png',bbox_inches='tight')
+		plt.savefig('./figure/temperature_'+nodeNAME[i]+'.png',bbox_inches='tight')
 
 	#********************************************************************************************************Temperature2
 	if len(nodeNAME) > 1:
@@ -266,7 +271,7 @@ def plot_temperature(nodeNAME, nodeLoc, data_dict):
 		plt.subplot().xaxis.set_major_formatter(majorFormatter)
 		plt.gcf().autofmt_xdate()
 		temperCMP.show()
-		plt.savefig('./temperature_all.png',bbox_inches='tight')
+		plt.savefig('./figure/temperature_all.png',bbox_inches='tight')
 
 	### to keep the images alive
 	# input()
