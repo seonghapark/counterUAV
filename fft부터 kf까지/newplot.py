@@ -7,9 +7,9 @@ in_distance = open("distance_from_maxindex.txt","r")
 
 data_t = []
 data_maxrange = []
-wav_time = 24
-initial_t = 7.0
-initial_distance = 24.0
+wav_time = int(sys.argv[1])
+initial_t = float(sys.argv[2])
+initial_distance = float(sys.argv[3])
 max_speed = 3.0
 
 
