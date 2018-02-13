@@ -1,5 +1,4 @@
 import numpy as np
-import sys
 import pylab as pl
 
 in_t = open("time_from_maxindex.txt","r")
@@ -7,9 +6,9 @@ in_distance = open("distance_from_maxindex.txt","r")
 
 data_t = []
 data_maxrange = []
-wav_time = int(sys.argv[1])
-initial_t = float(sys.argv[2])
-initial_distance = float(sys.argv[3])
+wav_time = 24
+initial_t = 7.081337868480725
+initial_distance = 24.09090909090909
 max_speed = 3.0
 
 
@@ -17,32 +16,32 @@ max_speed = 3.0
 in_t.readline()
 in_distance.readline() #ignore first second
 
-j=0
+j = 0
 for i in range(0, wav_time):
 	split_line = in_t.readline().split()
-	split_line = [float (j) for j in split_line]
+	split_line = [float (j) for j in split_line]  # string to float
 	data_t = np.append(data_t, split_line)
 	data_t = np.array(data_t)
 
 	split_line = in_distance.readline().split()
-	split_line = [float(k) for k in split_line]
+	split_line = [float(k) for k in split_line]  # string to float
 	data_maxrange = np.append(data_maxrange, split_line)
 	data_maxrange = np.array(data_maxrange)
 
-time_range = np.linspace(0, wav_time, 50*wav_time)
-time_range =time_range +1
+time_range = np.linspace(0, wav_time, 50*wav_time)  # 1초를 50개로 나눠 배열을 만듬, 1초면 인덱스가 50개, 0.02초 단위로 측정하므로
+time_range = time_range + 1  # 배열 전체에 1을 더함
 
 # check start point
 for i in range(0, len(data_t)):
 	if data_t[i] == initial_t:
-		initial_range =i
-		print (i)
+		initial_range = i
+		print(i)
 		break
 
 #cut before first point
 time_range = time_range[initial_range:]
 data_maxrange_afterinitial = data_maxrange[initial_range:]
-temp = np.concatenate((data_maxrange_afterinitial, ([0] * (50-len(data_maxrange_afterinitial)%50))), axis = 0) 
+temp = np.concatenate((data_maxrange_afterinitial, ([0] * (50-len(data_maxrange_afterinitial)%50))), axis = 0)
 print(temp.shape)
 
 # seperate by time (1 second)
@@ -86,8 +85,6 @@ for i in range(1, len(after_noise_cancel)):
 			after_noise_cancel[first_val+i] = after_noise_cancel[first_val] + (after_noise_cancel[last_val] - after_noise_cancel[first_val])/(last_val-first_val)*i
 
 
-
-
 print(data_t.shape, data_maxrange.shape)
 print(time_range.shape, data_maxrange_afterinitial.shape)
 print(time_range.shape, afterinitial_hap.shape)
@@ -96,11 +93,6 @@ pl.scatter(data_t, data_maxrange, marker = 'x', label = 'original data', color =
 pl.scatter(time_range, data_maxrange_afterinitial, marker = 'x', color = 'r', label = 'cut before first point')
 #pl.scatter(time_range, afterinitial_hap, marker = 'x', color = 'b', label = 'cut lower and upper value')
 pl.plot(time_range, after_noise_cancel, label = 'cut lower and upper value')
-
-
-
-
-
 
 
 #time_range, data_maxrange_afterinitial
