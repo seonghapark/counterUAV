@@ -1,15 +1,12 @@
 import numpy as np
 import threading
 import zmq
-import time
-import sys
-from scipy.io import wavfile
 
 fs = 44100
 flag = 0
 
 class Node:
-    def __init__(self, count = None, fsif = None, time = None, next = None, prev = None):
+    def __init__(self, count=None, fsif=None, time=None, next=None, prev=None):
         self.count = count
         self.fsif = fsif
         self.time = time
@@ -73,15 +70,16 @@ class zeroMQ(threading.Thread):
             string = self.socket.recv()
 
             print(string)
-            temp = np.fromstring(string, dtype=np.int16)
-            print(temp)
-            c = int(len(temp) / 883) + 1
-            f = temp[:882][:c]
-            t = (temp.T)[:c][:1]
+            temp = np.fromstring(string, dtype=np.float)
+            c = int(len(temp) / 883) #c 전체 데이터를 883으로 나누면 됨(c * 883 배열이므로)
+            f = np.empty((c, 882)) #지금 1차원배열로 받으므로 나중에 처리해줘야함
+            f = temp[:, :c]
+            f = f.T
+            t = temp[882:883, :c]
 
             print(c)
-            print(np.shape(f))
-            print(np.shape(t))
+            print(f)
+            print(t)
 
             if flag is not 0:
                 self.temp_tail.add_prev(c, f, t)
@@ -119,7 +117,6 @@ class fft_handler:
         s = v[:, 0:int(v.shape[1] / 2)]
         m = s.max()
         self.s = s - m
-
         self.time = self.time[:50]
         self.s = self.s[:50]
 

@@ -1,8 +1,6 @@
 import zmq
 from scipy.io import wavfile
 import numpy as np
-import sys
-from scipy import sparse
 
 fs = 44100
 
@@ -28,7 +26,7 @@ class fft_handler:
         self.fs = fs
         self.Tp = 0.020
         self.n = int(self.Tp * self.fs);
-        self.fsif = np.zeros([10000, self.n], dtype=np.int16)
+        self.fsif = np.zeros([10000, self.n], dtype=np.float)
 
         self.out_t = open("time_ndarray.txt", "w")
         self.out_sm = open("val_ndarray.txt", "w")
@@ -84,9 +82,9 @@ def main():
         fft.get_line(raw)
         time, fsif, count = fft.data_process()
 
-        time_array = np.zeros((count,1), dtype=np.int16) #time list to array
+        time_array = np.zeros((count,1), dtype=np.float) #time list to array
 
-        new_f = fsif[:count][:] #fsif transrate to countx882 array
+        new_f = fsif[:count, :] #fsif transrate to countx882 array
 
         for i in range (0,count): # time copy to time_array
             time_array[i][0] = time[i]
@@ -95,7 +93,7 @@ def main():
         data_array = np.concatenate((new_f,time_array),1) # make send data_array
         print(data_array)
         c = (data_array.ravel()).tobytes()
-        t = np.fromstring(c, dtype=np.int16)
+        t = np.fromstring(c, dtype=np.float)
         print(t)
         socket.send(c) # send data_array
 
