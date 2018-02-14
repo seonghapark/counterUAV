@@ -77,10 +77,6 @@ class zeroMQ(threading.Thread):
             f = f.T
             t = temp[882:883, :c]
 
-            print(c)
-            print(f)
-            print(t)
-
             if flag is not 0:
                 self.temp_tail.add_prev(c, f, t)
                 self.count += 1
