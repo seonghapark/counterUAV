@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.root.serverzmq.MainActivity">
+
+    <Button
+        android:id="@+id/sendGraphBtn1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="120px"
+        android:text="send graph1" />
+
+    <Button
+        android:id="@+id/onBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="120px"
+        android:layout_marginLeft="350px"
+        android:text="On"/>
+    <Button
+        android:id="@+id/offBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="120px"
+        android:layout_marginLeft="600px"
+        android:text="On"/>
+
+
+
+    <TextView
+        android:id="@+id/logTV"
+        android:layout_width="340dp"
+        android:layout_height="346dp"
+        android:layout_marginTop="250px"
+        android:scrollbars="vertical" />
+
+    <Button
+        android:id="@+id/disconnectBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1600px"
+        android:layout_marginLeft="600px"
+        android:text="BAN" />
+
+    <Button
+        android:id="@+id/exitBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1600px"
+        android:text="EXIT" />
+
+    <Button
+        android:id="@+id/sendBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="700px"
+        android:text="SendMSG" />
+
+    <EditText
+        android:id="@+id/sendET"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPersonName" />
+
+</RelativeLayout>
