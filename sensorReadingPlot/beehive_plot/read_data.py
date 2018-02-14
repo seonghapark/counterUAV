@@ -127,21 +127,6 @@ def read_data(nodeNAME):
 					elif "SHT25" in line:
 						temperature = float(line.strip().split(';')[-1])/100
 						data_dict[nodeNAME[i]]["sht25"].append(temperature)
-					elif "CO LMP Temp" in line:
-						temperature = float(line.strip().split(';')[-1])/100
-						data_dict[nodeNAME[i]]["co_lmp_tmp"].append(temperature)
-					elif "CO ADC Temp" in line:
-						temperature = float(line.strip().split(';')[-1])/100
-						data_dict[nodeNAME[i]]["co_adc_tmp"].append(temperature)
-					elif "SO2/H2S Temp" in line:
-						temperature = float(line.strip().split(';')[-1])/100
-						data_dict[nodeNAME[i]]["so2_adc_tmp"].append(temperature)
-					elif "O3/NO2 Temp" in line:
-						temperature = float(line.strip().split(';')[-1])/100
-						data_dict[nodeNAME[i]]["o3_tmp"].append(temperature)
-					elif "IAQ/IRR Temp" in line:
-						temperature = float(line.strip().split(';')[-1])/100
-						data_dict[nodeNAME[i]]["irr_tmp"].append(temperature)
 
 				elif "pressure" in line:
 					if "BMP180" in line:
@@ -210,5 +195,43 @@ def read_data(nodeNAME):
 						data_dict[nodeNAME[i]]["rawtsl250ls"].append(intensity)
 						irrad = (intensity * 0.0000625 * 2.5 - 0.005781) / 0.064
 						data_dict[nodeNAME[i]]["tsl250ls"].append(irrad)
+
+				# elif "Chemsense" in line:
+				# 	if "mac" in line:
+				# 		continue
+				# 	elif "at" in line:
+				# 		data_name = line.strip().split(';')[-2]
+				# 		temperature = float(line.strip().split(';')[-1])/100
+				# 		data_dict[nodeNAME[i]][data_name].append(temperature)
+				# 	elif "so2" in line:
+
+## at sensor name should be match with other name with tmp!!!
+
+
+				# 		ppm = conv(float(line.strip().split(';')[-1])/100
+						# data_dic[nodeNAME[i]]["so2"].append(ppm)
+				# 	elif "CO LMP Temp" in line:
+				# 		temperature = float(line.strip().split(';')[-1])/100
+				# 		data_dict[nodeNAME[i]]["co_lmp_tmp"].append(temperature)
+				# 	elif "CO ADC Temp" in line:
+				# 		temperature = float(line.strip().split(';')[-1])/100
+				# 		data_dict[nodeNAME[i]]["co_adc_tmp"].append(temperature)
+				# 	elif "SO2/H2S Temp" in line:
+				# 		temperature = float(line.strip().split(';')[-1])/100
+				# 		data_dict[nodeNAME[i]]["so2_adc_tmp"].append(temperature)
+				# 	elif "O3/NO2 Temp" in line:
+				# 		temperature = float(line.strip().split(';')[-1])/100
+				# 		data_dict[nodeNAME[i]]["o3_tmp"].append(temperature)
+				# 	elif "IAQ/IRR Temp" in line:
+				# 		temperature = float(line.strip().split(';')[-1])/100
+				# 		data_dict[nodeNAME[i]]["irr_tmp"].append(temperature)
+
+001e0610ba46;2018/02/13 00:00:07;coresense:4;frame;Chemsense;o3;3399
+001e0610ba46;2018/02/13 00:00:07;coresense:4;frame;Chemsense;h2s;12920
+001e0610ba46;2018/02/13 00:00:07;coresense:4;frame;Chemsense;reducing_gases;4628
+001e0610ba46;2018/02/13 00:00:07;coresense:4;frame;Chemsense;co;16988
+001e0610ba46;2018/02/13 00:00:07;coresense:4;frame;Chemsense;no2;2231
+001e0610ba46;2018/02/13 00:00:07;coresense:4;frame;Chemsense;so2;4991
+001e0610ba46;2018/02/13 00:00:07;coresense:4;frame;Chemsense;oxidizing_gases;60827
 
 	return data_dict
