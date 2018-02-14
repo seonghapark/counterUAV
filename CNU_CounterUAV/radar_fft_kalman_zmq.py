@@ -63,7 +63,7 @@ class zmq_handler(threading.Thread):
 
         # zmq sub
         self.sub_socket = context.socket(zmq.SUB)
-        self.sub_socket.connect("tcp://192.168.43.43:%s" % sub_port)  # raspberry pi ip address
+        self.sub_socket.connect("tcp://127.0.0.1:%s" % sub_port)  # raspberry pi ip address
 
         topicfilter = b""
         self.sub_socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
@@ -166,6 +166,9 @@ class max_handler:
         self.data_tlen = 0
         self.data_vallen = 0
 
+        self.time = []
+        self.max_distance = []
+
         self.initial_time = -1
         self.initial_distance = -1
         self.min_initial_distance = 10
@@ -179,25 +182,24 @@ class max_handler:
         self.data_vallen = len(self.data_val)
 
     def print_max(self):
-        time = []
-        max_distance = []
         for i in range(0, self.data_tlen - 1):
-            time.append((self.data_time[i] + self.data_time[i + 1]) / 2)
+            self.time.append((self.data_time[i] + self.data_time[i + 1]) / 2)
             max_index = np.argmax(self.data_val[i][self.ignore_index:])
-            max_distance.append(self.ignore_distance + max_index * self.max_detect / self.y_len)
+            self.max_distance.append(self.ignore_distance + max_index * self.max_detect / self.y_len)
         if (self.initial_time == -1 and self.initial_distance == -1):
-            self.set_initial(time, max_distance)
+            self.set_initial()
 
-        return time, max_distance
+        return self.time, self.max_distance
 
-    def set_initial(self, time, max_distance):
+    def set_initial(self):
         t = []
         val = []
+        check = 0
 
         for i in range(0, self.data_tlen - 1):
-            if (max_distance[i] > self.min_initial_distance):
-                t.append(time[i])
-                val.append(max_distance[i])
+            if (self.max_distance[i] > self.min_initial_distance):
+                t.append(self.time[i])
+                val.append(self.max_distance[i])
         long_val = np.array(self.front_val + val)
 
         if (len(long_val) > 10 and np.var(long_val) < 100):
@@ -208,36 +210,47 @@ class max_handler:
                     self.initial_time = (self.front_t + t)[i]
                     self.initial_distance = long_val[i]
                     minimum = abs(long_val[i] - mean)
+                    check = 1
+
+        if check is 0:
+            self.time = []
+            self.max_distance = []
 
         self.front_val = val
         self.front_t = t
 
 
 class kmf_handler:
-    def __init__(self, time, distance, initial_time=-1, initial_distance=-1, wav_time=1, max_speed=3):
+    def __init__(self, time=[], distance=[], initial_time=-1, initial_distance=-1, wav_time=1, max_speed=3):
+        self.time = time
         self.data_maxrange = distance
         self.initial_time = initial_time
         self.initial_distance = initial_distance
+        self.initial_range = None
         self.wav_time = wav_time
         self.max_speed = max_speed
         self.time_range = np.linspace(0, wav_time, 50 * wav_time)
         self.time_range = self.time_range + 1
 
-
+    def setting(self, time, distance, initial_time=-1, initial_distance=-1):
+        self.time = time
+        self.data_maxrange = distance
+        self.initial_time = initial_time
+        self.initial_distance = initial_distance
 
     def data_process(self):
-        if self.initial_time is -1:
+        if self.initial_time is -1:  # 측정할 필요가 없으면 버림
             return
 
         # check start point
-        for i in range(0, len(time)):
-            if time[i] == self.initial_time:
-                self.initial_range = i
-                print(i)
-                break
+        if self.initial_range is None:
+            for i in range(0, len(self.time)):
+                if self.time[i] == self.initial_time:
+                    self.initial_range = i
+                    break
 
         # cut before first point
-        self.time_range = self.time_range[self.initial_range:]
+        time_range_afterinitial = self.time_range[self.initial_range:]
         data_maxrange_afterinitial = self.data_maxrange[self.initial_range:]
         temp = np.concatenate((data_maxrange_afterinitial, ([0] * (50 - len(data_maxrange_afterinitial) % 50))), axis=0)
 
@@ -279,14 +292,12 @@ class kmf_handler:
                 for i in range(1, last_val - first_val):
                     after_noise_cancel[first_val + i] = after_noise_cancel[first_val] + (after_noise_cancel[last_val] - after_noise_cancel[first_val]) / (last_val - first_val) * i
         
-        self.getkmf(after_noise_cancel)
+        self.get_kmf(after_noise_cancel)
 
     def get_kmf(self, after_noise_cancel):
         kf = KalmanFilter(transition_matrices=np.array([[1, 1], [0, 1]]), transition_covariance=([[0.25, 0], [0, 0]]), initial_state_mean=[29, -1.5])
         self.after_kf = kf.em(after_noise_cancel).smooth(after_noise_cancel)[0]
 
-        print(self.time_range)
-        print(self.after_kf)
 
 def main():
     global flag
@@ -297,6 +308,7 @@ def main():
     zmq = zmq_handler(head, tail)
     fft = fft_handler()
     max = max_handler()
+    kmf = kmf_handler()
 
     zmq.start()
     while True:
@@ -313,7 +325,7 @@ def main():
         max.get_data(val, t)
         t, distance = max.print_max()
 
-        kmf = kmf_handler(t, distance, max.initial_time, max.initial_distance)
+        kmf.setting(t, distance, max.initial_time, max.initial_distance)
         kmf.data_process()
 
 
