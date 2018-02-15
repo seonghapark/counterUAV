@@ -1,4 +1,4 @@
-package kr.ac.cnu.counteruav;
+package com.example.root.subzmq1;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,7 +16,6 @@ import com.github.mikephil.charting.utils.ColorTemplate;
 
 import org.zeromq.ZMQ;
 
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +33,7 @@ public class ChartActivity extends AppCompatActivity {
 
         handler = new TestHandler();
 
+
         Thread thread1 = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -41,27 +41,11 @@ public class ChartActivity extends AppCompatActivity {
                 ZMQ.Context context = ZMQ.context(1);
                 ZMQ.Socket socket = context.socket(ZMQ.SUB);
                 socket.subscribe("".getBytes());
-                socket.connect("tcp://192.168.43.42:8889");
+                socket.connect("tcp://127.0.0.1:5559");
 
                 while(!Thread.currentThread().isInterrupted()) {
-
-                    String data = new String(socket.recv());
-
-                    int flag = 0;
-
-                    //time과 distance string를 나눈다.
-                    for (int i = 0; i < data.length(); i++) {
-                        if ((data.charAt(i) == ']')) {
-                            flag = i;
-                            break;
-                        }
-                    }
-
-                    String recvTimes = data.substring(1, flag);
-                    String recvDistances = data.substring(flag+2, data.length()-1);
-
-//                    String recvTimes = new String(socket.recv());
-//                    String recvDistances = new String(socket.recv());
+                    String recvTimes = new String(socket.recv());
+                    String recvDistances = new String(socket.recv());
                     try {
                         handler.setTimes(recvTimes);
                         handler.setDistances(recvDistances);
@@ -114,21 +98,9 @@ public class ChartActivity extends AppCompatActivity {
             String[] timesOfSec = times.split(" ");
             String[] distancesOfSec = distances.split(" ");
 
-            int count = 0;
-
-            if(timesOfSec.length >= distancesOfSec.length) {
-                count = distancesOfSec.length;
-            } else {
-                count = timesOfSec.length;
+            for (int i=0; i<timesOfSec.length; i++) {
+                lineEntries.add(new Entry(Float.parseFloat(timesOfSec[i]), Float.parseFloat(distancesOfSec[i])));
             }
-
-            // timeOfSec와 distanceOfSec 배열의 크기가 다를 때 indexBound error가 발생할 수 있으므로 두 배열 중 적은 크기만큼만 돈다.
-            for (int i=0; i<count; i++) {
-                if (!(timesOfSec[i].equals(new String(""))) && !((distancesOfSec[i].equals(new String(""))))){
-                    lineEntries.add(new Entry(Float.parseFloat(timesOfSec[i]), Float.parseFloat(distancesOfSec[i])));
-                }
-            }
-
             LineDataSet lineDataSet = new LineDataSet(lineEntries, "testData");
             lineDataSet.setColor(colors.get(0));
             lineDataSet.setDrawCircles(false);
@@ -139,8 +111,7 @@ public class ChartActivity extends AppCompatActivity {
             XAxis xAxis = lineChart.getXAxis();
             xAxis.setAxisMinimum(-24+second);
 
-            lineChart.setVisibleXRange(0, length);
-            lineChart.getDescription().setText("");
+            lineChart.setVisibleXRange(0, length);lineChart.getDescription().setText("");
 //            lineChart.setVisibleYRange(0, 70, YAxis.AxisDependency.LEFT);
 
             lineChart.invalidate();
