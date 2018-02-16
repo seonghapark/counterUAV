@@ -10,7 +10,7 @@ import subprocess
 import shlex
 
 from read_data import read_data
-from plot_data import plot_data
+from chemsense import import_data
 
 
 def collect_data(nodeNAME):
@@ -35,6 +35,9 @@ def collect_data(nodeNAME):
 
 
 if __name__ == '__main__':
+	xl_data = {}
+	xl_data = import_data(xl_data)
+
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-n','--none_names', dest='node_name', nargs='*', help='Target node IDs')
 	parser.add_argument('-ds', dest='start_day', nargs=1, help='Start date from today, 0 means 0 days from today: get data from today')
@@ -59,4 +62,4 @@ if __name__ == '__main__':
 	print("** location of the nodes: ", nodeLoc)
 	print("** Descrptions of the nodes: ", nodeDescr, '\n')
 
-	data_dict = read_data(nodeNAME)
+	read_data(nodeNAME, xl_data)
