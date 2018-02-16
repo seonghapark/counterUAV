@@ -101,12 +101,18 @@ def pick_value(line, value, first_sensor, count, xl_data):
 
 	return line, value, write_bool
 
+def acquire_sensor_spec(line):
+	first_sensor = line.strip().split(';')[-3]
+	sensor_type = line.strip().split(';')[-2]
+	if first_sensor == 'Chemsense' or sensor_type == 'adc_temperature':
+		first_sensor = ''
 
+	return first_sensor
 
 def read_data(nodeNAME, xl_data):
 	first_sensor = ''
 	count = 0
-	value = {'temp': 0}
+	chem_reading = {'temp': 0, 'id': ''}
 	for i in range(len(nodeNAME)):
 		outputcsv = './conv_data_set_'+nodeNAME[i]+'.csv'
 		inputcsv = './sensor_data_set_'+nodeNAME[i]+'.csv'
@@ -114,15 +120,16 @@ def read_data(nodeNAME, xl_data):
 			with open(outputcsv, 'w') as of:
 				for line in f:
 					if not first_sensor:
-						first_sensor = line.strip().split(';')[-3]
-					if count != 0 and line.strip().split(';')[-3] == first_sensor:
-						value = convert(value, xl_data)
-						for key, in_list in value.items():
+						first_sensor = acquire_sensor_spec(line)
+
+					if chem_reading['id'] != '' and count != 0 and line.strip().split(';')[-3] == first_sensor:
+						new_chem_value = convert(chem_reading, xl_data)
+						for key, in_list in new_chem_value.items():
 							if key != 'id' and key != 'temp':
 								new_line = new_line_chem(key, in_list)
 								of.write(new_line)
-						value = {'temp': 0}
-					line, value, write_bool = pick_value(line, value, first_sensor, count, xl_data)
+						chem_reading = {'temp': 0, 'id': ''}
+					line, value, write_bool = pick_value(line, chem_reading, first_sensor, count, xl_data)
 					if write_bool == True:
 						of.write(line)
 					count = count + 1
