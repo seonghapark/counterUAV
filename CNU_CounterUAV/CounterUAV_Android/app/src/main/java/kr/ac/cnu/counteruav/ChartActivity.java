@@ -46,6 +46,7 @@ public class ChartActivity extends AppCompatActivity {
                 while(!Thread.currentThread().isInterrupted()) {
 
                     String data = new String(socket.recv());
+                    Log.d("test", "re");
 
                     int flag = 0;
 

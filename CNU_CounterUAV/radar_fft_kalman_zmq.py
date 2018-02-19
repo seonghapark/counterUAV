@@ -1,13 +1,13 @@
 import zmq
 import numpy as np
+from scipy.io import wavfile
 from pykalman import KalmanFilter
 import threading
-import time
 
 fs = 44100
 flag = 0
 
-class Node:
+class Node:  # 받은 값을 저장하기 위한 링크드 리스트
     def __init__(self, count=None, fsif=None, time=None, next=None, prev=None):
         self.count = count
         self.fsif = fsif
@@ -57,51 +57,58 @@ class zmq_handler(threading.Thread):
         self.temp_head = Node()
         self.temp_tail = Node()
         self.temp_head.setting(self.temp_tail)
-        sub_port = 8887
+
         pub_port = 8889
         context = zmq.Context()
-
-        # zmq sub
-        self.sub_socket = context.socket(zmq.SUB)
-        self.sub_socket.connect("tcp://127.0.0.1:%s" % sub_port)  # raspberry pi ip address
-
-        topicfilter = b""
-        self.sub_socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
 
         # zmq pub
         self.pub_socket = context.socket(zmq.PUB)
         self.pub_socket.bind("tcp://*:%s" % pub_port)
 
 
-    def run(self):
-        global flag
-
-        abc = 0
-        while True:
-            string = self.sub_socket.recv()
-
-            temp = np.fromstring(string, dtype=np.float)
-            c = int(len(temp) / 883) #c 전체 데이터를 883으로 나누면 됨(c * 883 배열이므로)
-            f = np.empty((c, 882)) #지금 1차원배열로 받으므로 나중에 처리해줘야함
-            t = []
-            for i in range(0, c):
-                f[i] = temp[(i * 883):((i * 883) + 882)]
-                t.append(temp[((i + 1) * 883) - 1])
-
-            if flag is not 0:
-                self.temp_tail.add_prev(c, f, t)
-                self.count += 1
-            else:
-                flag = -1
-                if self.count is not 0:
-                    self.tail.add_list(self.temp_head.next, self.temp_tail.prev)
-                    self.count = 0
-                self.tail.add_prev(c, f, t)
-                flag = 0
+    # def run(self):  # 2개의 라즈베리파이로 분업하기(주고받기) 위해 만들어놓은 함수
+    #     global flag
+    #
+    #     while True:
+    #         string = self.sub_socket.recv()
+    #
+    #         temp = np.fromstring(string, dtype=np.float)
+    #         c = int(len(temp) / 883) #c 전체 데이터를 883으로 나누면 됨(c * 883 배열이므로)
+    #         f = np.empty((c, 882)) #지금 1차원배열로 받으므로 나중에 처리해줘야함
+    #         t = []
+    #         for i in range(0, c):
+    #             f[i] = temp[(i * 883):((i * 883) + 882)]
+    #             t.append(temp[((i + 1) * 883) - 1])
+    #
+    #         if flag is not 0:
+    #             self.temp_tail.add_prev(c, f, t)
+    #             self.count += 1
+    #         else:
+    #             flag = -1
+    #             if self.count is not 0:
+    #                 self.tail.add_list(self.temp_head.next, self.temp_tail.prev)
+    #                 self.count = 0
+    #             self.tail.add_prev(c, f, t)
+    #             flag = 0
 
     def send(self, s, time):
         data = np.concatenate((s, time), 0)
         self.pub_socket.send(data)
+
+
+class wav_handler:
+    def __init__(self, file_name):
+        self.fs, self.data = wavfile.read(file_name)
+        self.data = self.data.T
+        self.count = 0
+
+    def get_chunk(self):
+        if self.count + fs < self.data.shape[1]:
+            data = self.data[:, self.count: self.count + fs]
+            self.count += fs
+            return data
+        else:
+            return None
 
 
 class fft_handler:
@@ -114,29 +121,32 @@ class fft_handler:
     def dbv(self, input):
         return 20 * np.log10(abs(input))
 
-    def get_line(self, raw):
+    def get_line(self, raw):  # 사각파에서 증가부분을 찾는 함수
         self.leftarray = raw[0]
         self.rightarray = raw[1]
         self.start = (self.leftarray > 0) #주파수값이 증가하고 있는 지 판단함(양수면 증가)
 
-    def data_process(self, count, fsif, time):
+    def data_process(self):
         spliter = 58  # let spliter=x, 1700/x + x/2 >= 2*(1700/2)^(1/2) = 58, when equals x = 58
+        count = 0
+        time = []
+        fsif = np.zeros([100, self.n], dtype=np.float)
 
-        # for ii in range(11, int((self.start.shape[0] - self.n)), spliter):
-        #     if (self.start[ii] == True) & (self.start[ii - 11 - spliter:ii - spliter].max() == 0):  # if start[ii] is true and the mean of from start[ii-11] to start[ii-1] is zero (All False)
-        #         for jj in range(ii - spliter, ii):
-        #             if (jj > 0) & (self.start[jj] == True) & (self.start[jj - 11:jj - 1].mean() == 0):
-        #                 fsif[count, :] = self.rightarray[jj:jj + self.n]  # then copy rightarray from ii to ii+n and paste them to sif[count] --> sif[count] is a list
-        #                 time.append((jj + int(self.start.shape[0]) * self.opp) * 1. / self.fs)  # append time, the time is ii/fs --> few micro seconds (0.0001 sec or so)
-        #                 count = count + 1
-        #
-        #                 fsif[count, :] = self.rightarray[jj + 1:jj + 1 + self.n]  # then copy rightarray from ii to ii+n and paste them to sif[count] --> sif[count] is a list
-        #                 time.append((jj + 1 + int(self.start.shape[0]) * self.opp) * 1. / self.fs)  # append time, the time is ii/fs --> few micro seconds (0.0001 sec or so)
-        #                 count = count + 1
-        #
-        #                 break
-        #
-        # self.opp += 1
+        for ii in range(11, int((self.start.shape[0] - self.n)), spliter):  # 개선된 탐색문
+            if (self.start[ii] == True) & (self.start[ii - 11 - spliter:ii - spliter].max() == 0):  # if start[ii] is true and the mean of from start[ii-11] to start[ii-1] is zero (All False)
+                for jj in range(ii - spliter, ii):
+                    if (jj > 0) & (self.start[jj] is True) & (self.start[jj - 11:jj - 1].mean() == 0):
+                        fsif[count, :] = self.rightarray[jj:jj + self.n]  # then copy rightarray from ii to ii+n and paste them to sif[count] --> sif[count] is a list
+                        time.append((jj + int(self.start.shape[0]) * self.opp) * 1. / self.fs)  # append time, the time is ii/fs --> few micro seconds (0.0001 sec or so)
+                        count = count + 1
+
+                        fsif[count, :] = self.rightarray[jj + 1:jj + 1 + self.n]  # then copy rightarray from ii to ii+n and paste them to sif[count] --> sif[count] is a list
+                        time.append((jj + 1 + int(self.start.shape[0]) * self.opp) * 1. / self.fs)  # append time, the time is ii/fs --> few micro seconds (0.0001 sec or so)
+                        count = count + 1
+
+                        break
+
+        self.opp += 1
         data_time = np.array(time)  # change the format of time from list to to np.array
         sif = fsif[:count, :]   # truncate sif --> remove all redundant array lists in sif, just in case if sif is longer then count
         sif = sif - np.tile(sif.mean(0), [sif.shape[0], 1]);
@@ -306,22 +316,24 @@ def main():
     tail = Node()
     head.setting(tail)
     zmq = zmq_handler(head, tail)
+    wav = wav_handler("./wav/range_test2.wav")
     fft = fft_handler()
     max = max_handler()
     kmf = kmf_handler()
 
     zmq.start()
     while True:
-        if flag is not 0:
-            continue
-        flag = 1
-        c, f, t = head.remove_next()
-        flag = 0
-        if c is None:
-            continue
+        # if flag is not 0:  # 공유자원을 사용하기 위한 플래그 코드
+        #     continue
+        # flag = 1
+        # c, f, t = head.remove_next()
+        # flag = 0
+        # if c is None:
+        #     continue
 
-        fft.get_line(f)
-        val, t = fft.data_process(c, f, t)
+        raw = wav.get_chunk()
+        fft.get_line(raw)
+        val, t = fft.data_process()
         max.get_data(val, t)
         t, distance = max.print_max()
 
