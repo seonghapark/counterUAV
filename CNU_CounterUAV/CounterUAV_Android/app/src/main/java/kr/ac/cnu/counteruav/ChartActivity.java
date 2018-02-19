@@ -41,10 +41,11 @@ public class ChartActivity extends AppCompatActivity {
                 ZMQ.Context context = ZMQ.context(1);
                 ZMQ.Socket socket = context.socket(ZMQ.SUB);
                 socket.subscribe("".getBytes());
-                socket.connect("tcp://192.168.43.42:8889");
+                socket.connect("tcp://192.168.43.42:5556");
 
                 while(!Thread.currentThread().isInterrupted()) {
 
+                    Log.d("test", "st");
                     String data = new String(socket.recv());
                     Log.d("test", "re");
 

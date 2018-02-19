@@ -92,11 +92,11 @@ class zmq_handler(threading.Thread):
                 flag = 0
 
     def send(self, data, time):
-        print(len(data))
-        for i in range(0, len(data)):
-            result = data[i] + time[i]
-            self.pub_socket.send(result)
-
+        time = np.array2string(time)
+        data = np.array2string(data[:, 0])
+        result = time + data
+        self.pub_socket.send_string(result)
+        print(result)
 
 class wav_handler:
     def __init__(self, file_name):
@@ -258,10 +258,13 @@ class kmf_handler:
             for i in range(0, len(self.time)):
                 if self.time[i] == self.initial_time:
                     self.initial_range = i
+                    self.time_range = self.time_range + int(self.time[0] / 1)
                     break
 
         # cut before first point
-        self.time_range = self.time_range + self.time[0] / 1
+        if len(self.data_maxrange) is not 50:
+            temp = self.time_range + 1
+            self.time_range = np.concatenate((self.time_range, temp))
         self.time_range_afterinitial = self.time_range[self.initial_range:]
         data_maxrange_afterinitial = self.data_maxrange[self.initial_range:]
         temp = np.concatenate((data_maxrange_afterinitial, ([0] * (50 - len(data_maxrange_afterinitial) % 50))), axis=0)
@@ -312,6 +315,7 @@ class kmf_handler:
 
         return self.after_kf, self.time_range_afterinitial
 
+
 def main():
     global flag
 
@@ -348,5 +352,6 @@ def main():
         if send_data is None:
             continue
         zmq.send(send_data, send_time)
+
 
 main()
