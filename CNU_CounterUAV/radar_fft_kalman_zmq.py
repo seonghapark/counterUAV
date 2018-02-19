@@ -66,34 +66,36 @@ class zmq_handler(threading.Thread):
         self.pub_socket.bind("tcp://*:%s" % pub_port)
 
 
-    # def run(self):  # 2개의 라즈베리파이로 분업하기(주고받기) 위해 만들어놓은 함수
-    #     global flag
-    #
-    #     while True:
-    #         string = self.sub_socket.recv()
-    #
-    #         temp = np.fromstring(string, dtype=np.float)
-    #         c = int(len(temp) / 883) #c 전체 데이터를 883으로 나누면 됨(c * 883 배열이므로)
-    #         f = np.empty((c, 882)) #지금 1차원배열로 받으므로 나중에 처리해줘야함
-    #         t = []
-    #         for i in range(0, c):
-    #             f[i] = temp[(i * 883):((i * 883) + 882)]
-    #             t.append(temp[((i + 1) * 883) - 1])
-    #
-    #         if flag is not 0:
-    #             self.temp_tail.add_prev(c, f, t)
-    #             self.count += 1
-    #         else:
-    #             flag = -1
-    #             if self.count is not 0:
-    #                 self.tail.add_list(self.temp_head.next, self.temp_tail.prev)
-    #                 self.count = 0
-    #             self.tail.add_prev(c, f, t)
-    #             flag = 0
+    def run(self):  # 2개의 라즈베리파이로 분업하기(주고받기) 위해 만들어놓은 함수
+        global flag
 
-    def send(self, s, time):
-        data = np.concatenate((s, time), 0)
-        self.pub_socket.send(data)
+        while True:
+            string = self.sub_socket.recv()
+
+            temp = np.fromstring(string, dtype=np.float)
+            c = int(len(temp) / 883) #c 전체 데이터를 883으로 나누면 됨(c * 883 배열이므로)
+            f = np.empty((c, 882)) #지금 1차원배열로 받으므로 나중에 처리해줘야함
+            t = []
+            for i in range(0, c):
+                f[i] = temp[(i * 883):((i * 883) + 882)]
+                t.append(temp[((i + 1) * 883) - 1])
+
+            if flag is not 0:
+                self.temp_tail.add_prev(c, f, t)
+                self.count += 1
+            else:
+                flag = -1
+                if self.count is not 0:
+                    self.tail.add_list(self.temp_head.next, self.temp_tail.prev)
+                    self.count = 0
+                self.tail.add_prev(c, f, t)
+                flag = 0
+
+    def send(self, data, time):
+        print(len(data))
+        for i in range(0, len(data)):
+            result = data[i] + time[i]
+            self.pub_socket.send(result)
 
 
 class wav_handler:
@@ -133,9 +135,9 @@ class fft_handler:
         fsif = np.zeros([100, self.n], dtype=np.float)
 
         for ii in range(11, int((self.start.shape[0] - self.n)), spliter):  # 개선된 탐색문
-            if (self.start[ii] == True) & (self.start[ii - 11 - spliter:ii - spliter].max() == 0):  # if start[ii] is true and the mean of from start[ii-11] to start[ii-1] is zero (All False)
+            if (ii - spliter > 0) & (self.start[ii] == True) & (self.start[ii - 11 - spliter:ii - spliter].max() == False):  # if start[ii] is true and the mean of from start[ii-11] to start[ii-1] is zero (All False)
                 for jj in range(ii - spliter, ii):
-                    if (jj > 0) & (self.start[jj] is True) & (self.start[jj - 11:jj - 1].mean() == 0):
+                    if (self.start[jj] == True) & (self.start[jj - 11:jj - 1].mean() == 0.0):
                         fsif[count, :] = self.rightarray[jj:jj + self.n]  # then copy rightarray from ii to ii+n and paste them to sif[count] --> sif[count] is a list
                         time.append((jj + int(self.start.shape[0]) * self.opp) * 1. / self.fs)  # append time, the time is ii/fs --> few micro seconds (0.0001 sec or so)
                         count = count + 1
@@ -240,7 +242,6 @@ class kmf_handler:
         self.wav_time = wav_time
         self.max_speed = max_speed
         self.time_range = np.linspace(0, wav_time, 50 * wav_time)
-        self.time_range = self.time_range + 1
 
     def setting(self, time, distance, initial_time=-1, initial_distance=-1):
         self.time = time
@@ -250,7 +251,7 @@ class kmf_handler:
 
     def data_process(self):
         if self.initial_time is -1:  # 측정할 필요가 없으면 버림
-            return
+            return None, None
 
         # check start point
         if self.initial_range is None:
@@ -260,7 +261,8 @@ class kmf_handler:
                     break
 
         # cut before first point
-        time_range_afterinitial = self.time_range[self.initial_range:]
+        self.time_range = self.time_range + self.time[0] / 1
+        self.time_range_afterinitial = self.time_range[self.initial_range:]
         data_maxrange_afterinitial = self.data_maxrange[self.initial_range:]
         temp = np.concatenate((data_maxrange_afterinitial, ([0] * (50 - len(data_maxrange_afterinitial) % 50))), axis=0)
 
@@ -302,12 +304,13 @@ class kmf_handler:
                 for i in range(1, last_val - first_val):
                     after_noise_cancel[first_val + i] = after_noise_cancel[first_val] + (after_noise_cancel[last_val] - after_noise_cancel[first_val]) / (last_val - first_val) * i
         
-        self.get_kmf(after_noise_cancel)
+        return self.get_kmf(after_noise_cancel)
 
     def get_kmf(self, after_noise_cancel):
         kf = KalmanFilter(transition_matrices=np.array([[1, 1], [0, 1]]), transition_covariance=([[0.25, 0], [0, 0]]), initial_state_mean=[29, -1.5])
         self.after_kf = kf.em(after_noise_cancel).smooth(after_noise_cancel)[0]
 
+        return self.after_kf, self.time_range_afterinitial
 
 def main():
     global flag
@@ -321,7 +324,6 @@ def main():
     max = max_handler()
     kmf = kmf_handler()
 
-    zmq.start()
     while True:
         # if flag is not 0:  # 공유자원을 사용하기 위한 플래그 코드
         #     continue
@@ -332,13 +334,19 @@ def main():
         #     continue
 
         raw = wav.get_chunk()
+        if raw is None:
+            break
+
         fft.get_line(raw)
         val, t = fft.data_process()
         max.get_data(val, t)
         t, distance = max.print_max()
 
         kmf.setting(t, distance, max.initial_time, max.initial_distance)
-        kmf.data_process()
+        send_data, send_time = kmf.data_process()
 
+        if send_data is None:
+            continue
+        zmq.send(send_data, send_time)
 
 main()
