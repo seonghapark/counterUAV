@@ -1,5 +1,6 @@
 import zmq
 import numpy as np
+import pylab as pl
 from scipy.io import wavfile
 from pykalman import KalmanFilter
 import threading
@@ -97,6 +98,7 @@ class zmq_handler(threading.Thread):
         result = time + data
         self.pub_socket.send_string(result)
         print(result)
+
 
 class wav_handler:
     def __init__(self, file_name):
@@ -259,13 +261,13 @@ class kmf_handler:
                 if self.time[i] == self.initial_time:
                     self.initial_range = i
                     self.time_range = self.time_range + int(self.time[0] / 1)
+                    self.time_range_afterinitial = self.time_range[self.initial_range:]
                     break
 
         # cut before first point
         if len(self.data_maxrange) is not 50:
-            temp = self.time_range + 1
-            self.time_range = np.concatenate((self.time_range, temp))
-        self.time_range_afterinitial = self.time_range[self.initial_range:]
+            self.time_range = self.time_range + 1
+            self.time_range_afterinitial = np.concatenate((self.time_range_afterinitial, self.time_range))
         data_maxrange_afterinitial = self.data_maxrange[self.initial_range:]
         temp = np.concatenate((data_maxrange_afterinitial, ([0] * (50 - len(data_maxrange_afterinitial) % 50))), axis=0)
 
@@ -295,18 +297,24 @@ class kmf_handler:
         afterinitial_hap = np.array(afterinitial_hap[:-1 * (50 - len(data_maxrange_afterinitial) % 50)])
 
         # fill -1 values
-        front_val = 0
+        first_val = 0
         last_val = 0
-        after_noise_cancel = np.zeros((len(afterinitial_hap)))
-        for i in range(0, len(afterinitial_hap)):
+        length = len(afterinitial_hap)
+        after_noise_cancel = np.zeros(length)
+        after_noise_cancel[0] = afterinitial_hap[0]
+        for i in range(1, length):  # 데이터의 노이즈를 제거하는 과정
             after_noise_cancel[i] = afterinitial_hap[i]
-        for i in range(1, len(after_noise_cancel)):
-            if (after_noise_cancel[i] != -1):
+            if after_noise_cancel[i] != -1.0:  # 음수 부분이 노이즈이므로 앞 뒤와 일정한 간격의 값으로 대체해줌
                 first_val = last_val
                 last_val = i
-                for i in range(1, last_val - first_val):
-                    after_noise_cancel[first_val + i] = after_noise_cancel[first_val] + (after_noise_cancel[last_val] - after_noise_cancel[first_val]) / (last_val - first_val) * i
-        
+                gap = (after_noise_cancel[last_val] - after_noise_cancel[first_val]) / (last_val - first_val)
+                for j in range(first_val + 1, last_val):
+                    after_noise_cancel[j] = after_noise_cancel[j - 1] + gap
+                continue
+            if i == length - 1:  # 마지막부분이 음수라면 위에서 처리가 안돼므로 미분값을 더해줌
+                for j in range(first_val + 1, length):
+                    after_noise_cancel[j] = after_noise_cancel[j - 1]
+
         return self.get_kmf(after_noise_cancel)
 
     def get_kmf(self, after_noise_cancel):
