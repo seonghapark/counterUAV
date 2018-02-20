@@ -61,7 +61,7 @@ class zmq_handler(threading.Thread):
         self.temp_tail = Node()
         self.temp_head.setting(self.temp_tail)
 
-        pub_port = 8889
+        pub_port = 8881
         context = zmq.Context()
 
         # zmq pub
