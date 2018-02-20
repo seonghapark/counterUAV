@@ -98,6 +98,7 @@ class zmq_handler(threading.Thread):
         time = np.array2string(time)
         data = np.array2string(data[:, 0])
         result = time + data
+        time.sleep(1)
         self.pub_socket.send_string(result)
         print(result)
 
