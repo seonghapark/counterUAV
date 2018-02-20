@@ -94,10 +94,10 @@ class zmq_handler(threading.Thread):
                 self.tail.add_prev(c, f, t)
                 flag = 0
 
-    def send(self, data, time):
-        time = np.array2string(time)
+    def send(self, data, timedata):
+        timedata = np.array2string(timedata)
         data = np.array2string(data[:, 0])
-        result = time + data
+        result = timedata + data
         time.sleep(1)
         self.pub_socket.send_string(result)
         print(result)
