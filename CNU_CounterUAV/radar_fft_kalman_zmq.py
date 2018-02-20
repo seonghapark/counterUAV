@@ -68,8 +68,6 @@ class zmq_handler(threading.Thread):
         self.pub_socket = context.socket(zmq.PUB)
         self.pub_socket.bind("tcp://*:%s" % pub_port)
 
-#         time.sleep(2)
-
 
     def run(self):  # 2개의 라즈베리파이로 분업하기(주고받기) 위해 만들어놓은 함수
         global flag
@@ -96,12 +94,11 @@ class zmq_handler(threading.Thread):
                 self.tail.add_prev(c, f, t)
                 flag = 0
 
-    def send(self, data, timedata):
-        timedata = np.array2string(timedata)
+    def send(self, data, time):
+        time = np.array2string(time)
         data = np.array2string(data[:, 0])
-        result = timedata + data
+        result = time + data
         self.pub_socket.send_string(result)
-        time.sleep(2)
         print(result)
 
 
