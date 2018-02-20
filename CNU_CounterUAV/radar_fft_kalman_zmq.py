@@ -196,6 +196,8 @@ class max_handler:
         self.data_vallen = len(self.data_val)
 
     def print_max(self):
+        self.time = []
+        self.max_distance = []
         for i in range(0, self.data_tlen - 1):
             self.time.append((self.data_time[i] + self.data_time[i + 1]) / 2)
             max_index = np.argmax(self.data_val[i][self.ignore_index:])
@@ -226,10 +228,6 @@ class max_handler:
                     minimum = abs(long_val[i] - mean)
                     check = 1
 
-        if check is 0:
-            self.time = []
-            self.max_distance = []
-
         self.front_val = val
         self.front_t = t
 
@@ -244,6 +242,7 @@ class kmf_handler:
         self.wav_time = wav_time
         self.max_speed = max_speed
         self.time_range = np.linspace(0, wav_time, 50 * wav_time)
+        self.temp_slice_index = 0
 
     def setting(self, time, distance, initial_time=-1, initial_distance=-1):
         self.time = time
@@ -262,48 +261,43 @@ class kmf_handler:
                     self.initial_range = i
                     self.time_range = self.time_range + int(self.time[0] / 1)
                     self.time_range_afterinitial = self.time_range[self.initial_range:]
+                    data_maxrange_afterinitial = self.data_maxrange[self.initial_range:]
+                    self.avg = self.initial_distance
                     break
-
-        # cut before first point
-        if len(self.data_maxrange) is not 50:
+        else:
+            # cut before first point
             self.time_range = self.time_range + 1
-            self.time_range_afterinitial = np.concatenate((self.time_range_afterinitial, self.time_range))
-        data_maxrange_afterinitial = self.data_maxrange[self.initial_range:]
-        temp = np.concatenate((data_maxrange_afterinitial, ([0] * (50 - len(data_maxrange_afterinitial) % 50))), axis=0)
+            self.time_range_afterinitial = self.time_range
+            data_maxrange_afterinitial = self.data_maxrange
 
         # seperate by time (1 second)
-        afterinitial_sep = np.zeros((int(len(temp) / 50), 50))
-        for i in range(0, int(len(temp) / 50)):
-            for j in range(0, 50):
-                afterinitial_sep[i][j] = temp[i * 50 + j]
+        afterinitial_noise = np.zeros(50)
+        afterinitial_noise = data_maxrange_afterinitial[:]
+        length = len(afterinitial_noise)
 
         # cut lower and upper value
-        avg = self.initial_distance
-        for i in range(0, afterinitial_sep.shape[0]):
-            hap = 0
-            hapcnt = 0
-            for j in range(0, 50):
-                if ((avg - self.max_speed < afterinitial_sep[i][j]) and (afterinitial_sep[i][j] < avg + self.max_speed)):
-                    hap += afterinitial_sep[i][j]
-                    hapcnt += 1
-                else:
-                    afterinitial_sep[i][j] = -1
-            avg = hap / float(hapcnt)
-
-        afterinitial_hap = []
-        for i in range(0, afterinitial_sep.shape[0]):
-            for j in range(0, afterinitial_sep.shape[1]):
-                afterinitial_hap.append(afterinitial_sep[i][j])
-        afterinitial_hap = np.array(afterinitial_hap[:-1 * (50 - len(data_maxrange_afterinitial) % 50)])
+        hap = 0
+        hapcnt = 0
+        for i in range(0, length):
+            if ((self.avg - self.max_speed < afterinitial_noise[i]) and (afterinitial_noise[i] < self.avg + self.max_speed)):
+                hap += afterinitial_noise[i]
+                hapcnt += 1
+            else:
+                afterinitial_noise[i] = -1
+        self.avg = hap / float(hapcnt)
 
         # fill -1 values
         first_val = 0
         last_val = 0
-        length = len(afterinitial_hap)
+        if self.temp_slice_index != 0:  # 앞의 데이터에서 처리하지 못한 부분을 붙여줌
+            afterinitial_noise = np.concatenate((self.temp_slice_data, afterinitial_noise), 0)
+            self.time_range_afterinitial = np.concatenate((self.temp_slice_time, self.time_range_afterinitial), 0)
+            self.temp_slice_index = 0
+        length = len(afterinitial_noise)
         after_noise_cancel = np.zeros(length)
-        after_noise_cancel[0] = afterinitial_hap[0]
+        after_noise_cancel[0] = afterinitial_noise[0]
         for i in range(1, length):  # 데이터의 노이즈를 제거하는 과정
-            after_noise_cancel[i] = afterinitial_hap[i]
+            after_noise_cancel[i] = afterinitial_noise[i]
             if after_noise_cancel[i] != -1.0:  # 음수 부분이 노이즈이므로 앞 뒤와 일정한 간격의 값으로 대체해줌
                 first_val = last_val
                 last_val = i
@@ -311,17 +305,24 @@ class kmf_handler:
                 for j in range(first_val + 1, last_val):
                     after_noise_cancel[j] = after_noise_cancel[j - 1] + gap
                 continue
-            if i == length - 1:  # 마지막부분이 음수라면 위에서 처리가 안돼므로 미분값을 더해줌
-                for j in range(first_val + 1, length):
-                    after_noise_cancel[j] = after_noise_cancel[j - 1]
+            if i == length - 1:  # 마지막이 음수면 처리가 안돼므로 저장한 뒤 다음 데이터와 함께 처리함
+                self.temp_slice_index = last_val
+                self.temp_slice_data = np.zeros(length - self.temp_slice_index + 1)
+                self.temp_slice_data = after_noise_cancel[self.temp_slice_index:]
+                self.temp_slice_time = np.zeros(length - self.temp_slice_index + 1)
+                self.temp_slice_time = self.time_range_afterinitial[self.temp_slice_index:]
 
-        return self.get_kmf(after_noise_cancel)
+
+        if self.temp_slice_index != 0:
+            return self.get_kmf(after_noise_cancel[:self.temp_slice_index + 1]), self.time_range_afterinitial[:self.temp_slice_index + 1]
+        else:
+            return self.get_kmf(after_noise_cancel), self.time_range_afterinitial
 
     def get_kmf(self, after_noise_cancel):
         kf = KalmanFilter(transition_matrices=np.array([[1, 1], [0, 1]]), transition_covariance=([[0.25, 0], [0, 0]]), initial_state_mean=[29, -1.5])
         self.after_kf = kf.em(after_noise_cancel).smooth(after_noise_cancel)[0]
 
-        return self.after_kf, self.time_range_afterinitial
+        return self.after_kf
 
 
 def main():
@@ -359,7 +360,18 @@ def main():
 
         if send_data is None:
             continue
+
+        # 그래프 그리는 코드
+        # pl.plot(send_time, send_data[:, 0], label='after kalman filter')
+        #
+        # pl.xlim(0, 30)
+        # pl.ylim(-10, 70)
+        # pl.legend(loc='upper right')
+        #
+        # pl.show()
+
         zmq.send(send_data, send_time)
+
 
 
 main()
