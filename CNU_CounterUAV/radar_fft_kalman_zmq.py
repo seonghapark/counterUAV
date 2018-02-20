@@ -365,4 +365,5 @@ def main():
         zmq.send(send_data, send_time)
 
 
+print(zmq.pyzmq_version())
 main()
