@@ -66,6 +66,7 @@ class zmq_handler(threading.Thread):
 
         # zmq pub
         self.pub_socket = context.socket(zmq.PUB)
+        self.pub_socket.setsockopt(zmq.LINGER, 0)
         self.pub_socket.bind("tcp://*:%s" % pub_port)
 
 
