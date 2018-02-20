@@ -40,8 +40,9 @@ public class ChartActivity extends AppCompatActivity {
 
                 ZMQ.Context context = ZMQ.context(1);
                 ZMQ.Socket socket = context.socket(ZMQ.SUB);
+
+                socket.connect("tcp://10.182.16.119:8889");
                 socket.subscribe("".getBytes());
-                socket.connect("tcp://192.168.43.42:8889");
 
                 while(!Thread.currentThread().isInterrupted()) {
 
