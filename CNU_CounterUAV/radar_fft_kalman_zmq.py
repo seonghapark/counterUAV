@@ -68,7 +68,7 @@ class zmq_handler(threading.Thread):
         self.pub_socket = context.socket(zmq.PUB)
         self.pub_socket.bind("tcp://*:%s" % pub_port)
 
-        time.sleep(2)
+#         time.sleep(2)
 
 
     def run(self):  # 2개의 라즈베리파이로 분업하기(주고받기) 위해 만들어놓은 함수
