@@ -289,18 +289,23 @@ class kmf_handler:
         # fill -1 values
         first_val = 0
         last_val = 0
+        check = 0
         if self.temp_slice_index != 0:  # 앞의 데이터에서 처리하지 못한 부분을 붙여줌
             afterinitial_noise = np.concatenate((self.temp_slice_data, afterinitial_noise), 0)
             self.time_range_afterinitial = np.concatenate((self.temp_slice_time, self.time_range_afterinitial), 0)
             self.temp_slice_index = 0
+        if afterinitial_noise[0] < 0:   # 첫 값이 음수라면 이전 데이터의 마지막 값을 가져옴
+            afterinitial_noise = np.insert(afterinitial_noise, 0, self.temp_last_data)
+            check = 1
         length = len(afterinitial_noise)
         after_noise_cancel = np.zeros(length)
         after_noise_cancel[0] = afterinitial_noise[0]
-        for i in range(1, length):  # 데이터의 노이즈를 제거하는 과정
+        for i in range(1, length):  # 데이터의 노이즈를 제거  하는 과정
             after_noise_cancel[i] = afterinitial_noise[i]
             if after_noise_cancel[i] != -1.0:  # 음수 부분이 노이즈이므로 앞 뒤와 일정한 간격의 값으로 대체해줌
                 first_val = last_val
                 last_val = i
+                self.temp_last_data = after_noise_cancel[last_val]
                 gap = (after_noise_cancel[last_val] - after_noise_cancel[first_val]) / (last_val - first_val)
                 for j in range(first_val + 1, last_val):
                     after_noise_cancel[j] = after_noise_cancel[j - 1] + gap
@@ -308,15 +313,24 @@ class kmf_handler:
             if i == length - 1:  # 마지막이 음수면 처리가 안돼므로 저장한 뒤 다음 데이터와 함께 처리함
                 self.temp_slice_index = last_val
                 self.temp_slice_data = np.zeros(length - self.temp_slice_index + 1)
-                self.temp_slice_data = after_noise_cancel[self.temp_slice_index:]
+                if check == 0:
+                    self.temp_slice_data = after_noise_cancel[self.temp_slice_index:]
+                else:
+                    self.temp_slice_data = after_noise_cancel[self.temp_slice_index + 1:]
                 self.temp_slice_time = np.zeros(length - self.temp_slice_index + 1)
                 self.temp_slice_time = self.time_range_afterinitial[self.temp_slice_index:]
 
-
-        if self.temp_slice_index != 0:
-            return self.get_kmf(after_noise_cancel[:self.temp_slice_index + 1]), self.time_range_afterinitial[:self.temp_slice_index + 1]
+        if self.temp_slice_index != 0:  # 시작이 음수일 때, 마지막이 음수일 때 등의 조건에 맞게 처리해줌
+            if check == 0:
+                return self.get_kmf(after_noise_cancel[:self.temp_slice_index + 1]), self.time_range_afterinitial[:self.temp_slice_index + 1]
+            else:
+                self.temp_slice_index = self.temp_slice_index - 1
+                return self.get_kmf(after_noise_cancel[1:self.temp_slice_index + 2]), self.time_range_afterinitial[:self.temp_slice_index + 1]
         else:
-            return self.get_kmf(after_noise_cancel), self.time_range_afterinitial
+            if check == 1:
+                return self.get_kmf(after_noise_cancel[1:]), self.time_range_afterinitial
+            else:
+                return self.get_kmf(after_noise_cancel), self.time_range_afterinitial
 
     def get_kmf(self, after_noise_cancel):
         kf = KalmanFilter(transition_matrices=np.array([[1, 1], [0, 1]]), transition_covariance=([[0.25, 0], [0, 0]]), initial_state_mean=[29, -1.5])
@@ -337,6 +351,7 @@ def main():
     max = max_handler()
     kmf = kmf_handler()
 
+    temp = 0
     while True:
         # if flag is not 0:  # 공유자원을 사용하기 위한 플래그 코드
         #     continue
@@ -362,11 +377,12 @@ def main():
             continue
 
         # 그래프 그리는 코드
-        # pl.plot(send_time, send_data[:, 0], label='after kalman filter')
+        # temp = temp + 1
+        # print(temp)
+        # pl.plot(send_time, send_data[:, 0])
         #
         # pl.xlim(0, 30)
         # pl.ylim(-10, 70)
-        # pl.legend(loc='upper right')
         #
         # pl.show()
 
