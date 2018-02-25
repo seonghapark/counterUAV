@@ -240,7 +240,7 @@ class fft_handler:
     def __init__(self):
         self.opp = 0
         self.fs = fs
-        self.Tp = 0.020
+        self.Tp = 0.052
         self.n = int(self.Tp * self.fs);
 
     def dbv(self, input):
@@ -289,7 +289,7 @@ class fft_handler:
 class max_handler:
     def __init__(self):
         self.n = 882
-        self.lfm = [2260E6, 2590E6]  # e6 = * 10^6
+        self.lfm = [2535E6, 2556E6]  # e6 = * 10^6
         self.max_detect = 3E8 / (2 * (self.lfm[1] - self.lfm[0])) * self.n / 2
         self.y_len = 1764
 
@@ -505,17 +505,16 @@ def main():
             continue
 
         # 그래프 그리는 코드
-        # temp = temp + 1
-        # print(temp)
-        # pl.plot(send_time, send_data[:, 0])
-        #
-        # pl.xlim(0, 30)
-        # pl.ylim(-10, 70)
-        #
-        # pl.show()
+        temp = temp + 1
+        print(temp)
+        pl.plot(send_time, send_data[:, 0])
 
-        zmq.send(send_data, send_time)
+        pl.xlim(0, 30)
+        pl.ylim(-10, 70)
 
+        pl.show()
+
+        #zmq.send(send_data, send_time)
 
 
 main()
