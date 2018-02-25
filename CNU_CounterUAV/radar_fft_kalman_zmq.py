@@ -77,10 +77,10 @@ class spi_handler():
         self.setNextOperation(REG_CLOCK, channel, 0)
         self.writeClockRegister(0, clkDivider, updRate)  # 우리는 레이더에서 싱크를 줘서 안써도 될듯?
 
-        self.setNextPoeration(GET_SETUP, channel, 0)
+        self.setNextPoeration(REG_SETUP, channel, 0)
         self.writeSetipRegister(MODE_SELF_CAL, gain, polarity, 0, 0)
 
-        while not slef.dataReady(channel):
+        while not self.dataReady(channel):
             pass
 
     def setNextOperation(self, reg, channel, readWrite):
@@ -90,9 +90,9 @@ class spi_handler():
     # CLKDIS : master clock disable bit
     # CLKDIV : clock divider bit
     def writeClockRegiseter(self, CLKDIS, CLKDIV, outputUpdateRate):
-        r = CLKDIS << 4 | CLKDIV << 3 | ouputUpdateRate
+        r = CLKDIS << 4 | CLKDIV << 3 | outputUpdateRate
         r &= ~(1 << 2)  # clear CLK
-        sekf.spu.xfer([r])
+        self.spu.xfer([r])
 
     def writeSetupRegister(self, operationMode, gain, unipolar, buffered, fsync):
         r = operationMode << 6 | gain << 3 | unipolar << 2 | buffered << 1| fsync
