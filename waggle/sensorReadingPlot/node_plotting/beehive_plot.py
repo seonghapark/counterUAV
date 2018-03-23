@@ -45,7 +45,7 @@ if __name__ == '__main__':
 
 	args = parser.parse_args()
 
-    if not args.node_name:
+	if not args.node_name:
 		print(args)
 		subprocess.call(['./livenode'])
 		exit(1)

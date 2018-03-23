@@ -226,12 +226,12 @@ def read_data(nodeNAME):
 				# 		temperature = float(line.strip().split(';')[-1])/100
 				# 		data_dict[nodeNAME[i]]["irr_tmp"].append(temperature)
 
-001e0610ba46;2018/02/13 00:00:07;coresense:4;frame;Chemsense;o3;3399
-001e0610ba46;2018/02/13 00:00:07;coresense:4;frame;Chemsense;h2s;12920
-001e0610ba46;2018/02/13 00:00:07;coresense:4;frame;Chemsense;reducing_gases;4628
-001e0610ba46;2018/02/13 00:00:07;coresense:4;frame;Chemsense;co;16988
-001e0610ba46;2018/02/13 00:00:07;coresense:4;frame;Chemsense;no2;2231
-001e0610ba46;2018/02/13 00:00:07;coresense:4;frame;Chemsense;so2;4991
-001e0610ba46;2018/02/13 00:00:07;coresense:4;frame;Chemsense;oxidizing_gases;60827
+#001e0610ba46;2018/02/13 00:00:07;coresense:4;frame;Chemsense;o3;3399
+#001e0610ba46;2018/02/13 00:00:07;coresense:4;frame;Chemsense;h2s;12920
+#001e0610ba46;2018/02/13 00:00:07;coresense:4;frame;Chemsense;reducing_gases;4628
+#001e0610ba46;2018/02/13 00:00:07;coresense:4;frame;Chemsense;co;16988
+#001e0610ba46;2018/02/13 00:00:07;coresense:4;frame;Chemsense;no2;2231
+#001e0610ba46;2018/02/13 00:00:07;coresense:4;frame;Chemsense;so2;4991
+#001e0610ba46;2018/02/13 00:00:07;coresense:4;frame;Chemsense;oxidizing_gases;60827
 
 	return data_dict
