@@ -21,46 +21,46 @@
 #  MA 02110-1301, USA.
 #
 #
-#adapted form arduino library :
-#https://github.com/kerrydwong/AD770X
+# adapted form arduino library :
+# https://github.com/kerrydwong/AD770X
 
 import spidev
 
-REG_CMM = 0x0 #communication register 8 bit
-REG_SETUP = 0x1 #setup register 8 bit
-REG_CLOCK = 0x2 #clock register 8 bit
-REG_DATA = 0x3 #data register 16 bit, contains conversion result
-REG_TEST = 0x4 #test register 8 bit, POR 0x0
-REG_NOP = 0x5 #no operation
-REG_OFFSET = 0x6 #offset register 24 bit
-REG_GAIN = 0x7 # gain register 24 bit
+REG_CMM = 0x0   # communication register 8 bit
+REG_SETUP = 0x1     # setup register 8 bit
+REG_CLOCK = 0x2     # clock register 8 bit
+REG_DATA = 0x3  # data register 16 bit, contains conversion result
+REG_TEST = 0x4  # test register 8 bit, POR 0x0
+REG_NOP = 0x5   # no operation
+REG_OFFSET = 0x6    # offset register 24 bit
+REG_GAIN = 0x7  # gain register 24 bit
 
-#channel selection for AD7706 (for AD7705 use the first two channel definitions)
-#CH1 CH0
-CHN_AIN1 = 0x0 #AIN1; calibration register pair 0
-CHN_AIN2 = 0x1 #AIN2; calibration register pair 1
-CHN_COMM = 0x2 #common; calibration register pair 0
-CHN_AIN3 = 0x3 #AIN3; calibration register pair 2
+# channel selection for AD7706 (for AD7705 use the first two channel definitions)
+# CH1 CH0
+CHN_AIN1 = 0x0  # AIN1; calibration register pair 0
+CHN_AIN2 = 0x1  # AIN2; calibration register pair 1
+CHN_COMM = 0x2  # common; calibration register pair 0
+CHN_AIN3 = 0x3  # AIN3; calibration register pair 2
 
-#output update rate
-#CLK FS1 FS0
-UPDATE_RATE_20 = 0x0 # 20 Hz
-UPDATE_RATE_25 = 0x1 # 25 Hz
-UPDATE_RATE_100 = 0x2 # 100 Hz
-UPDATE_RATE_200 = 0x3 # 200 Hz
-UPDATE_RATE_50 = 0x4 # 50 Hz
-UPDATE_RATE_60 = 0x5 # 60 Hz
-UPDATE_RATE_250 = 0x6 # 250 Hz
-UPDATE_RATE_500 = 0x7 # 500 Hz
+# output update rate
+# CLK FS1 FS0
+UPDATE_RATE_20 = 0x0    # 20 Hz
+UPDATE_RATE_25 = 0x1    # 25 Hz
+UPDATE_RATE_100 = 0x2   # 100 Hz
+UPDATE_RATE_200 = 0x3   # 200 Hz
+UPDATE_RATE_50 = 0x4    # 50 Hz
+UPDATE_RATE_60 = 0x5    # 60 Hz
+UPDATE_RATE_250 = 0x6   # 250 Hz
+UPDATE_RATE_500 = 0x7   # 500 Hz
 
-#operating mode options
-#MD1 MD0
-MODE_NORMAL = 0x0 #normal mode
-MODE_SELF_CAL = 0x1 #self-calibration
-MODE_ZERO_SCALE_CAL = 0x2 #zero-scale system calibration, POR 0x1F4000, set FSYNC high before calibration, FSYNC low after calibration
-MODE_FULL_SCALE_CAL = 0x3 #full-scale system calibration, POR 0x5761AB, set FSYNC high before calibration, FSYNC low after calibration
+# operating mode options
+# MD1 MD0
+MODE_NORMAL = 0x0   # normal mode
+MODE_SELF_CAL = 0x1     # self-calibration
+MODE_ZERO_SCALE_CAL = 0x2   # zero-scale system calibration, POR 0x1F4000, set FSYNC high before calibration, FSYNC low after calibration
+MODE_FULL_SCALE_CAL = 0x3   # full-scale system calibration, POR 0x5761AB, set FSYNC high before calibration, FSYNC low after calibration
 
-#gain setting
+# gain setting, 증폭률 = 출력의 크기 / 입력의 크기
 GAIN_1 = 0x0
 GAIN_2 = 0x1
 GAIN_4 = 0x2
@@ -76,9 +76,9 @@ BIPOLAR = 0x1
 CLK_DIV_1 = 0x1
 CLK_DIV_2 = 0x2
 
-MODE = 0b11 #SPI_CPHA | SPI_CPOL
+MODE = 0b11     # SPI_CPHA | SPI_CPOL
 BITS = 8
-SPEED = 50000
+SPEED = 21000000
 DELAY = 10
 
 
@@ -91,7 +91,7 @@ class AD770X():
         self.spi.bits_per_word = BITS
         self.reset()
 
-    def initChannel(self, channel, clkDivider=CLK_DIV_1, polarity=BIPOLAR, gain=GAIN_1, updRate=UPDATE_RATE_25):
+    def initChannel(self, channel, clkDivider=CLK_DIV_1, polarity=BIPOLAR, gain=GAIN_16, updRate=UPDATE_RATE_200):
         self.setNextOperation(REG_CLOCK, channel, 0)
         self.writeClockRegister(0, clkDivider, updRate)
 
