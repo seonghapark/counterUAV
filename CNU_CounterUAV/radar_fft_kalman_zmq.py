@@ -73,9 +73,9 @@ class spi_handler():
         self.spi.bits_per_word = BITS
         self.reset()
 
-    def initChannel(self, channel, clkDivider=CLK_DIV_1, polarity=BIPOLAR, gain=GAIN_1, updRate=UPDATE_RATE_25):
+    def initChannel(self, channel, clkDivider=CLK_DIV_1, polarity=BIPOLAR, gain=GAIN_1, updRate=UPDATE_RATE_500):
         self.setNextOperation(REG_CLOCK, channel, 0)
-        self.writeClockRegister(0, clkDivider, updRate)  # 우리는 레이더에서 싱크를 줘서 안써도 될듯?
+        self.writeClockRegister(0, clkDivider, updRate)
 
         self.setNextOperation(REG_SETUP, channel, 0)
         self.writeSetupRegister(MODE_SELF_CAL, gain, polarity, 0, 0)
@@ -468,7 +468,6 @@ def main():
 
     while True:
         print(spi.readADResultRaw(CHN_AIN1))
-        time.sleep(0.5)
 
     head = Node()
     tail = Node()
