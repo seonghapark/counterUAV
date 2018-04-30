@@ -321,7 +321,8 @@ class max_handler:
         self.max_distance = []
         for i in range(0, self.data_tlen - 1):
             self.time.append((self.data_time[i] + self.data_time[i + 1]) / 2)
-            max_index = np.argmax(self.data_val[i][self.ignore_index:])
+            max_index = np.argmax(self.data_val[i][self.ignore_index:])  # 결과에 시작점을 더해줘야 함
+            print(self.data_val[i][max_index])
             self.max_distance.append(self.ignore_distance + max_index * self.max_detect / self.y_len)
         if (self.initial_time == -1 and self.initial_distance == -1):
             self.set_initial()
@@ -463,12 +464,12 @@ class kmf_handler:
 def main():
     global flag
 
-    spi = spi_handler()
-    spi.initChannel(CHN_AIN1)
-
-    while True:
-        print(spi.readADResultRaw(CHN_AIN1))
-        time.sleep(0.5)
+    # spi = spi_handler()
+    # spi.initChannel(CHN_AIN1)
+    #
+    # while True:
+    #     print(spi.readADResultRaw(CHN_AIN1))
+    #     time.sleep(0.5)
 
     head = Node()
     tail = Node()
