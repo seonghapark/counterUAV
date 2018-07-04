@@ -10,14 +10,12 @@ if len(sys.argv) > 1:
 context = zmq.Context()
 socket = context.socket(zmq.SUB)
 
-print("Collecting updates from weather server...")
-socket.connect("tcp://192.168.43.244:%s" % port)
-
-# Subscribe to zipcode, default is NYC, 10001
-socket.setsockopt(zmq.SUBSCRIBE, "")
+print("Collecting data...")
+socket.connect("tcp://localhost:%s" % port)
+socket.setsockopt(zmq.SUBSCRIBE, b'')
 
 # Process 5 updates
 total_value = 0
 for update_nbr in range (5):
     string = socket.recv()
-    print string
+    print(string)
