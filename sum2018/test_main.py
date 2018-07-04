@@ -15,24 +15,3 @@ if __name__ == "__main__":
     colorgraph = colorgraph_handler()
     colorgraph.draw_graph()
 
-    # #inwav part
-    # print("start inwav part")
-    # file_name = pwd+ '/' +sys.argv[1]
-    # inwav = inwav_handler(file_name)
-    # print("end inwav part")
-
-    # #fft part
-    # print("start fft part")
-    # fft = fft_handler()
-    # count = 0
-    # while(True):
-    #     raw = inwav.get_chunk()
-    #     if raw is None:
-    #         break
-    #     fft.get_line(raw)
-    #     time, result = fft.data_process()
-    #     fft.store_result()
-    #     print("in fft", count, time.shape, result.shape)
-    #     count+=1
-    # print("end fft part")
-

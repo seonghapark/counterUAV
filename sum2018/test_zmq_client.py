@@ -10,7 +10,7 @@ if len(sys.argv) > 1:
 context = zmq.Context()
 socket = context.socket(zmq.SUB)
 
-print "Collecting updates from weather server..."
+print("Collecting updates from weather server...")
 socket.connect("tcp://192.168.43.244:%s" % port)
 
 # Subscribe to zipcode, default is NYC, 10001

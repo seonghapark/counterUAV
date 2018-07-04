@@ -12,5 +12,5 @@ socket = context.socket(zmq.PUB)
 socket.bind("tcp://*:%s" % port)
 
 while True:
-    print socket.send(b"999-We don't want to see this")
+    print(socket.send(b"999-We don't want to see this"))
     time.sleep(1)
