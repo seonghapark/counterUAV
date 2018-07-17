@@ -1,6 +1,6 @@
 
 wav_name='../range_test2.wav'
-wav_time=25
+wav_time=10
 
 printf "Enter option(0,1,2)\n0) draw color graph\n1) draw max graph\n2) after noisecancelling and kf graph\n(option[Enter])\n"
 read option

@@ -80,11 +80,16 @@ class fft_handler(Thread):
         thresh = 0  # Threshold for Sync is 0 Voltage
         self.start = (self.leftarray > thresh)  # An array of True/False --> if leftarray > 0, then true else false
 
+        print(self.start.shape, self.rightarray)
+
     def data_process(self):
         st = t.time()*1000
 
         count = 0
         time = [] # time is a list
+
+        print("data", self.rightarray, self.rightarray.shape, self.n)
+        print("sync", self.start, self.start.shape)
 
         # for ii in range(11, int((self.start.shape[0]-self.n)), 3): 
         #     if (self.start[ii] == True) & (self.start[ii-11:ii-1].mean() == 0): # if start[ii] is true and the mean of from start[ii-11] to start[ii-1] is zero
