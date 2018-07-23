@@ -66,10 +66,28 @@ class rmq_commumication():
         if method is None:
             return None, None
 
-        headers = properties.headers
-        print(headers)
-        self.sync = np.fromstring(np.array(body[:headers['sync']]), dtype=np.bool)
-        self.data = np.fromstring(np.array(body[headers['sync']:]), dtype=np.int16)
+        data = bytearray(body)
+        print(len(data))
+
+        if len(data) < 2:
+            return None, None
+        if (data[0] >> 6) > 0:
+            del data[:1]
+        if len(data) % 2 == 1:
+            del data[-1:]
+
+        values = []
+        sync = []
+        for index in range(0, len(data), 2):
+            high = data[index] & 0x1F
+            low = data[index + 1] & 0x1F
+            values.append(high << 5 | low)  
+            sync.append(True if (data[index] >> 5) == 1 else False)
+
+        self.sync = np.array(sync)
+        self.data = np.array(values)
+
+        print(self.sync, self.data, len(self.sync), len(self.data))
 
         # print(self.sync.shape, self.sync, self.data)
         return self.sync, self.data
@@ -90,18 +108,24 @@ class ifft_handler():
     def data_process(self, sync, data):
         count = 0
         result_time = [] # time is a list
+        self.fs = len(sync)
+        self.n = int(self.Tp*self.fs)
+        self.fsif = np.zeros([10000,self.n], dtype=np.int16) 
+        print(self.fs)
 
         # print(data, data.shape, self.n)
         # print(sync, sync.shape)
 
-        spliter = 50 # to search rising edge
-        for ii in range(11, int((sync.shape[0] - self.n)), spliter):  # improved searching loop
+        spliter = 10 # to search rising edge
+        val = 2
+        for ii in range(val, int((sync.shape[0] - self.n)), spliter):  # improved searching loop
             # if sync[ii - 11 - spliter:ii - spliter] == []:
             #     continue
-            if (ii - spliter > 0) & (sync[ii] == True) & (sync[ii - 11 - spliter:ii - spliter].max() == False):  # if start[ii] is true and the mean of from start[ii-11] to start[ii-1] is zero (All False)
+            if (ii - spliter > 0) & (sync[ii] == True) & (sync[ii - val - spliter:ii - spliter].max() == False):  # if start[ii] is true and the mean of from start[ii-11] to start[ii-1] is zero (All False)
                 for jj in range(ii - spliter, ii):
-                    if (sync[jj] == True) & (sync[jj - 11:jj - 1].mean() == 0.0):
+                    if (sync[jj] == True) & (sync[jj - val:jj - 1].mean() == 0.0):
                         # print(data[jj:jj + self.n], jj)
+                        # print(self.n)
                         self.fsif[count, :] = data[jj:jj + self.n]  # then copy rightarray from ii to ii+n and paste them to sif[count] --> sif[count] is a list
                         result_time.append((jj + int(sync.shape[0]) * self.opp) * 1. / self.fs)  # append time, the time is ii/fs --> few micro seconds (0.0001 sec or so)
                         count = count + 1
@@ -122,8 +146,20 @@ class ifft_handler():
         max_real = real_value.max() 
         result_data = real_value - max_real
 
+        #### 2 pulse cancelor RTI plot
+        sif2 = sif[1:sif.shape[0],:] - sif[:sif.shape[0]-1,:]
+        last = sif[-1,:]
+        sif2 = np.vstack((sif2, last))
+        print(sif2, sif2.shape, sif.shape, zpad)
+        v = np.fft.ifft(sif2, zpad, 1)
+        decibel = self.dbv(v)
+        real_value = decibel[:,0:int(decibel.shape[1] / 2)]
+        max_real = real_value.max() 
+        result_data = real_value - max_real
+
         result_time = result_time[:50]
         result_data = result_data[:50]
+        
         # print(result_time.dtype, result_data.dtype)
         return result_time, result_data
 
@@ -149,18 +185,19 @@ if __name__ == '__main__':
         st = time.time()*1000
         result_time, result_data = ifft.data_process(sync, data)  # It takes approximately 500 ms
         et = time.time()*1000
-        # print('FFT elapsed in %2.f' % (et-st), result_time.shape, result_data.shape)
+        print('FFT elapsed in %2.f' % (et-st), result_time.shape, result_data.shape)
 
         rabbitmq.publish(result_time, result_data)
+        print(result_data)
 
-            # for k in range(0,len(result_time)):
-            #     out_t.write(str(result_time[k])+' ')
-            #     out_t.write("\n")
-            #     out_t.flush()
-            # for k in range(0,len(result_data)):
-            #     out_sm.write(str(result_data[k])+' ')
-            #     out_sm.write("\n")
-            #     out_sm.flush()
+        # for k in range(0,len(result_time)):
+        #     out_t.write(str(result_time[k])+', ')
+        #     out_t.write("\n")
+        #     out_t.flush()
+        # for k in range(0,len(result_data)):
+        #     out_sm.write(str(result_data[k])+', ')
+        #     out_sm.write("\n")
+        #     out_sm.flush()
 
     # except(KeyboardInterrupt, Exception) as ex:
     #     print(ex)

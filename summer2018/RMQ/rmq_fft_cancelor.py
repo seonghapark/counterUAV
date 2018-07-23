@@ -67,7 +67,6 @@ class rmq_commumication():
             return None, None
 
         headers = properties.headers
-        print(headers)
         self.sync = np.fromstring(np.array(body[:headers['sync']]), dtype=np.bool)
         self.data = np.fromstring(np.array(body[headers['sync']:]), dtype=np.int16)
 
@@ -117,13 +116,29 @@ class ifft_handler():
         sif = self.fsif[:count,:] # truncate sif --> remove all redundant array lists in sif, just in case if sif is longer then count
         sif = sif - np.tile(sif.mean(0), [sif.shape[0], 1])
         zpad = int(8 * self.n / 2)  # create the number_of_ifft_entities --> which is the number of vales that has to be created from fft calculation
+        print(sif.shape, zpad)
         decibel = self.dbv(np.fft.ifft(sif, zpad, 1)) # Do fft calculation, and convert results to decibel through dbv function
         real_value = decibel[:,0:int(decibel.shape[1] / 2)] 
         max_real = real_value.max() 
         result_data = real_value - max_real
 
+        # result_time = result_time[:50]
+        # result_data = result_data[:50]
+
+        #### 2 pulse cancelor RTI plot
+        sif2 = sif[1:sif.shape[0],:] - sif[:sif.shape[0]-1,:]
+        last = sif[-1,:]
+        sif2 = np.vstack((sif2, last))
+        print(sif2, sif2.shape, sif.shape, zpad)
+        v = np.fft.ifft(sif2, zpad, 1)
+        decibel = self.dbv(v)
+        real_value = decibel[:,0:int(decibel.shape[1] / 2)]
+        max_real = real_value.max() 
+        result_data = real_value - max_real
+
         result_time = result_time[:50]
         result_data = result_data[:50]
+
         # print(result_time.dtype, result_data.dtype)
         return result_time, result_data
 

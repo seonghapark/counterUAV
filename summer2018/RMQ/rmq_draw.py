@@ -17,6 +17,8 @@ import pika
 import time
 import queue
 
+import argparse
+
 EXCHANGE_NAME = 'radar'
 
 class rmq_commumication(Thread):
@@ -30,6 +32,7 @@ class rmq_commumication(Thread):
 
 
     def get_connection(self, url='amqp://localhost'):
+    # def get_connection(self, url='amqp:192.168.2.177'):
         parameters = pika.URLParameters(url)
 
         parameters.connection_attempts = 5
@@ -88,9 +91,11 @@ class rmq_commumication(Thread):
 class colorgraph_handler():
     def __init__(self):
         ## constants for frame
-        self.n = 882  # Samples per a ramp up-time
-        self.zpad = 3528  # the number of data in 0.08 seconds?
-        self.lfm = [2260E6, 2590E6]  # Radar frequency sweep range
+        # self.n = 882  # Samples per a ramp up-time
+        self.n = int(5512/50)
+        self.zpad = 8 * (self.n / 2)  # the number of data in 0.08 seconds?
+        # self.lfm = [2260E6, 2590E6]  # Radar frequency sweep range
+        self.lfm = [2400E6, 2500E6]
         self.max_detect = 3E8/(2*(self.lfm[1]-self.lfm[0]))*self.n/2 # Max detection distance according to the radar frequency
         self.set_t = 10 #int(sys.argv[1])  # Frame length on x axis
         # self.set_t = 25  # Frame length on x axis --> 25 seconds
@@ -118,6 +123,7 @@ class colorgraph_handler():
 
 
     def set(self, result_time, result_data):
+        print('set')
         if self.previous != result_time.item(0):
             self.previous = result_time.item(0)
             self.q_result_time.put(result_time)
@@ -149,10 +155,11 @@ class colorgraph_handler():
         plt.show()
 
 
-if __name__ == '__main__':  
+if __name__ == '__main__':
     print('Connect RMQ') 
     plot = colorgraph_handler()
     rabbitmq = rmq_commumication(plot)
+    # print(rabbitmq.max_detect)
 
     rabbitmq.start()
 
