@@ -91,8 +91,8 @@ class rmq_commumication(Thread):
 class colorgraph_handler():
     def __init__(self):
         ## constants for frame
-        # self.n = 882  # Samples per a ramp up-time
-        self.n = int(5512/50)
+        self.n = 882  # Samples per a ramp up-time
+        # self.n = int(5512/50)
         self.zpad = 8 * (self.n / 2)  # the number of data in 0.08 seconds?
         # self.lfm = [2260E6, 2590E6]  # Radar frequency sweep range
         self.lfm = [2400E6, 2500E6]
@@ -112,6 +112,7 @@ class colorgraph_handler():
 
         ## constants to plot animation, initialize animate function
         self.fig = plt.figure()
+        self.ax = self.fig.add_subplot(111)
         self.xlabel = plt.xlabel('Time(s)')
         self.ylabel = plt.ylabel('Distance(m)')
         self.ylim = plt.ylim(0,self.max_detect)
@@ -146,12 +147,25 @@ class colorgraph_handler():
     def animate(self, time):
         # print('data', self.data_val, self.data_val.shape)
         self.get()
+
+        time = time+1
+
+        if time > self.set_t:
+            lim = self.ax.set_xlim(time - self.set_t, time)
+        else:
+            # makes it look ok when the animation loops
+            lim = self.ax.set_xlim(0, self.set_t)
+
+        print(self.data_t.shape, self.data_val.shape, self.data_tlen)
         plt.pcolormesh(self.data_t, self.y, self.data_val[:self.data_tlen].T, cmap=self.cmap, norm=self.norm)
         # print('animate ')
 
+        return self.ax
+
     def draw_graph(self):
         # ani = animation.FuncAnimation(self.fig, self.animate, init_func=self.animate_init, interval=1000)#, frames=self.set_t, repeat=False)
-        ani = animation.FuncAnimation(self.fig, self.animate, interval=1000, frames=range(0,5))
+        # ani = animation.FuncAnimation(self.fig, self.animate, interval=1000, frames=range(0,5))
+        ani = animation.FuncAnimation(self.fig, self.animate, interval=1000, blit=False)
         plt.show()
 
 
