@@ -50,8 +50,8 @@ if __name__ == '__main__':
 
     try:
         # divide input
-        for i in range(int(len(read_line)//115200)):
-            raw = read_line[i*115200:(i+1)*115200]
+        for i in range(int(len(read_line)//11025)):
+            raw = read_line[i*11025:(i+1)*11025]
             rabbitmq.publish(raw)
 
     except (KeyboardInterrupt, Exception) as ex:
