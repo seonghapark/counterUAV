@@ -48,8 +48,9 @@ class rmq_commumication():
         max_data = np.array(max_data)
         kalman = np.array(kalman)
         
-        data = result_time.tostring() + result_data.tostring() + kalman.tostring()
-        headers = {'result_time': len(result_time.tostring()), 'result':len(result_data.tostring()), 'kalman': len(kalman.tostring())}
+        data = max_time.tostring() + max_data.tostring() + kalman.tostring()
+        headers = {'max_time': len(max_time.tostring()), 'max_data': len(max_data.tostring()),
+                   'kalman_data': len(kalman.tostring())}
         pika_properties = pika.BasicProperties(headers=headers)
         # pika_properties = pika.BasicProperties(content_type='application/json', headers=headers)
         self.connection.publish(
@@ -76,7 +77,7 @@ class rmq_commumication():
 if __name__ == '__main__':
     print('Connect RMQ')
     rabbitmq = rmq_commumication()
-  
+
     try:
         while(True):
             max_time, max_data = rabbitmq.get()
@@ -86,7 +87,7 @@ if __name__ == '__main__':
 
             st = time.time() * 1000
             #print('max time',max_time)
-            print('max data',max_data)
+            # print('max data',max_data)
             #print('max data',len(max_data))
             #print(type(max_data))
 
@@ -94,7 +95,7 @@ if __name__ == '__main__':
 
             # intial parameters
             n_iter = 10 # Number of iterations in Kalman Filter
-            kalman = []                       
+            kalman = []
                                
             for j in range(len(max_data)):
             #for j in range(50):    
@@ -131,12 +132,14 @@ if __name__ == '__main__':
                         #what[k] : 현재예측상태값 , z는 측정잡음
                         P[k] = (1-K[k])*Pminus[k] # Update the eror covariance
 
-                    #print('xhat :',xhat[n_iter-1])#n_iter한 최종값
+                    # print('xhat :',xhat[n_iter-1])#n_iter한 최종값
+                    kalman.append(xhat[n_iter - 1])
                     #print('xhatminus :',xhatminus[k])
-                    print('xhatminus :',xhat[n_iter-1])
-            kalman.append(xhat[n_iter-1])
-                                     
-        rabbitmq.publish(max_time, max_data, kalman)
+                    # print('xhatminus :',xhat[n_iter-1])
+            # print(max_time)
+            rabbitmq.publish(max_time, max_data, kalman)
+
+
             
     except(KeyboardInterrupt, Exception) as ex:
         print(ex)

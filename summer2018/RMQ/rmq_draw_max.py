@@ -26,6 +26,7 @@ class rmq_commumication(Thread):
         Thread.__init__(self)
         self.max_time = []
         self.max_data = []
+        self.kalman_data = []
         self.plot = plotter
 
         self.channel = self.get_connection()
@@ -57,7 +58,7 @@ class rmq_commumication(Thread):
         channel.queue_bind(
             queue=in_queue,
             exchange=EXCHANGE_NAME,
-            routing_key='max'
+            routing_key='kalman'
         )
         return in_queue
 
@@ -79,11 +80,20 @@ class rmq_commumication(Thread):
             return None
 
         headers = properties.headers
+
         if len(body) != 0:
             self.max_time = np.fromstring(np.array(body[:headers['max_data']]), dtype=np.float64)
             self.max_data = np.fromstring(np.array(body[headers['max_data']:]), dtype=np.float64)
+            self.kalman_data = self.max_data[len(self.max_time):]
+            self.max_data = self.max_data[:len(self.max_time)]
 
-        self.plot.set(self.max_time, self.max_data)
+            # self.max_kalman = np.fromstring(np.array(body[headers['kalman_data']:]), dtype=np.float64)
+
+            # print(self.max_time)
+            # print(self.max_data)
+            # print(self.kalman_data)
+        self.plot.set(self.max_time, self.max_data, self.kalman_data)
+
 
 
 class scattergraph_handler():
@@ -104,12 +114,14 @@ class scattergraph_handler():
         self.data_t = []    # modified
         self.data_val = []
         # self.data_val = np.zeros((50, self.y.shape[0]))
+        self.data_kalman = []
 
         self.q_result_data = queue.Queue()
         self.q_result_time = queue.Queue()
 
         self.q_max_data = queue.Queue()
         self.q_max_time = queue.Queue()
+        self.q_kalman_data = queue.Queue()
 
         self.previous = 0
 
@@ -118,24 +130,26 @@ class scattergraph_handler():
         self.ax = self.fig.add_subplot(111)
         self.xlabel = plt.xlabel('Time(s)')
         self.ylabel = plt.ylabel('Distance(m)')
-        self.ylim = plt.ylim(0,self.max_detect)
+        # self.ylim = plt.ylim(0,self.max_detect)
+        self.ylim = plt.ylim(0,100)
         self.cmap = plt.get_cmap('jet')
         self.norm = colors.BoundaryNorm([i for i in range(-80,1)], ncolors=self.cmap.N, clip=True)
 
 
-    def set(self, max_time, max_data):
+    def set(self, max_time, max_data, kalman_data):
         print('set')
         self.q_max_data.put(max_data)
         self.q_max_time.put(max_time)
+        self.q_kalman_data.put(kalman_data)
 
     def get(self):
         if not self.q_max_time.empty():
             self.data_t = self.q_max_time.get()
             self.data_val = self.q_max_data.get()
+            self.data_kalman = self.q_kalman_data.get()
 
     def animate(self, time):
         self.get()
-
         time = time+1
 
         if time > self.set_t:
@@ -146,7 +160,14 @@ class scattergraph_handler():
 
         # print(len(self.data_t), len(self.data_val))
         # plt.pcolormesh(self.data_t, self.y, self.data_val[:self.data_tlen].T, cmap=self.cmap, norm=self.norm)
-        plt.scatter(self.data_t, self.data_val, marker='o', s=1)
+
+        # print(self.data_t)
+        # print(self.data_val)
+        # print(self.data_kalman, '\n')
+        print(time)
+
+        plt.scatter(self.data_t, self.data_val, marker='o', s=1, c='red', edgecolor='red')
+        plt.scatter(self.data_t, self.data_kalman, marker='o', s=1, c='blue', edgecolor='blue')
 
         return self.ax
 

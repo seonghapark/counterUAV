@@ -102,9 +102,6 @@ if __name__ == '__main__':
                     max_data.append(mean)
                     max_time.append(result_time[i])
 
-            # print(max_data)
-            # print(max_time, '\n')
-
             et = time.time()*1000
             max_data = np.array(max_data)
             max_time = np.array(max_time)
