@@ -24,9 +24,11 @@ EXCHANGE_NAME = 'radar'
 class rmq_commumication(Thread):
     def __init__(self, plotter):
         Thread.__init__(self)
-        self.result_time = []
-        self.result_data = []
+        self.max_time = []
+        self.max_data = []
+
         self.plot = plotter
+
         self.channel = self.get_connection()
         self.in_queue = self.subscribe(self.channel)
 
@@ -56,7 +58,7 @@ class rmq_commumication(Thread):
         channel.queue_bind(
             queue=in_queue,
             exchange=EXCHANGE_NAME,
-            routing_key='ifft'
+            routing_key='max'
         )
         return in_queue
 
@@ -74,24 +76,23 @@ class rmq_commumication(Thread):
 
     def _callback(self, channel, method, properties, body):
         # print("_callback: ", 'channel: ', channel, ' method: ', method, ' properties: ', properties, ' body: ',body)
+        if method is None:
+            return None
+
         headers = properties.headers
-        self.data_disassembler(bytearray(body), headers)
-        self.plot.set(self.result_time, self.result_data)
+        if len(body) != 0:
+            self.max_time = np.fromstring(np.array(body[:headers['max_data']]), dtype=np.float64)
+            self.max_data = np.fromstring(np.array(body[headers['max_data']:]), dtype=np.float64)
+            # self.result_time = self.max_data[len(self.max_time):]
+            self.max_data = np.reshape(self.max_data, (int(len(self.max_data)), int(len(self.max_data) / len(self.max_time))))
+
+        self.plot.set(self.max_time, self.max_data)
 
 
-    def data_disassembler(self, body, properties):
-        self.result_time = np.fromstring(np.array(body[:properties['result_time']]), dtype=np.float64)
-
-        self.result_data = np.fromstring(np.array(body[properties['result_time']:]), dtype=np.float64)
-        self.result_data = np.reshape(self.result_data, (int(len(self.result_time)), int(len(self.result_data)/len(self.result_time))))
-
-        self.plot.set(self.result_time, self.result_data)
-
-
-class colorgraph_handler():
+class scattergraph_handler():
     def __init__(self):
         ## constants for frame
-        self.n = int(5512/50)  # Samples per a ramp up-time(110)
+        self.n = 882  # Samples per a ramp up-time
         # self.n = int(5512/50)
         self.zpad = 8 * (self.n / 2)  # the number of data in 0.08 seconds?
         # self.lfm = [2260E6, 2590E6]  # Radar frequency sweep range
@@ -103,11 +104,17 @@ class colorgraph_handler():
         ## variables for incoming data
         self.y = np.linspace(0,self.max_detect, int(self.zpad/2))
         self.data_tlen = 0
-        self.data_t = np.zeros((50))
-        self.data_val = np.zeros((50, self.y.shape[0]))
+        self.data_t = []    # modified
+        self.data_val = []
+        self.origin_time = []
+        # self.data_val = np.zeros((50, self.y.shape[0]))
 
         self.q_result_data = queue.Queue()
         self.q_result_time = queue.Queue()
+
+        self.q_max_data = queue.Queue()
+        self.q_max_time = queue.Queue()
+
         self.previous = 0
 
         ## constants to plot animation, initialize animate function
@@ -118,34 +125,19 @@ class colorgraph_handler():
         self.ylim = plt.ylim(0,self.max_detect)
         self.cmap = plt.get_cmap('jet')
         self.norm = colors.BoundaryNorm([i for i in range(-80,1)], ncolors=self.cmap.N, clip=True)
-        self.pcolormesh = plt.pcolormesh(self.data_t, self.y, self.data_val.T, cmap=self.cmap, norm=self.norm)
-        self.colorbar = plt.colorbar()
-        self.colorlabel = self.colorbar.set_label('Intensity (dB)')
 
 
-    def set(self, result_time, result_data):
+    def set(self, max_time, max_data):
         print('set')
-        if self.previous != result_time.item(0):
-            self.previous = result_time.item(0)
-            self.q_result_time.put(result_time)
-            self.q_result_data.put(result_data)
-
-        # print(self.previous, result_time.item(0), type(self.previous), type(result_time.item(0)))
-        # time.sleep(0.9)
+        self.q_max_data.put(max_data)
+        self.q_max_time.put(max_time)
 
     def get(self):
-        if not self.q_result_time.empty():
-            # print('get')
-            self.data_t = self.q_result_time.get()
-            self.data_val = self.q_result_data.get()
-
-            self.data_tlen = len(self.data_t)
-
-            # print(self.data_t.item(0))
-        # print(self.data_t, self.data_val)
+        if not self.q_max_time.empty():
+            self.data_t = self.q_max_time.get()
+            self.data_val = self.q_max_data.get()
 
     def animate(self, time):
-        # print('data', self.data_val, self.data_val.shape)
         self.get()
 
         time = time+1
@@ -156,9 +148,8 @@ class colorgraph_handler():
             # makes it look ok when the animation loops
             lim = self.ax.set_xlim(0, self.set_t)
 
-        print(self.data_t.shape, self.data_val.shape, self.data_tlen)
-        plt.pcolormesh(self.data_t, self.y, self.data_val[:self.data_tlen].T, cmap=self.cmap, norm=self.norm)
-        # print('animate ')
+        # draw points of threshold data in color red
+        plt.scatter(self.data_t, self.data_val, marker='o', s=1, color='red', edgecolor='red')
 
         return self.ax
 
@@ -171,16 +162,14 @@ class colorgraph_handler():
 
 if __name__ == '__main__':
     print('Connect RMQ')
-    plot = colorgraph_handler()
-    rabbitmq = rmq_commumication(plot)
-    # print(rabbitmq.max_detect)
-
+    splot = scattergraph_handler()
+    rabbitmq = rmq_commumication(splot)
     rabbitmq.start()
 
     try:
         while(True):
             # print('main while(True)')
-            if plot.q_result_time.empty():
+            if splot.q_max_data.empty():
                 # print('queue is empty')
                 time.sleep(1)
             else:
@@ -189,11 +178,12 @@ if __name__ == '__main__':
 
         # print('while(False)')
 
-        plot.draw_graph()  # It takes approximately 500 ms
+        splot.draw_graph()  # It takes approximately 500 ms
 
     except(KeyboardInterrupt, Exception) as ex:
         print(ex)
     finally:
         print('Close all')
         rabbitmq.channel.close()
+
 

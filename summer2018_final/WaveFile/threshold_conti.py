@@ -45,9 +45,10 @@ class rmq_commumication():
         )
         return in_queue
 
-    def publish(self, max_time, max_data):
-        data = max_time.tostring() + max_data.tostring()
-        headers = {'max_time': len(max_time.tostring()), 'max_data': len(max_data.tostring())}
+    def publish(self, max_time, result_time, max_data):
+        data = max_time.tostring() + result_time.tostring() + max_data.tostring()
+        headers = {'max_time': len(max_time.tostring()), 'result_time': len(result_time.tostring()),
+                   'max_data': len(max_data.tostring())}
         pika_properties = pika.BasicProperties(headers=headers)
         # pika_properties = pika.BasicProperties(content_type='application/json', headers=headers)
 
@@ -87,12 +88,11 @@ if __name__ == '__main__':
                 continue
 
             st = time.time() * 1000
-            # print(result_time)
 
             # extract data based on threshold
-            for i in range(len(result_data)):       # 50
+            for i in range(len(result_data)):
                 thr_data = []
-                for j in range(24, len(result_data[i])):    #1764
+                for j in range(24, len(result_data[i])):
                     if result_data[i][j] > -12:  # TODO threshold
                         thr_data.append(j)
 
@@ -103,15 +103,18 @@ if __name__ == '__main__':
                     temp = 3E8/(2*(2500E6-2400E6))*882/2    # TODO
                     mean = temp / 1764 * mean
                     max_data.append(mean)
-                    max_time.append(result_time[i])
+                    max_time.append(True)
+                else:
+                    max_time.append(False)
+
+
             et = time.time()*1000
 
-            # print(max_data)
-            # print(max_time, '\n')
             max_data = np.array(max_data)
             max_time = np.array(max_time)
+            result_time = np.array(result_time)
 
-            rabbitmq.publish(max_time, max_data)
+            rabbitmq.publish(max_time, result_time, max_data)
 
 
     except(KeyboardInterrupt, Exception) as ex:

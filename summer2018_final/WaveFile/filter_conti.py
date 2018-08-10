@@ -53,16 +53,24 @@ class rmq_commumication():
         method, properties, body = self.connection.basic_get(queue=self.in_queue, no_ack=True)
 
         if method is None:
-            return None, None
+            return None, None, None
         headers = properties.headers
 
         if len(body) != 0:
-            self.max_time = np.fromstring(np.array(body[:headers['max_data']]), dtype=np.float64)
-            self.max_data = np.fromstring(np.array(body[headers['max_data']:]), dtype=np.float64)
+            self.max_time = np.fromstring(np.array(body[:headers['max_time']]), dtype=np.bool)
+            self.result_time = np.fromstring(np.array(body[headers['max_time']:]), dtype=np.float64)
+            self.max_data = self.result_time[len(self.max_time):]
+            self.result_time = self.result_time[:len(self.max_time)]
+
+            # self.max_data = np.reshape(self.max_data,
+            #                            (int(len(self.max_data)), int(len(self.max_data) / len(self.max_time))))
+
         else:
-            return None, None
-        # print(self.sync.shape, self.sync, self.data)
-        return self.max_time, self.max_data
+            return None, None, None
+
+        # print(self.max_time, self.max_data, self.result_time)
+
+        return self.max_time, self.max_data, self.result_time
 
 '''
 Class: ParticleFilter
@@ -143,26 +151,52 @@ class ParticleFilter:
 if __name__ == '__main__':
     print('Connect RMQ')
     rabbitmq = rmq_commumication()
-    pf = ParticleFilter(N=10000, x_range=(0, 200), sensor_err=1, par_std=1)     # out
+    pf = ParticleFilter(N=10000, x_range=(0, 200), sensor_err=1, par_std=1)
+
+    ii = 0
+    check = False
+    last = -1
 
     try:
         while (True):
-            max_time, max_data = rabbitmq.get()
+            max_time, max_data, result_time = rabbitmq.get()
             if max_time is None:
                 time.sleep(0.2)
                 continue
 
             # print("ParticlFilter class implementation")
-            # pf = ParticleFilter(N=10000, x_range=(0, 200), sensor_err=1, par_std=1)   # in
-            pf_data = np.zeros(len(max_data))
-            # pf_data = []
+            # pf_data = np.zeros(len(result_time)
+            j = 0
+            if len(max_data) != 0:     # 1초 단위 안에 값이 있는 경우
+                pf_data = np.zeros(len(result_time))
+                check = True
+                for i in range(len(result_time)):   # 50번 돌면서
+                    if max_time[i]:         # i번 째에 값이 있는 경우
+                        pf_data[i] = pf.filterdata(data=max_data[j])
+                        # pf_data.append(pf.filterdata(data=max_data[j]))
+                        j += 1
+                        last = pf_data[i]
+                        print('1% ', last)
+                    elif last != -1:              # i번 째에는 값이 없으나 그 전에 값이 있었던 경우
+                        pf_data[i] = pf.filterdata(data=last)
+                        # pf_data.append(pf.filterdata(data=last))
+                        last = pf_data[i]
+                        print('2% ', last)
 
-            for i in range(len(max_data)):
-                pf_data[i] = pf.filterdata(data=max_data[i])
-                # pf_data[i].append(pf.filterdata(data=max_data[i]))
+            elif len(max_data) == 0 and check:     # 1초 단위에 값이없으나 그 전에 값이 있는 경우
+                pf_data = np.zeros(len(result_time))
+                for i in range(len(result_time)):
+                    pf_data[i] = pf.filterdata(data=last)
+                    # pf_data.append(pf.filterdata(data=last))
+                    last = pf_data[i]
+                    print('3% ', last)
+            else:
+                pf_data = []
 
-            print(pf_data)
-            rabbitmq.publish(max_time, max_data, pf_data)
+            ii += 1
+            print(pf_data, '\n')
+
+            # rabbitmq.publish(max_time, max_data, pf_data)
 
 
 

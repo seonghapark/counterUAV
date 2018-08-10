@@ -16,7 +16,7 @@ RealTime에서 txt 파일을 11025바이트 단위(1초)로 파싱한다.
 
 ## 3. Threshold
 FFT에서 받아온 데이터(50,1764) 중 Threshold(임계값)을 기준으로 데이터를 추출한 후 특정 시간의 평균을 데이터(1차원 배열)로 전송한다.
-RealTime에서는 Amplitude를 -9이상으로 하였고, 더 큰 값으로 수정할까 고민중입니다.
+RealTime에서는 Amplitude를 -4이상으로 하였습니다.
 WaveFile에서는 Amplitude를 -12이상, Distance를 24이상으로 하였다.
 
 

@@ -114,7 +114,8 @@ class colorgraph_handler():
         self.fig = plt.figure()
         self.xlabel = plt.xlabel('Time(s)')
         self.ylabel = plt.ylabel('Distance(m)')
-        self.ylim = plt.ylim(0,self.max_detect)
+        # self.ylim = plt.ylim(0,self.max_detect)
+        self.ylim = plt.ylim(0,100)             # smodified
         self.cmap = plt.get_cmap('jet')
         self.norm = colors.BoundaryNorm([i for i in range(-80,1)], ncolors=self.cmap.N, clip=True)
         self.pcolormesh = plt.pcolormesh(self.data_t, self.y, self.data_val.T, cmap=self.cmap, norm=self.norm)

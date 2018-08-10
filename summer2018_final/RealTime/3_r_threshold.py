@@ -92,10 +92,10 @@ if __name__ == '__main__':
             st = time.time() * 1000
 
             # extract data based on threshold
-            for i in range(len(result_data)):
+            for i in range(len(result_data)):   # 44 or 46
                 thr_data = []
-                for j in range(24, len(result_data[i])):
-                    if result_data[i][j] > -9:  # TODO threshold
+                for j in range(len(result_data[i])):    # 220 (44=17m)       # TODO threshold for y
+                    if result_data[i][j] > -4:  # TODO threshold for amplitude
                         thr_data.append(j)
 
                 # get the mean(average) of distance(j)
@@ -103,12 +103,9 @@ if __name__ == '__main__':
                     thr_data = np.array(thr_data)
                     mean = thr_data.mean()
                     temp = 3E8/(2*(2500E6-2400E6))*int(5512/50)/2   # TODO
-                    mean = temp / 1764 * mean
+                    mean = temp / 220 * mean
                     max_data.append(mean)
                     max_time.append(result_time[i])
-
-            # print(max_time)
-            print(max_data, '\n')
 
             et = time.time()*1000
 

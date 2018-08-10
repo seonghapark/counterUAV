@@ -87,7 +87,7 @@ class rmq_commumication():
         self.sync = np.array(sync)
         self.data = np.array(values)
 
-        print(self.sync, self.data, len(self.sync), len(self.data))
+        # print(self.sync, self.data, len(self.sync), len(self.data))
 
         # print(self.sync.shape, self.sync, self.data)
         return self.sync, self.data
@@ -111,7 +111,7 @@ class ifft_handler():
         self.fs = len(sync)
         self.n = int(self.Tp*self.fs)
         self.fsif = np.zeros([10000,self.n], dtype=np.int16) 
-        print(self.fs)
+        # print(self.fs)
 
         # print(data, data.shape, self.n)
         # print(sync, sync.shape)
@@ -150,7 +150,7 @@ class ifft_handler():
         sif2 = sif[1:sif.shape[0],:] - sif[:sif.shape[0]-1,:]
         last = sif[-1,:]
         sif2 = np.vstack((sif2, last))
-        print(sif2, sif2.shape, sif.shape, zpad)
+        # print(sif2, sif2.shape, sif.shape, zpad)
         v = np.fft.ifft(sif2, zpad, 1)
         decibel = self.dbv(v)
         real_value = decibel[:,0:int(decibel.shape[1] / 2)]
@@ -185,10 +185,10 @@ if __name__ == '__main__':
         st = time.time()*1000
         result_time, result_data = ifft.data_process(sync, data)  # It takes approximately 500 ms
         et = time.time()*1000
-        print('FFT elapsed in %2.f' % (et-st), result_time.shape, result_data.shape)
+        # print('FFT elapsed in %2.f' % (et-st), result_time.shape, result_data.shape)
 
         rabbitmq.publish(result_time, result_data)
-        print(result_data)
+        # print(result_data)
 
         # for k in range(0,len(result_time)):
         #     out_t.write(str(result_time[k])+', ')
