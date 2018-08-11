@@ -143,6 +143,7 @@ class ParticleFilter:
 if __name__ == '__main__':
     print('Connect RMQ')
     rabbitmq = rmq_commumication()
+    # pf = ParticleFilter(N=10000, x_range=(0, 200), sensor_err=1, par_std=1)     # out
 
     try:
         while (True):
@@ -154,7 +155,7 @@ if __name__ == '__main__':
             # print("ParticlFilter class implementation")
             pf_data = np.zeros(len(max_data))
             # pf_data = []
-            pf = ParticleFilter(N=10000, x_range=(0, 200), sensor_err=1, par_std=1)
+            pf = ParticleFilter(N=10000, x_range=(0, 200), sensor_err=1, par_std=1)   # in
 
             for i in range(len(max_data)):
                 pf_data[i] = pf.filterdata(data=max_data[i])

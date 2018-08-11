@@ -125,8 +125,8 @@ class scattergraph_handler():
         self.ax = self.fig.add_subplot(111)
         self.xlabel = plt.xlabel('Time(s)')
         self.ylabel = plt.ylabel('Distance(m)')
-        # self.ylim = plt.ylim(0,self.max_detect)
-        self.ylim = plt.ylim(0,100)
+        self.ylim = plt.ylim(0,self.max_detect)
+        # self.ylim = plt.ylim(0,100)
         self.cmap = plt.get_cmap('jet')
         self.norm = colors.BoundaryNorm([i for i in range(-80,1)], ncolors=self.cmap.N, clip=True)
 
@@ -158,7 +158,7 @@ class scattergraph_handler():
 
         # draw points of threshold data in color red and draw points of kalman filter in blue
         plt.scatter(self.data_t, self.data_val, marker='o', s=1, c='red', edgecolor='red')
-        plt.scatter(self.data_t, self.data_kalman, marker='o', s=1, c='blue', edgecolor='blue')
+        plt.scatter(self.data_t, self.data_kalman, marker='o', s=1, c='green', edgecolor='green')
 
         # plt.plot(self.data_t, self.data_kalman)
         # plt.scatter(self.data_t, self.data_val, marker='o', s=1, c='red', edgecolor='red')

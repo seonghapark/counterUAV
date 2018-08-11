@@ -91,7 +91,7 @@ class rmq_commumication(Thread):
 class colorgraph_handler():
     def __init__(self):
         ## constants for frame
-        self.n = int(5512/50)  # Samples per a ramp up-time(110)
+        self.n = int(5512/50)  # Samples per a ramp up-time
         # self.n = int(5512/50)
         self.zpad = 8 * (self.n / 2)  # the number of data in 0.08 seconds?
         # self.lfm = [2260E6, 2590E6]  # Radar frequency sweep range
@@ -156,7 +156,7 @@ class colorgraph_handler():
             # makes it look ok when the animation loops
             lim = self.ax.set_xlim(0, self.set_t)
 
-        print(self.data_t.shape, self.data_val.shape, self.data_tlen)
+        # print(self.data_t.shape, self.data_val.shape, self.data_tlen)
         plt.pcolormesh(self.data_t, self.y, self.data_val[:self.data_tlen].T, cmap=self.cmap, norm=self.norm)
         # print('animate ')
 

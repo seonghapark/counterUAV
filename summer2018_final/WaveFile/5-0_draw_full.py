@@ -17,6 +17,8 @@ import pika
 import time
 import queue
 
+import argparse
+
 EXCHANGE_NAME = 'radar'
 
 class rmq_commumication(Thread):
@@ -25,12 +27,12 @@ class rmq_commumication(Thread):
         self.result_time = []
         self.result_data = []
         self.plot = plotter
-
         self.channel = self.get_connection()
         self.in_queue = self.subscribe(self.channel)
 
 
     def get_connection(self, url='amqp://localhost'):
+    # def get_connection(self, url='amqp:192.168.2.177'):
         parameters = pika.URLParameters(url)
 
         parameters.connection_attempts = 5
@@ -72,9 +74,6 @@ class rmq_commumication(Thread):
 
     def _callback(self, channel, method, properties, body):
         # print("_callback: ", 'channel: ', channel, ' method: ', method, ' properties: ', properties, ' body: ',body)
-        if method is None:
-            return None
-
         headers = properties.headers
         self.data_disassembler(bytearray(body), headers)
         self.plot.set(self.result_time, self.result_data)
@@ -93,9 +92,10 @@ class colorgraph_handler():
     def __init__(self):
         ## constants for frame
         self.n = 882  # Samples per a ramp up-time
-        self.zpad = 3528  # the number of data in 0.08 seconds?
-        self.lfm = [2400E6, 2500E6]
+        # self.n = int(5512/50)
+        self.zpad = 8 * (self.n / 2)  # the number of data in 0.08 seconds?
         # self.lfm = [2260E6, 2590E6]  # Radar frequency sweep range
+        self.lfm = [2400E6, 2500E6]
         self.max_detect = 3E8/(2*(self.lfm[1]-self.lfm[0]))*self.n/2 # Max detection distance according to the radar frequency
         self.set_t = 10 #int(sys.argv[1])  # Frame length on x axis
         # self.set_t = 25  # Frame length on x axis --> 25 seconds
@@ -112,10 +112,10 @@ class colorgraph_handler():
 
         ## constants to plot animation, initialize animate function
         self.fig = plt.figure()
+        self.ax = self.fig.add_subplot(111)
         self.xlabel = plt.xlabel('Time(s)')
         self.ylabel = plt.ylabel('Distance(m)')
-        # self.ylim = plt.ylim(0,self.max_detect)
-        self.ylim = plt.ylim(0,100)             # smodified
+        self.ylim = plt.ylim(0,self.max_detect)
         self.cmap = plt.get_cmap('jet')
         self.norm = colors.BoundaryNorm([i for i in range(-80,1)], ncolors=self.cmap.N, clip=True)
         self.pcolormesh = plt.pcolormesh(self.data_t, self.y, self.data_val.T, cmap=self.cmap, norm=self.norm)
@@ -124,6 +124,7 @@ class colorgraph_handler():
 
 
     def set(self, result_time, result_data):
+        print('set')
         if self.previous != result_time.item(0):
             self.previous = result_time.item(0)
             self.q_result_time.put(result_time)
@@ -143,16 +144,28 @@ class colorgraph_handler():
             # print(self.data_t.item(0))
         # print(self.data_t, self.data_val)
 
-    # this code draws whole input data
     def animate(self, time):
         # print('data', self.data_val, self.data_val.shape)
         self.get()
+
+        # time = time+1
+        #
+        # if time > self.set_t:
+        #     lim = self.ax.set_xlim(time - self.set_t, time)
+        # else:
+        #     # makes it look ok when the animation loops
+        #     lim = self.ax.set_xlim(0, self.set_t)
+
+        # print(self.data_t.shape, self.data_val.shape, self.data_tlen)
         plt.pcolormesh(self.data_t, self.y, self.data_val[:self.data_tlen].T, cmap=self.cmap, norm=self.norm)
         # print('animate ')
 
+        return self.ax
+
     def draw_graph(self):
         # ani = animation.FuncAnimation(self.fig, self.animate, init_func=self.animate_init, interval=1000)#, frames=self.set_t, repeat=False)
-        ani = animation.FuncAnimation(self.fig, self.animate, interval=1000, frames=range(0,5))
+        # ani = animation.FuncAnimation(self.fig, self.animate, interval=1000, frames=range(0,5))
+        ani = animation.FuncAnimation(self.fig, self.animate, interval=1000, blit=False)
         plt.show()
 
 
@@ -160,6 +173,7 @@ if __name__ == '__main__':
     print('Connect RMQ')
     plot = colorgraph_handler()
     rabbitmq = rmq_commumication(plot)
+    # print(rabbitmq.max_detect)
 
     rabbitmq.start()
 
@@ -182,5 +196,4 @@ if __name__ == '__main__':
     finally:
         print('Close all')
         rabbitmq.channel.close()
-
 

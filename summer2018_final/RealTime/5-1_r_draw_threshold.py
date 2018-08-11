@@ -119,7 +119,7 @@ class scattergraph_handler():
         self.xlabel = plt.xlabel('Time(s)')
         self.ylabel = plt.ylabel('Distance(m)')
         self.ylim = plt.ylim(0,self.max_detect)
-        # self.ylim = plt.ylim(0,20)
+        # self.ylim = plt.ylim(0,15)
         self.cmap = plt.get_cmap('jet')
         self.norm = colors.BoundaryNorm([i for i in range(-80,1)], ncolors=self.cmap.N, clip=True)
 
@@ -137,13 +137,13 @@ class scattergraph_handler():
     def animate(self, time):
         self.get()
 
-        # time = time+1
-        #
-        # if time > self.set_t:
-        #     lim = self.ax.set_xlim(time - self.set_t, time)
-        # else:
-        #     # makes it look ok when the animation loops
-        #     lim = self.ax.set_xlim(0, self.set_t)
+        time = time+1
+
+        if time > self.set_t:
+            lim = self.ax.set_xlim(time - self.set_t, time)
+        else:
+            # makes it look ok when the animation loops
+            lim = self.ax.set_xlim(0, self.set_t)
 
         # draw points of threshold data in color red
         plt.scatter(self.data_t, self.data_val, marker='o', s=1, c='red', edgecolor='red')

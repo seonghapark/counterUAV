@@ -94,7 +94,7 @@ if __name__ == '__main__':
             # extract data based on threshold
             for i in range(len(result_data)):   # 44 or 46
                 thr_data = []
-                for j in range(len(result_data[i])):    # 220 (44=17m)       # TODO threshold for y
+                for j in range(3, len(result_data[i])//5):    # 220 (44=17m)       # TODO threshold for y
                     if result_data[i][j] > -4:  # TODO threshold for amplitude
                         thr_data.append(j)
 
