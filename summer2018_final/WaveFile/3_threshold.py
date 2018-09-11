@@ -17,7 +17,7 @@ class rmq_commumication():
         self.connection = self.get_connection()
         self.in_queue = self.subscribe(self.connection)
 
-    def get_connection(self, url='amqp://localhost'):
+    def get_connection(self, url='amqp://Jeonghwan.localdomain'):
         parameters = pika.URLParameters(url)
 
         parameters.connection_attempts = 5
@@ -87,7 +87,8 @@ if __name__ == '__main__':
                 continue
 
             st = time.time() * 1000
-            # print(result_time)
+            print("Result time:{}".format(result_time))
+            print("Reulst data:{}".format(result_data))
 
             # extract data based on threshold
             for i in range(len(result_data)):       # 50

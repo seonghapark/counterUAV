@@ -31,7 +31,7 @@ class rmq_commumication(Thread):
         self.in_queue = self.subscribe(self.channel)
 
 
-    def get_connection(self, url='amqp://localhost'):
+    def get_connection(self, url='amqp://Jeonghwan.localdomain'):
     # def get_connection(self, url='amqp:192.168.2.177'):
         parameters = pika.URLParameters(url)
 
@@ -173,7 +173,7 @@ if __name__ == '__main__':
     print('Connect RMQ') 
     plot = colorgraph_handler()
     rabbitmq = rmq_commumication(plot)
-    # print(rabbitmq.max_detect)
+    print(plot.max_detect)
 
     rabbitmq.start()
 

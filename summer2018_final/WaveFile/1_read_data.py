@@ -22,7 +22,7 @@ class rmq_commumication():
 
         self.connection = self.get_connection()
 
-    def get_connection(self, url='amqp://localhost'):
+    def get_connection(self, url='amqp://Jeonghwan.localdomain'):
         parameters = pika.URLParameters(url)
 
         parameters.connection_attempts = 5
@@ -120,7 +120,7 @@ if __name__ == "__main__":
         while(True):
             raw = inwav.get_chunk()
             if raw is None:
-                # print('no data to read')
+                print('no data to read')
                 break
             # data = rabbitmq.data_assembler(raw)
             rabbitmq.publish(raw)
