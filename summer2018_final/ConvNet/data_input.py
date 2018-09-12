@@ -6,6 +6,7 @@ import os
 from random import shuffle
 from tqdm import tqdm
 
+
 IMG_SIZE = 30 #radar data image will be 30 x 30; any changes to the data dimension can be addressed by changing IMG_SIZE
 
 NUM_CLASSES = 4
@@ -21,7 +22,7 @@ def label_img(img, num_classes):
         one_hot_list[1] = 1
     elif word_label = 'tree':
         one_hot_list[2] = 1
-    else
+    else #Others
         one_hot_list[3] = 1
 
     return one_hot_list
