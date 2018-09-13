@@ -35,4 +35,7 @@ def create_train_data():
 
         #data preprocessing (gray scale, edge detection, etc.)
        
-def create_test_data(): 
+def create_test_data():
+
+def DataLoader(batch_idx, batch_size):
+# For loading data for the RadarNet model 

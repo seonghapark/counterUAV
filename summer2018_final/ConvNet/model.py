@@ -11,7 +11,7 @@ class RadarNet():
         self.lr = opt['learning_rate']
         self.dropout = opt['dropout_p']
         self.num_epoch = opt['epoch']
-    
+
     def model(x):
         #Initialze kernels
         conv1_filter = tf.Variable(tf.truncated_normal(shape=[3, 3, 3, 64], mean=0, stddev=0.08))
@@ -67,3 +67,25 @@ class RadarNet():
         out = contrib.layers.fully_connected(inputs=ffn4, num_outputs=self.num_class, activation_fn=None)
 
         return out
+
+    def loss(model_out, y):
+        logit = tf.identity(model_out, name='logits')
+
+        cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logit, labels=y))
+
+        return cost
+
+    def optimizer(cost)
+        optimizer = tf.train.AdamOptimizer(learning_rate=self.lr).minimize(cost)
+
+        return optimizer
+
+    def train_neural_network(session, optimizer, keep_probability, feature_batch, label_batch):
+        session.run(optimizer,
+                feed_dict={x: feature_batch, y: label_batch, dropout_p: keep_probability})
+
+    def print_stats(session, feature_batch, label_batch, cost, accuracy):
+        loss = sess.run(cost, feed_dict={x: feature_batch, y: label_batch, dropout_p: 1.})
+        valid_acc = sess.run(accuracy, feed_dict={x: valid_features, y: valid_labels, dropout_p: 1.})
+
+        print('Loss: {:>10.4f} Validation Accuracy: {:.6f}'.format(loss, valid_acc))
