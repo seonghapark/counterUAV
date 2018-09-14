@@ -33,8 +33,8 @@ class rmq_commumication(Thread):
         self.in_queue = self.subscribe(self.channel)
 
 
-    def get_connection(self, url='amqp://localhost'):
-    # def get_connection(self, url='amqp:192.168.2.177'):
+    # def get_connection(self, url='amqp://localhost'):
+    def get_connection(self, url='amqp://192.168.20.83'):
         parameters = pika.URLParameters(url)
 
         parameters.connection_attempts = 5
@@ -159,11 +159,12 @@ class scattergraph_handler():
 
 
         # draw points of threshold data in color red and draw points of particle filter in green
-        plt.scatter(self.data_t, self.data_val, marker='o', s=1, c='red', edgecolor='red')
-        plt.scatter(self.data_t, self.data_particle, marker='o', s=1, c='green', edgecolor='green')
+        plt.scatter(self.data_t + (time - 1), self.data_val, marker='o', s=1, c='red', edgecolor='red')
+        plt.scatter(self.data_t + (time - 1), self.data_particle, marker='o', s=1, c='green', edgecolor='green')
 
         # plt.plot(self.data_t, self.data_particle, c='blue')
-        # plt.scatter(self.data_t, self.data_val, marker='o', s=1, c='red', edgecolor='red')
+        # plt.scatter(self.data_t, self.data_val, marker='o', s=1, c='red', edgecolor='red')  # scatter plot
+        self.ax.plot(self.data_t + (time - 1), self.data_val)  # line plot
 
         return self.ax
 

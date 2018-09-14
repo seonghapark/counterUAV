@@ -19,7 +19,8 @@ class rmq_commumication():
         self.connection = self.get_connection()
         self.in_queue = self.subscribe(self.connection)
 
-    def get_connection(self, url='amqp://localhost'):
+    # def get_connection(self, url='amqp://localhost'):
+    def get_connection(self, url='amqp://192.168.20.83'):
         parameters = pika.URLParameters(url)
 
         parameters.connection_attempts = 5
@@ -117,7 +118,7 @@ class ifft_handler():
         # print(data, data.shape, self.n)
         # print(sync, sync.shape)
 
-        spliter = 10 # to search rising edge
+        spliter = 50 # to search rising edge
         val = 2
         for ii in range(val, int((sync.shape[0] - self.n)), spliter):  # improved searching loop
             # if sync[ii - 11 - spliter:ii - spliter] == []:
@@ -158,11 +159,13 @@ class ifft_handler():
         max_real = real_value.max() 
         result_data = real_value - max_real
 
+        print(len(result_time), len(result_data))
+
         result_time = result_time[:50]
         result_data = result_data[:50]
 
-        print(result_time)
-        
+        print(result_time, result_data)
+        print(result_time.shape, result_data.shape)
         # print(result_time.dtype, result_data.dtype)
         return result_time, result_data
 

@@ -32,8 +32,8 @@ class rmq_commumication(Thread):
         self.in_queue = self.subscribe(self.channel)
 
 
-    def get_connection(self, url='amqp://localhost'):
-    # def get_connection(self, url='amqp:192.168.2.177'):
+    # def get_connection(self, url='amqp://localhost'):
+    def get_connection(self, url='amqp://192.168.20.83'):
         parameters = pika.URLParameters(url)
 
         parameters.connection_attempts = 5
@@ -115,7 +115,7 @@ class scattergraph_handler():
 
         ## constants to plot animation, initialize animate function
         self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(111)
+        self.ax = self.fig.add_subplot(1, 1, 1)
         self.xlabel = plt.xlabel('Time(s)')
         self.ylabel = plt.ylabel('Distance(m)')
         self.ylim = plt.ylim(0,self.max_detect)
@@ -146,8 +146,9 @@ class scattergraph_handler():
             lim = self.ax.set_xlim(0, self.set_t)
 
         # draw points of threshold data in color red
-        plt.scatter(self.data_t, self.data_val, marker='o', s=1, c='red', edgecolor='red')
-
+        # plt.scatter(self.data_t + (time - 1), self.data_val, marker='o', s=1, c='red', edgecolor='red')  # scatter plot
+        self.ax.plot(self.data_t + (time - 1), self.data_val)  # line plot
+        
         return self.ax
 
     def draw_graph(self):

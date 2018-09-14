@@ -150,14 +150,14 @@ class colorgraph_handler():
 
         time = time+1
 
-        if time > self.set_t:
+        if time >= self.set_t:
             lim = self.ax.set_xlim(time - self.set_t, time)
         else:
             # makes it look ok when the animation loops
             lim = self.ax.set_xlim(0, self.set_t)
 
         # print(self.data_t.shape, self.data_val.shape, self.data_tlen)
-        plt.pcolormesh(self.data_t, self.y, self.data_val[:self.data_tlen].T, cmap=self.cmap, norm=self.norm)
+        plt.pcolormesh(self.data_t + (time - 1), self.y, self.data_val[:self.data_tlen].T, cmap=self.cmap, norm=self.norm)
         # print('animate ')
 
         return self.ax

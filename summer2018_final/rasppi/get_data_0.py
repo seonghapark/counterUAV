@@ -53,7 +53,7 @@ class rmq_commumication():
 
 
 def main(args):
-    binary_data = open('/home/cuav/repo/counterUAV/summer2018_final/RealTime/raw_data/raw_recording.txt','wb')   # Create a file
+    # binary_data = open('/home/cuav/repo/counterUAV/summer2018_final/RealTime/raw_data/raw_recording.txt','wb')   # Create a file
     try:
         data = bytearray()
         rabbitmq = rmq_commumication()
@@ -69,11 +69,11 @@ def main(args):
                 if current_time - start_time > 1.0:
                     print(len(data))
                     if len(data) >= 11025:
-                        rabbitmq.publish(data[:11025])
+                        rabbitmq.publish(data[:11725])
 
-                    lengthMSb = bytes([11025 >> 8])
-                    lengthLSb = bytes([11025 & 0xFF])
-                    binary_data.write(lengthMSb + lengthLSb + data)
+                    # lengthMSb = bytes([11025 >> 8])
+                    # lengthLSb = bytes([11025 & 0xFF])
+                    # binary_data.write(lengthMSb + lengthLSb + data)
 
                     data = bytearray()
                     start_time = current_time
