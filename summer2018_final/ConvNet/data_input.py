@@ -9,8 +9,7 @@ from tqdm import tqdm
 
 IMG_SIZE = 30 #radar data image will be 30 x 30; any changes to the data dimension can be addressed by changing IMG_SIZE
 
-NUM_CLASSES = 4
-TRAIN_DIR = '~/counterUAV/summer2018_final/ConvNet'
+TRAIN_DIR = '~/counterUAV/summer2018_final/ConvNet/Train_Data'
 
 def label_img(img, num_classes):
     #person.2283.png

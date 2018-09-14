@@ -76,13 +76,18 @@ class RadarNet():
         return cost
 
     def optimizer(cost)
-        optimizer = tf.train.AdamOptimizer(learning_rate=self.lr).minimize(cost)
+        optim = tf.train.AdamOptimizer(learning_rate=self.lr).minimize(cost)
 
-        return optimizer
+        return optim
 
-    def train_neural_network(session, optimizer, keep_probability, feature_batch, label_batch):
-        session.run(optimizer,
-                feed_dict={x: feature_batch, y: label_batch, dropout_p: keep_probability})
+    def accuracy(logits):
+        correct_pred = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
+        acc = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy')
+
+        return acc
+ 
+    def train_neural_network(session, optimizer, dropout_p, feature_batch, label_batch):
+        session.run(optimizer, feed_dict={x: feature_batch, y: label_batch, dropout_p: dropout_p})
 
     def print_stats(session, feature_batch, label_batch, cost, accuracy):
         loss = sess.run(cost, feed_dict={x: feature_batch, y: label_batch, dropout_p: 1.})
