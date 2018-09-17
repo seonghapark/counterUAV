@@ -68,8 +68,10 @@ def main(args):
                 current_time = time.time()
                 if current_time - start_time > 1.0:
                     print(len(data))
-                    if len(data) >= 11025:
-                        rabbitmq.publish(data[:11725])
+                    # if len(data) >= 11025:
+                    #     rabbitmq.publish(data[:11025])
+                    if len(data) >= 11724:
+                        rabbitmq.publish(data[:11724])
 
                     # lengthMSb = bytes([11025 >> 8])
                     # lengthLSb = bytes([11025 & 0xFF])

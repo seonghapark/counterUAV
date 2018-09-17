@@ -86,9 +86,12 @@ class sort_by_threshold():
     def sorting(self, result_time, result_data):
         self.max_data = []
         self.max_time = []
-        for i in range(len(result_data)):   # must 50
+        for i in range(len(result_data)):   # must 50  # was 44 or 46
             thr_data = []
-            for j in range(3, len(result_data[i])//5):    # 220 (44=17m)       # TODO threshold for y
+            # for j in range(3, len(result_data[i])//5):    # 220 (44=17m)       # TODO threshold for y  # then 250 (50?)
+            for j in range(len(result_data[i])):
+                # print("result_data[i][j]: ", result_data[i][j])
+                print(len(result_data[i]))
                 if result_data[i][j] > -10:  # TODO threshold for amplitude
                     thr_data.append(j)
 
@@ -96,8 +99,10 @@ class sort_by_threshold():
             if len(thr_data) != 0:
                 thr_data = np.array(thr_data)
                 mean = thr_data.mean()
-                temp = 3E8/(2*(2500E6-2400E6))*int(5512/50)/2   # TODO
-                mean = temp / 220 * mean
+                temp = 3E8/(2*(2500E6-2400E6))*int(5512/50)/2   # TODO --> samplers per a ramp up time / 2 --> 50 ramp ups in a second
+                temp = 3E8/(2*(2500E6-2400E6))*int(11724/50)/2
+                # temp = 3E8/(2*(2500E6-2400E6))*int(11725/50)/2   # TODO
+                mean = temp / 250 * mean
                 self.max_data.append(mean)
                 self.max_time.append(result_time[i])
 
@@ -132,8 +137,8 @@ if __name__ == '__main__':
 
         max_time, max_data = thresh.sorting(result_time, result_data)
         print("max_time: ", max_time, "max_time_length: ", len(max_time), "max_data: ", max_data, "max_data_length: ", len(max_data))
-        max_data = thresh.sort_max(result_time, result_data)
-        print("max_data_length: ", len(max_data))
+        # max_data = thresh.sort_max(result_time, result_data)
+        # print("max_data_length: ", len(max_data))
 
         # # extract data based on threshold
         # print("threshold")
