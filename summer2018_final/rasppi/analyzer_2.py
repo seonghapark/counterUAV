@@ -140,9 +140,6 @@ class ifft_handler():
                         break
 
         # self.opp += 1
-        # result_time = []
-        # for i in range(50):
-        #     result_time.append(self.Tp * (i + 1))
 
         result_time = np.array(result_time)  # change the format of time from list to to np.array
         sif = self.fsif[:count,:] # truncate sif --> remove all redundant array lists in sif, just in case if sif is longer then count
@@ -196,7 +193,7 @@ if __name__ == '__main__':
         st = time.time()*1000
         result_time, result_data = ifft.data_process(sync, data)  # It takes approximately 500 ms
         et = time.time()*1000
-        # print('FFT elapsed in %2.f' % (et-st), result_time.shape, result_data.shape)
+        print('FFT elapsed in %2.f' % (et-st), result_time.shape, result_data.shape)
 
         rabbitmq.publish(result_time, result_data)
         # print(result_data)

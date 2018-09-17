@@ -83,7 +83,6 @@ class sort_by_threshold():
         self.comp_result_data = []
         self.max_idx = []
         self.max_data = []
-        self.max_time = []
         self.local_max = 0
         self.idx = 0
         self.local_mean = 0
@@ -135,7 +134,13 @@ class sort_by_threshold():
         self.max_data = np.array(self.max_data)
         print(self.max_data, len(self.max_data), type(self.max_data), self.max_data[10])
 
-        return self.max_data, r_time
+        self.processed_time = []
+        for i in range(50):
+            temp_time = r_time[i] + 0.0016 * (i + 1)
+            self.processed_time.append(temp_time)
+        print(r_time[i], self.processed_time)
+
+        return self.processed_time, self.max_data
 
 
  
@@ -153,7 +158,13 @@ if __name__ == '__main__':
             continue
 
         # max_time, max_data = thresh.sorting(result_time, result_data)
+        st = time.time()*1000
+
         max_time, max_data = thresh.sort_max(result_time, result_data)
+
+        et = time.time()*1000
+        print('Sorting elapsed in %2.f' % (et-st))
+
         rabbitmq.publish(max_time, max_data)
 
 
