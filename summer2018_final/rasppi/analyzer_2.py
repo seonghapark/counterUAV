@@ -19,8 +19,8 @@ class rmq_commumication():
         self.connection = self.get_connection()
         self.in_queue = self.subscribe(self.connection)
 
-    # def get_connection(self, url='amqp://localhost'):
-    def get_connection(self, url='amqp://192.168.20.83'):
+    def get_connection(self, url='amqp://localhost'):
+    # def get_connection(self, url='amqp://192.168.20.83'):
         parameters = pika.URLParameters(url)
 
         parameters.connection_attempts = 5
@@ -97,7 +97,8 @@ class rmq_commumication():
 class ifft_handler():
     def __init__(self):
         self.opp = 0
-        self.fs = 44100  # Sampling rate
+        # self.fs = 44100  # Sampling rate
+        self.fs = 11724
         self.Tp = 0.020   # Radar ramp up-time
         self.n = int(self.Tp*self.fs)   # Samples per ramp up-time
         self.fsif = np.zeros([10000,self.n], dtype=np.int16)  # Zero array for further data storage
@@ -139,6 +140,10 @@ class ifft_handler():
                         break
 
         # self.opp += 1
+        result_time = []
+        for i in range(50):
+            result_time.append(self.Tp * (i + 1))
+
         result_time = np.array(result_time)  # change the format of time from list to to np.array
         sif = self.fsif[:count,:] # truncate sif --> remove all redundant array lists in sif, just in case if sif is longer then count
         sif = sif - np.tile(sif.mean(0), [sif.shape[0], 1])
