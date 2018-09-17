@@ -16,6 +16,8 @@ def main():
         opt['epoch'] = 10
         opt['model_path'] = save_model_path 
 
+    tf.reset_default_graph()
+
     x = tf.placeholder(tf.float32, shape=(None, 30, 30, 1), name='input')
     y = tf.placeholder(tf.float32, shape=(None, 10), name='output')
 

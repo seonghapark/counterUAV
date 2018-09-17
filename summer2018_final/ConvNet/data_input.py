@@ -3,6 +3,7 @@
 import tensorflow as tf
 import cv2
 import os
+import pickle
 from random import shuffle
 from tqdm import tqdm
 
@@ -37,4 +38,16 @@ def create_train_data():
 def create_test_data():
 
 def DataLoader(batch_idx, batch_size):
-# For loading data for the RadarNet model 
+# For loading data for the RadarNet model
+    if os.path.exists(TRAIN_DIR):
+        try:
+            with open(TRAIN_DIR + '/data_batch_' + str(batch_idx), mode='rb') as file:
+                batch = pickle.load(file, encoding='latin1')
+
+            features = batch['data'].reshape((len(batch['data']), 3, 32, 32)).transpose(0, 2, 3, 1)
+            labels = batch['labels']
+
+        except IOError:
+            print('Failed to read from {}'.format(TRAIN_DIR))
+
+    return batch_features, batch_label
