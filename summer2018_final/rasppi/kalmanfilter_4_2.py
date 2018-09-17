@@ -16,8 +16,8 @@ class rmq_commumication():
         self.connection = self.get_connection()
         self.in_queue = self.subscribe(self.connection)
 
-    def get_connection(self, url='amqp://localhost'):
-    # def get_connection(self, url='amqp://192.168.20.83'):
+    # def get_connection(self, url='amqp://localhost'):
+    def get_connection(self, url='amqp://192.168.20.83'):
         parameters = pika.URLParameters(url)
         parameters.connection_attempts = 5
         parameters.retry_delay = 5.0
@@ -129,8 +129,8 @@ class kalmanfilter():
         return self.xhat
 
 
-# import matplotlib.pyplot as plt
-# plt.rcParams['figure.figsize'] = (10, 8)
+import matplotlib.pyplot as plt
+plt.rcParams['figure.figsize'] = (10, 8)
 
 if __name__ == '__main__':
     print('Connect RMQ')
@@ -153,15 +153,15 @@ if __name__ == '__main__':
             rabbitmq.publish(max_time, max_data, xhat)
 
 
-        # plt.figure()
-        # plt.plot(max_data,'k+',label='noisy measurements')
-        # plt.plot(xhat,'b-',label='a posteri estimate')
-        # # plt.axhline(x,color='g',label='truth value')
-        # plt.legend()
-        # plt.title('Estimate vs. iteration step', fontweight='bold')
-        # plt.xlabel('Iteration')
-        # plt.ylabel('Voltage')
-        # plt.show()
+            # plt.figure()
+            # plt.plot(max_data,'k+',label='noisy measurements')
+            # plt.plot(xhat,'b-',label='a posteri estimate')
+            # # plt.axhline(x,color='g',label='truth value')
+            # plt.legend()
+            # plt.title('Estimate vs. iteration step', fontweight='bold')
+            # plt.xlabel('Iteration')
+            # plt.ylabel('Voltage')
+            # plt.show()
 
             
     except(KeyboardInterrupt, Exception) as ex:
