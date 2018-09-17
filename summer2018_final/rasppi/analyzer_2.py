@@ -13,9 +13,6 @@ EXCHANGE_NAME = 'radar'
 
 class rmq_commumication():
     def __init__(self):
-        # self.sync = np.array([])
-        # self.data = np.array([])
-        # self.sign = 0
         self.connection = self.get_connection()
         self.in_queue = self.subscribe(self.connection)
 
@@ -88,9 +85,6 @@ class rmq_commumication():
         self.sync = np.array(sync)
         self.data = np.array(values)
 
-        # print(self.sync, self.data, len(self.sync), len(self.data))
-
-        # print(self.sync.shape, self.sync, self.data)
         return self.sync, self.data
 
 
@@ -114,10 +108,6 @@ class ifft_handler():
         self.fs = len(sync)
         self.n = int(self.Tp*self.fs)
         self.fsif = np.zeros([10000,self.n], dtype=np.int16) 
-        # print(self.fs)
-
-        # print(data, data.shape, self.n)
-        # print(sync, sync.shape)
 
         spliter = 50 # to search rising edge
         val = 2
@@ -138,8 +128,6 @@ class ifft_handler():
                         count = count + 1
 
                         break
-
-        # self.opp += 1
 
         result_time = np.array(result_time)  # change the format of time from list to to np.array
         sif = self.fsif[:count,:] # truncate sif --> remove all redundant array lists in sif, just in case if sif is longer then count
@@ -180,37 +168,37 @@ if __name__ == '__main__':
     # out_t = open('fft_result_time.txt','w+')   # Create a file
     # out_sm = open('fft_result_data.txt','w+')   # Create a file
 
-    # try:
-    while(True):
-        sync, data = rabbitmq.get()
-        if sync is None:
-            # print('no incomming data', data)
-            time.sleep(0.2)
-            continue
-        # else:
-        #     print('sync: ', sync, ' data: ', data)
+    try:
+        while(True):
+            sync, data = rabbitmq.get()
+            if sync is None:
+                # print('no incomming data', data)
+                time.sleep(0.2)
+                continue
+            # else:
+            #     print('sync: ', sync, ' data: ', data)
 
-        st = time.time()*1000
-        result_time, result_data = ifft.data_process(sync, data)  # It takes approximately 500 ms
-        et = time.time()*1000
-        print('FFT elapsed in %2.f' % (et-st), result_time.shape, result_data.shape)
+            st = time.time()*1000
+            result_time, result_data = ifft.data_process(sync, data)  # It takes approximately 500 ms
+            et = time.time()*1000
+            print('FFT elapsed in %2.f' % (et-st), result_time.shape, result_data.shape)
 
-        rabbitmq.publish(result_time, result_data)
-        # print(result_data)
+            rabbitmq.publish(result_time, result_data)
+            # print(result_data)
 
-        # for k in range(0,len(result_time)):
-        #     out_t.write(str(result_time[k])+', ')
-        #     out_t.write("\n")
-        #     out_t.flush()
-        # for k in range(0,len(result_data)):
-        #     out_sm.write(str(result_data[k])+', ')
-        #     out_sm.write("\n")
-        #     out_sm.flush()
+            # for k in range(0,len(result_time)):
+            #     out_t.write(str(result_time[k])+', ')
+            #     out_t.write("\n")
+            #     out_t.flush()
+            # for k in range(0,len(result_data)):
+            #     out_sm.write(str(result_data[k])+', ')
+            #     out_sm.write("\n")
+            #     out_sm.flush()
 
-    # except(KeyboardInterrupt, Exception) as ex:
-    #     print(ex)
-    # finally:
-    #     print('Close all')
-    #     rabbitmq.connection.close()
+    except(KeyboardInterrupt, Exception) as ex:
+        print(ex)
+    finally:
+        print('Close all')
+        rabbitmq.connection.close()
 
 

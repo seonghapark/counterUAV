@@ -134,15 +134,17 @@ class sort_by_threshold():
         self.max_data = np.array(self.max_data)
         print(self.max_data, len(self.max_data), type(self.max_data), self.max_data[10])
 
-        self.processed_time = []
-        for i in range(50):
-            temp_time = r_time[i] + 0.0016 * (i + 1)
-            self.processed_time.append(temp_time)
-        print(r_time[i], self.processed_time)
+        # self.processed_time = []
+        # for i in range(50):
+        #     temp_time = r_time[i] + 0.0016 * (i + 1)
+        #     self.processed_time.append(temp_time)
+        # print(r_time[i], self.processed_time)
 
-        self.processed_time = np.array(self.processed_time)
+        # self.processed_time = np.array(self.processed_time)
 
-        return self.processed_time, self.max_data
+        # return self.processed_time, self.max_data
+
+        return r_time, self.max_data
 
 
  
@@ -152,26 +154,25 @@ if __name__ == '__main__':
     rabbitmq = rmq_commumication()
     thresh = sort_by_threshold()
 
-    # try:
-    while(True):
-        result_time, result_data = rabbitmq.get()
-        if result_time is None:
-            time.sleep(0.2)
-            continue
+    try:
+        while(True):
+            result_time, result_data = rabbitmq.get()
+            if result_time is None:
+                time.sleep(0.2)
+                continue
 
-        # max_time, max_data = thresh.sorting(result_time, result_data)
-        st = time.time()*1000
+            # max_time, max_data = thresh.sorting(result_time, result_data)
+            st = time.time()*1000
 
-        max_time, max_data = thresh.sort_max(result_time, result_data)
+            max_time, max_data = thresh.sort_max(result_time, result_data)
 
-        et = time.time()*1000
-        print('Sorting elapsed in %2.f' % (et-st))
+            et = time.time()*1000
+            print('Sorting elapsed in %2.f' % (et-st))
 
-        rabbitmq.publish(max_time, max_data)
+            rabbitmq.publish(max_time, max_data)
 
-
-    # except(KeyboardInterrupt, Exception) as ex:
-    #     print(ex)
-    # finally:
-    #     print('Close all')
-    #     rabbitmq.connection.close()
+    except(KeyboardInterrupt, Exception) as ex:
+        print(ex)
+    finally:
+        print('Close all')
+        rabbitmq.connection.close()
