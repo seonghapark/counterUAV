@@ -19,6 +19,8 @@ import queue
 
 import argparse
 
+st = time.time()*1000
+
 EXCHANGE_NAME = 'radar'
 
 class rmq_commumication(Thread):
@@ -31,8 +33,8 @@ class rmq_commumication(Thread):
         self.in_queue = self.subscribe(self.channel)
 
 
-    def get_connection(self, url='amqp://localhost'):
-    # def get_connection(self, url='amqp:192.168.2.177'):
+    # def get_connection(self, url='amqp://localhost'):
+    def get_connection(self, url='amqp://192.168.20.83'):
         parameters = pika.URLParameters(url)
 
         parameters.connection_attempts = 5
@@ -91,8 +93,8 @@ class rmq_commumication(Thread):
 class colorgraph_handler():
     def __init__(self):
         ## constants for frame
-        self.n = int(5512/50)  # Samples per a ramp up-time
-        # self.n = int(5512/50)
+        # self.n = int(5512/50)  # Samples per a ramp up-time
+        self.n = int(11724/50)/2
         self.zpad = 8 * (self.n / 2)  # the number of data in 0.08 seconds?
         # self.lfm = [2260E6, 2590E6]  # Radar frequency sweep range
         self.lfm = [2400E6, 2500E6]
@@ -122,6 +124,7 @@ class colorgraph_handler():
         self.colorbar = plt.colorbar()
         self.colorlabel = self.colorbar.set_label('Intensity (dB)')
 
+        self.processed_time = []
 
     def set(self, result_time, result_data):
         print('set')
@@ -140,6 +143,16 @@ class colorgraph_handler():
             self.data_val = self.q_result_data.get()
 
             self.data_tlen = len(self.data_t)
+
+            self.processed_time = []
+            for i in range(50):
+                temp_time = self.data_t[i] + 0.0016 * (i + 1)
+                self.processed_time.append(temp_time)
+            self.processed_time = np.array(self.processed_time)
+
+            self.data_t = self.processed_time
+
+            print(self.data_t)
 
             # print(self.data_t.item(0))
         # print(self.data_t, self.data_val)
@@ -179,7 +192,6 @@ if __name__ == '__main__':
 
     try:
         while(True):
-            # print('main while(True)')
             if plot.q_result_time.empty():
                 # print('queue is empty')
                 time.sleep(1)
@@ -187,7 +199,8 @@ if __name__ == '__main__':
                 # print('queue is not empty')
                 break
 
-        # print('while(False)')
+        et = time.time()*1000
+        print("Elapsed in %2.f" % (et-st))
 
         plot.draw_graph()  # It takes approximately 500 ms
 
