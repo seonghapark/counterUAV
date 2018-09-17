@@ -140,9 +140,9 @@ class ifft_handler():
                         break
 
         # self.opp += 1
-        result_time = []
-        for i in range(50):
-            result_time.append(self.Tp * (i + 1))
+        # result_time = []
+        # for i in range(50):
+        #     result_time.append(self.Tp * (i + 1))
 
         result_time = np.array(result_time)  # change the format of time from list to to np.array
         sif = self.fsif[:count,:] # truncate sif --> remove all redundant array lists in sif, just in case if sif is longer then count
