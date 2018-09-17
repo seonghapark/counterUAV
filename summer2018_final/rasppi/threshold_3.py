@@ -80,44 +80,63 @@ class rmq_commumication():
 
 class sort_by_threshold():
     def __init__(self):
+        self.comp_result_data = []
+        self.max_idx = []
         self.max_data = []
         self.max_time = []
+        self.local_max = 0
+        self.idx = 0
+        self.local_mean = 0
+
+        self.max_distance = 3E8/(2*(2500E6-2400E6))*int(11724/50)/2
 
     def sorting(self, result_time, result_data):
+        print("in sorting function: ", result_time.shape, result_data.shape)  # (50,), (50, 234) when the sampling rate is 11724
+
         self.max_data = []
-        self.max_time = []
+        self.max_idx = []
+
         for i in range(len(result_data)):   # must 50  # was 44 or 46
-            thr_data = []
             # for j in range(3, len(result_data[i])//5):    # 220 (44=17m)       # TODO threshold for y  # then 250 (50?)
-            for j in range(len(result_data[i])):
-                # print("result_data[i][j]: ", result_data[i][j])
-                print(len(result_data[i]))
-                if result_data[i][j] > -10:  # TODO threshold for amplitude
-                    thr_data.append(j)
+            self.comp_result_data = result_data[i]
+            for i in range(5):
+                self.local_max = self.comp_result_data.max()
+                self.idx = self.comp_result_data.argmax()
+                self.max_idx.append(self.idx)
 
-            # get the mean(average) of distance(j)
-            if len(thr_data) != 0:
-                thr_data = np.array(thr_data)
-                mean = thr_data.mean()
-                temp = 3E8/(2*(2500E6-2400E6))*int(5512/50)/2   # TODO --> samplers per a ramp up time / 2 --> 50 ramp ups in a second
-                temp = 3E8/(2*(2500E6-2400E6))*int(11724/50)/2
-                # temp = 3E8/(2*(2500E6-2400E6))*int(11725/50)/2   # TODO
-                mean = temp / 250 * mean
-                self.max_data.append(mean)
-                self.max_time.append(result_time[i])
+                self.comp_result_data = np.delete(result_data[i], self.idx)
 
-        return self.max_time, self.max_data
+            print(self.max_idx)
+            self.max_idx.remove(max(self.max_idx))
+            self.local_mean = sum(self.max_idx)/len(self.max_idx)
+
+            distance = self.max_distance / 234 * self.local_mean
+            self.max_data.append(distance)
+            self.max_idx = []
+
+        self.max_data = np.array(self.max_data)
+
+        return result_time, self.max_data
 
     def sort_max(self, r_time, r_data):
-        for i in range(len(r_data)):
-            max_value = r_data[i].max()
-            indices = np.where(r_data == r_data.max())
+        print("in sorting function: ", result_time.shape, result_data.shape)  # (50,), (50, 234) when the sampling rate is 11724
 
-            self.max_data.append(max_value)
-            print(max_value, indices)
-        print(max_data)
+        self.max_data = []
 
-        return self.max_data
+        for i in range(len(result_data)):   # must 50  # was 44 or 46
+            self.comp_result_data = result_data[i]
+            self.idx = self.comp_result_data.argmax()
+
+            # Get distance
+            distance = self.max_distance / 234 * self.idx
+            self.max_data.append(distance)
+
+
+        self.max_data = np.array(self.max_data)
+        print(self.max_data, len(self.max_data), type(self.max_data), self.max_data[10])
+
+        return self.max_data, r_time
+
 
  
 
@@ -133,31 +152,8 @@ if __name__ == '__main__':
             time.sleep(0.2)
             continue
 
-        print(len(result_time), len(result_data))
-
-        max_time, max_data = thresh.sorting(result_time, result_data)
-        print("max_time: ", max_time, "max_time_length: ", len(max_time), "max_data: ", max_data, "max_data_length: ", len(max_data))
-        # max_data = thresh.sort_max(result_time, result_data)
-        # print("max_data_length: ", len(max_data))
-
-        # # extract data based on threshold
-        # print("threshold")
-        # for i in range(len(result_data)):   # 44 or 46
-        #     thr_data = []
-        #     for j in range(3, len(result_data[i])//5):    # 220 (44=17m)       # TODO threshold for y
-        #         if result_data[i][j] > -20:  # TODO threshold for amplitude
-        #             print("yes")
-        #             thr_data.append(j)
-
-        #     # get the mean(average) of distance(j)
-        #     if len(thr_data) != 0:
-        #         thr_data = np.array(thr_data)
-        #         mean = thr_data.mean()
-        #         temp = 3E8/(2*(2500E6-2400E6))*int(5512/50)/2   # TODO
-        #         mean = temp / 220 * mean
-        #         max_data.append(mean)
-        #         max_time.append(result_time[i])
-
+        # max_time, max_data = thresh.sorting(result_time, result_data)
+        max_time, max_data = thresh.sort_max(result_time, result_data)
         rabbitmq.publish(max_time, max_data)
 
 
