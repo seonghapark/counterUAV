@@ -140,6 +140,8 @@ class sort_by_threshold():
             self.processed_time.append(temp_time)
         print(r_time[i], self.processed_time)
 
+        self.processed_time = np.array(self.processed_time)
+
         return self.processed_time, self.max_data
 
 
