@@ -139,6 +139,8 @@ if __name__ == '__main__':
 
     try:
         while(True):
+            st = time.time() * 1000
+
             max_time, max_data = rabbitmq.get()
             if max_time is None:
                 time.sleep(0.2)
@@ -152,6 +154,8 @@ if __name__ == '__main__':
             # print(xhat, '\n')
             rabbitmq.publish(max_time, max_data, xhat)
 
+            et = time.time() * 1000
+            print("kalman filter elapsed in %2.f" % (et-st))
 
             # plt.figure()
             # plt.plot(max_data,'k+',label='noisy measurements')

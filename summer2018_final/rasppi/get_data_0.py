@@ -66,7 +66,7 @@ def main(args):
                 else:
                     time.sleep(0.01)
                 current_time = time.time()
-                if current_time - start_time > 1.0:
+                if current_time - start_time > 0.95:
                     print(len(data))
                     # if len(data) >= 11025:
                     #     rabbitmq.publish(data[:11025])

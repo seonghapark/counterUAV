@@ -19,8 +19,6 @@ import queue
 
 import argparse
 
-st = time.time()*1000
-
 EXCHANGE_NAME = 'radar'
 
 class rmq_commumication(Thread):
@@ -192,6 +190,7 @@ if __name__ == '__main__':
 
     try:
         while(True):
+            st = time.time()*1000
             if plot.q_result_time.empty():
                 # print('queue is empty')
                 time.sleep(1)

@@ -90,7 +90,8 @@ class scattergraph_handler():
     def __init__(self):
         ## constants for frame
         # self.n = 882  # Samples per a ramp up-time
-        self.n = int(5512/50)
+        # self.n = int(5512/50)
+        self.n = int(11724/50)
         self.zpad = 8 * (self.n / 2)  # the number of data in 0.08 seconds?
         # self.lfm = [2260E6, 2590E6]  # Radar frequency sweep range
         self.lfm = [2400E6, 2500E6]
@@ -134,6 +135,14 @@ class scattergraph_handler():
             self.data_t = self.q_max_time.get()
             self.data_val = self.q_max_data.get()
 
+            self.processed_time = []
+            for i in range(50):
+                temp_time = self.data_t[i] + 0.0016 * (i + 1)
+                self.processed_time.append(temp_time)
+            self.processed_time = np.array(self.processed_time)
+
+            self.data_t = self.processed_time
+
     def animate(self, time):
         self.get()
 
@@ -146,8 +155,8 @@ class scattergraph_handler():
             lim = self.ax.set_xlim(0, self.set_t)
 
         # draw points of threshold data in color red
-        # plt.scatter(self.data_t + (time - 1), self.data_val, marker='o', s=1, c='red', edgecolor='red')  # scatter plot
-        self.ax.plot(self.data_t + (time - 1), self.data_val)  # line plot
+        plt.scatter(self.data_t + (time - 1), self.data_val, marker='o', s=1, c='red', edgecolor='red')  # scatter plot
+        # self.ax.plot(self.data_t + (time - 1), self.data_val)  # line plot
         
         return self.ax
 

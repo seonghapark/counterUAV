@@ -170,6 +170,8 @@ if __name__ == '__main__':
 
     try:
         while(True):
+            st = time.time() * 1000
+
             sync, data = rabbitmq.get()
             if sync is None:
                 # print('no incomming data', data)
@@ -184,6 +186,9 @@ if __name__ == '__main__':
             print('FFT elapsed in %2.f' % (et-st), result_time.shape, result_data.shape)
 
             rabbitmq.publish(result_time, result_data)
+
+            et = time.time() * 1000
+            print("analyzer elapsed in %2.f" % (et-st))
             # print(result_data)
 
             # for k in range(0,len(result_time)):

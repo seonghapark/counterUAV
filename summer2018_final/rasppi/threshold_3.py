@@ -46,9 +46,9 @@ class rmq_commumication():
         )
         return in_queue
 
-    def publish(self, max_time, max_data):
-        max_data = np.array(max_data)
-        max_time = np.array(max_time)
+    def publish_max(self, max_time, max_data):
+        # max_data = np.array(max_data)
+        # max_time = np.array(max_time)
 
         data = max_time.tostring() + max_data.tostring()
         headers = {'max_time': len(max_time.tostring()), 'max_data': len(max_data.tostring())}
@@ -59,6 +59,22 @@ class rmq_commumication():
             exchange=EXCHANGE_NAME,
             properties=pika_properties,
             routing_key='max',
+            body=data)
+
+
+    def publish_multi(self, max_time, particle_data):
+        # max_data = np.array(max_data)
+        # max_time = np.array(max_time)
+
+        data = max_time.tostring() + max_data.tostring()
+        headers = {'max_time': len(max_time.tostring()), 'particle_data': len(max_data.tostring())}
+        pika_properties = pika.BasicProperties(headers=headers)
+        # pika_properties = pika.BasicProperties(content_type='application/json', headers=headers)
+
+        self.connection.publish(
+            exchange=EXCHANGE_NAME,
+            properties=pika_properties,
+            routing_key='multi',
             body=data)
 
 
@@ -80,44 +96,43 @@ class rmq_commumication():
 
 class sort_by_threshold():
     def __init__(self):
-        self.comp_result_data = []
-        self.max_idx = []
-        self.max_data = []
-        self.local_max = 0
         self.idx = 0
-        self.local_mean = 0
+        self.dist = 0
+
+        self.max_data = []
+        self.comp_result_data = []
+        self.particle_max_data = []
 
         self.max_distance = 3E8/(2*(2500E6-2400E6))*int(11724/50)/2
+        self.unit_dist = self.max_distance / 234
 
-    def sorting(self, result_time, result_data):
+    def sorting(self, result_data):
         print("in sorting function: ", result_time.shape, result_data.shape)  # (50,), (50, 234) when the sampling rate is 11724
 
         self.max_data = []
-        self.max_idx = []
+        self.particle_max_data = []
 
         for i in range(len(result_data)):   # must 50  # was 44 or 46
             # for j in range(3, len(result_data[i])//5):    # 220 (44=17m)       # TODO threshold for y  # then 250 (50?)
             self.comp_result_data = result_data[i]
-            for i in range(5):
-                self.local_max = self.comp_result_data.max()
+            for j in range(50):
                 self.idx = self.comp_result_data.argmax()
-                self.max_idx.append(self.idx)
+
+                # Get distance
+                self.dist = self.unit_dist * self.idx
+                self.max_data.append(self.dist)
 
                 self.comp_result_data = np.delete(result_data[i], self.idx)
 
-            print(self.max_idx)
-            self.max_idx.remove(max(self.max_idx))
-            self.local_mean = sum(self.max_idx)/len(self.max_idx)
+            self.particle_max_data.append(self.max_data)
+            self.max_data = []
 
-            distance = self.max_distance / 234 * self.local_mean
-            self.max_data.append(distance)
-            self.max_idx = []
+        self.particle_max_data = np.array(self.particle_max_data)
+        print(self.particle_max_data, len(self.particle_max_data), type(self.particle_max_data))
 
-        self.max_data = np.array(self.max_data)
+        return self.particle_max_data
 
-        return result_time, self.max_data
-
-    def sort_max(self, r_time, r_data):
+    def sort_max(self, r_data):
         print("in sorting function: ", result_time.shape, result_data.shape)  # (50,), (50, 234) when the sampling rate is 11724
 
         self.max_data = []
@@ -127,24 +142,14 @@ class sort_by_threshold():
             self.idx = self.comp_result_data.argmax()
 
             # Get distance
-            distance = self.max_distance / 234 * self.idx
-            self.max_data.append(distance)
+            self.dist = self.unit_dist * self.idx
+            self.max_data.append(self.dist)
 
 
         self.max_data = np.array(self.max_data)
-        print(self.max_data, len(self.max_data), type(self.max_data), self.max_data[10])
+        # print(self.max_data, len(self.max_data), type(self.max_data), self.max_data[10])
 
-        # self.processed_time = []
-        # for i in range(50):
-        #     temp_time = r_time[i] + 0.0016 * (i + 1)
-        #     self.processed_time.append(temp_time)
-        # print(r_time[i], self.processed_time)
-
-        # self.processed_time = np.array(self.processed_time)
-
-        # return self.processed_time, self.max_data
-
-        return r_time, self.max_data
+        return self.max_data
 
 
  
@@ -161,15 +166,19 @@ if __name__ == '__main__':
                 time.sleep(0.2)
                 continue
 
-            # max_time, max_data = thresh.sorting(result_time, result_data)
             st = time.time()*1000
+            # Sorting for kalman filter
+            max_data = thresh.sort_max(result_data)
 
-            max_time, max_data = thresh.sort_max(result_time, result_data)
+            # Sorting for particle filter
+            particle_data = thresh.sorting(result_data)
+
 
             et = time.time()*1000
             print('Sorting elapsed in %2.f' % (et-st))
 
-            rabbitmq.publish(max_time, max_data)
+            rabbitmq.publish_max(result_time, max_data)
+            rabbitmq.publish_multi(result_time, particle_data)
 
     except(KeyboardInterrupt, Exception) as ex:
         print(ex)
