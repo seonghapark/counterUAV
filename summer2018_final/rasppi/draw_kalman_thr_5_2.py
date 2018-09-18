@@ -79,7 +79,8 @@ class rmq_commumication(Thread):
         if method is None:
             return None
 
-        headers = properties.headers
+        headers = properties.headers  # header = {'property_name': length, 'max_time': 400, 'kalman_data': 400}
+        # print("headers: ", headers, "body: ", body)
 
         if len(body) != 0:
             self.max_time = np.fromstring(np.array(body[:headers['max_data']]), dtype=np.float64)
@@ -94,7 +95,8 @@ class rmq_commumication(Thread):
 class scattergraph_handler():
     def __init__(self):
         ## constants for frame
-        self.n = int(5512/50)  # Samples per a ramp up-time
+        # self.n = int(5512/50)  # Samples per a ramp up-time
+        self.n = int(11724/50)
         # self.n = int(5512/50)
         self.zpad = 8 * (self.n / 2)  # the number of data in 0.08 seconds?
         # self.lfm = [2260E6, 2590E6]  # Radar frequency sweep range
@@ -142,6 +144,15 @@ class scattergraph_handler():
             self.data_t = self.q_max_time.get()
             self.data_val = self.q_max_data.get()
             self.data_kalman = self.q_kalman_data.get()
+
+            self.processed_time = []
+            for i in range(50):
+                temp_time = self.data_t[i] + 0.0016 * (i + 1)
+                self.processed_time.append(temp_time)
+            self.processed_time = np.array(self.processed_time)
+
+            self.data_t = self.processed_time
+
 
     def animate(self, time):
         self.get()
