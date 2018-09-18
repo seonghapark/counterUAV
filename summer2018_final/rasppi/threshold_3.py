@@ -66,8 +66,8 @@ class rmq_commumication():
         # max_data = np.array(max_data)
         # max_time = np.array(max_time)
 
-        data = max_time.tostring() + max_data.tostring()
-        headers = {'max_time': len(max_time.tostring()), 'particle_data': len(max_data.tostring())}
+        data = max_time.tostring() + particle_data.tostring()
+        headers = {'max_time': len(max_time.tostring()), 'particle_data': len(particle_data.tostring())}
         pika_properties = pika.BasicProperties(headers=headers)
         # pika_properties = pika.BasicProperties(content_type='application/json', headers=headers)
 
