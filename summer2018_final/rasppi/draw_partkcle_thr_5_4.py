@@ -87,6 +87,8 @@ class rmq_commumication(Thread):
             self.particle_data = self.max_data[len(self.max_time):]
             self.max_data = self.max_data[:len(self.max_time)]
 
+        print(len(self.max_time), len(self.max_data), len(self.particle_data))
+
         self.plot.set(self.max_time, self.max_data, self.particle_data)
 
 
@@ -146,6 +148,8 @@ class scattergraph_handler():
     def animate(self, time):
         self.get()
 
+        print(len(self.data_t), len(self.data_val), len(self.data_particle))
+
         time = time+1
 
         if time > self.set_t:
@@ -164,7 +168,7 @@ class scattergraph_handler():
 
         # plt.plot(self.data_t, self.data_particle, c='blue')
         # plt.scatter(self.data_t, self.data_val, marker='o', s=1, c='red', edgecolor='red')  # scatter plot
-        self.ax.plot(self.data_t + (time - 1), self.data_val)  # line plot
+        self.ax.plot(self.data_t + (time - 1), self.data_particle)  # line plot
 
         return self.ax
 

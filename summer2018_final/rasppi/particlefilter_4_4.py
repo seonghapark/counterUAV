@@ -9,7 +9,8 @@ class rmq_commumication():
         self.connection = self.get_connection()
         self.in_queue = self.subscribe(self.connection)
 
-    def get_connection(self, url='amqp://localhost'):
+    # def get_connection(self, url='amqp://localhost'):
+    def get_connection(self, url='amqp://192.168.20.83'):
         parameters = pika.URLParameters(url)
         parameters.connection_attempts = 5
         parameters.retry_delay = 5.0
@@ -29,7 +30,7 @@ class rmq_commumication():
         channel.queue_bind(
             queue=in_queue,
             exchange=EXCHANGE_NAME,
-            routing_key='max'
+            routing_key='multi'
         )
         return in_queue
 
@@ -56,12 +57,16 @@ class rmq_commumication():
             return None, None
         headers = properties.headers
 
+        print(headers)
+
         if len(body) != 0:
-            self.max_time = np.fromstring(np.array(body[:headers['max_data']]), dtype=np.float64)
-            self.max_data = np.fromstring(np.array(body[headers['max_data']:]), dtype=np.float64)
+            self.max_time = np.fromstring(np.array(body[:headers['max_time']]), dtype=np.float64)
+            self.max_data = np.fromstring(np.array(body[headers['max_time']:]), dtype=np.float64)
+            self.max_data = np.reshape(self.max_data, (int(len(self.max_time)), int(len(self.max_data)/len(self.max_time))))
         else:
             return None, None
-        # print(self.sync.shape, self.sync, self.data)
+
+        # print("self.max_data: ", self.max_data, type(self.max_data), self.max_data.shape)
         return self.max_time, self.max_data
 
 '''
@@ -85,18 +90,18 @@ class ParticleFilter:
     def __init__(self, N, x_range, sensor_err, par_std):
         self.N = N
         self.x_range = x_range
-        self.create_uniform_particles()
         self.weights = np.zeros(N)
         self.u = 0.00
         self.initial_pose = 0
         self.sensor_std_err = sensor_err
         self.particle_std = par_std
 
+        self.particles = []
+
     # create particles uniformly in x range
     def create_uniform_particles(self):
         self.particles = np.empty((self.N, 1))
         self.particles[:, 0] = uniform(self.x_range[0], self.x_range[1], size=self.N)
-        return self.particles
 
     # predict with normal distribution(randn)
     def predict(self, particles, std, u, dt=1.):
@@ -104,11 +109,12 @@ class ParticleFilter:
         self.particles[:, 0] += u + (randn(self.N) * std)
 
     # update weights based on z(input)
-    def update(self, particles, weights, z, R, init_var):
+    def update(self, particles, weights, z, R):
         self.weights.fill(1.)
 
-        self.distance = np.linalg.norm(self.particles[:, 0:1] - init_var, axis=1)
-        self.weights *= scipy.stats.norm(self.distance, R).pdf(z)
+        for i in range(len(z)):
+            self.distance = np.linalg.norm(self.particles[:, 0:1] - self.initial_pose, axis=1)
+            self.weights *= scipy.stats.norm(self.distance, R).pdf(z[i])
 
         self.weights += 1.e-300  # avoid round-off to zero
         self.weights /= sum(self.weights)  # normalize
@@ -131,8 +137,9 @@ class ParticleFilter:
 
     # procedure of particle filter
     def filterdata(self, data):
+        self.create_uniform_particles()
         self.predict(self.particles, u=self.u, std=self.particle_std)
-        self.update(self.particles, self.weights, z=data, R=self.sensor_std_err, init_var=self.initial_pose)
+        self.update(self.particles, self.weights, z=data, R=self.sensor_std_err)
         if self.neff(self.weights) < self.N / 2:  # Perform systematic resampling.
             self.indexes = systematic_resample(self.weights)
             self.resample_from_index(self.particles, self.weights, self.indexes)
@@ -145,29 +152,30 @@ if __name__ == '__main__':
     rabbitmq = rmq_commumication()
     # pf = ParticleFilter(N=10000, x_range=(0, 200), sensor_err=1, par_std=1)     # out
 
-    try:
-        while (True):
-            max_time, max_data = rabbitmq.get()
-            if max_time is None:
-                time.sleep(0.2)
-                continue
+    # try:
+    while (True):
+        max_time, max_data = rabbitmq.get()
+        if max_time is None:
+            time.sleep(0.2)
+            continue
 
-            # print("ParticlFilter class implementation")
-            pf_data = np.zeros(len(max_data))
-            # pf_data = []
-            pf = ParticleFilter(N=10000, x_range=(0, 200), sensor_err=1, par_std=1)   # in
+        # print("ParticlFilter class implementation")
+        pf_data = np.zeros(len(max_data))
+        # pf_data = []
+        pf = ParticleFilter(N=10000, x_range=(0, 200), sensor_err=1, par_std=1)   # in
 
-            for i in range(len(max_data)):
-                pf_data[i] = pf.filterdata(data=max_data[i])
-                # pf_data[i].append(pf.filterdata(data=max_data[i]))
+        for i in range(len(max_data)):
+            # print(max_data[i])
+            pf_data[i] = pf.filterdata(data=max_data[i])
+            # pf_data[i].append(pf.filterdata(data=max_data[i]))
 
-            print(pf_data)
-            rabbitmq.publish(max_time, max_data, pf_data)
+        print("this is the result data: ", pf_data, len(max_time), len(max_data), len(pf_data))
+        rabbitmq.publish(max_time, max_data, pf_data)
 
 
 
-    except(KeyboardInterrupt, Exception) as ex:
-        print(ex)
-    finally:
-        print('Close all')
-        rabbitmq.connection.close()
+    # except(KeyboardInterrupt, Exception) as ex:
+    #     print(ex)
+    # finally:
+    #     print('Close all')
+    #     rabbitmq.connection.close()
