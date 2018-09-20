@@ -9,8 +9,8 @@ class rmq_commumication():
         self.connection = self.get_connection()
         self.in_queue = self.subscribe(self.connection)
 
-    # def get_connection(self, url='amqp://localhost'):
-    def get_connection(self, url='amqp://192.168.20.83'):
+    def get_connection(self, url='amqp://localhost'):
+    # def get_connection(self, url='amqp://192.168.20.83'):
         parameters = pika.URLParameters(url)
         parameters.connection_attempts = 5
         parameters.retry_delay = 5.0
@@ -34,14 +34,14 @@ class rmq_commumication():
         )
         return in_queue
 
-    def publish(self, max_time, max_data, pf_data):
-        max_time = np.array(max_time)
-        max_data = np.array(max_data)
-        pf_data = np.array(pf_data)
+    def publish(self, max_time, pf_data, max_data):
+        # max_time = np.array(max_time)
+        # pf_data = np.array(pf_data)
+        # max_data = np.array(max_data)
 
-        data = max_time.tostring() + max_data.tostring() + pf_data.tostring()
-        headers = {'max_time': len(max_time.tostring()), 'max_data': len(max_data.tostring()),
-                   'particle_data': len(pf_data.tostring())}
+        data = max_time.tostring() + pf_data.tostring() + max_data.tostring()
+        headers = {'max_time': len(max_time.tostring()),'particle_data': len(pf_data.tostring()), 'max_data': len(max_data.tostring())}
+        # print("publish headers: ", headers)
         pika_properties = pika.BasicProperties(headers=headers)
         # pika_properties = pika.BasicProperties(content_type='application/json', headers=headers)
         self.connection.publish(
@@ -57,7 +57,7 @@ class rmq_commumication():
             return None, None
         headers = properties.headers
 
-        print(headers)
+        # print("get headers: ", headers)
 
         if len(body) != 0:
             self.max_time = np.fromstring(np.array(body[:headers['max_time']]), dtype=np.float64)
@@ -152,30 +152,37 @@ if __name__ == '__main__':
     rabbitmq = rmq_commumication()
     # pf = ParticleFilter(N=10000, x_range=(0, 200), sensor_err=1, par_std=1)     # out
 
-    # try:
-    while (True):
-        max_time, max_data = rabbitmq.get()
-        if max_time is None:
-            time.sleep(0.2)
-            continue
+    try:
+        while (True):
+            max_time, max_data = rabbitmq.get()
+            if max_time is None:
+                time.sleep(0.2)
+                continue
 
-        # print("ParticlFilter class implementation")
-        pf_data = np.zeros(len(max_data))
-        # pf_data = []
-        pf = ParticleFilter(N=10000, x_range=(0, 200), sensor_err=1, par_std=1)   # in
+            st = time.time() * 1000
 
-        for i in range(len(max_data)):
-            # print(max_data[i])
-            pf_data[i] = pf.filterdata(data=max_data[i])
-            # pf_data[i].append(pf.filterdata(data=max_data[i]))
+            # print("ParticlFilter class implementation")
+            pf_data = np.zeros(len(max_data))
+            # pf_data = []
+            pf = ParticleFilter(N=10000, x_range=(0, 50), sensor_err=1, par_std=1)   # in
 
-        print("this is the result data: ", pf_data, len(max_time), len(max_data), len(pf_data))
-        rabbitmq.publish(max_time, max_data, pf_data)
+            for i in range(len(max_data)):
+                # print(max_data[i])
+                pf_data[i] = pf.filterdata(data=max_data[i])
+                # pf_data[i].append(pf.filterdata(data=max_data[i]))
+
+            et = time.time() * 1000
+            print("Particle filter elapsed in %2.f" % (et-st))
+
+            # print("this is the result data: ", pf_data, len(max_time), len(max_data), len(pf_data))
+            # print("this is the result data: ", len(max_time), len(max_data), len(pf_data), max_time.shape, max_data.shape, pf_data.shape)
+            # print(pf_data)
+            rabbitmq.publish(max_time, pf_data, max_data)
 
 
 
-    # except(KeyboardInterrupt, Exception) as ex:
-    #     print(ex)
-    # finally:
-    #     print('Close all')
-    #     rabbitmq.connection.close()
+    except(KeyboardInterrupt, Exception) as ex:
+        print(ex)
+    finally:
+        print('Close all')
+        rabbitmq.connection.close()

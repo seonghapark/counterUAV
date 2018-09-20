@@ -82,12 +82,13 @@ class rmq_commumication(Thread):
         headers = properties.headers
 
         if len(body) != 0:
-            self.max_time = np.fromstring(np.array(body[:headers['max_data']]), dtype=np.float64)
-            self.max_data = np.fromstring(np.array(body[headers['max_data']:]), dtype=np.float64)
-            self.particle_data = self.max_data[len(self.max_time):]
-            self.max_data = self.max_data[:len(self.max_time)]
+            self.max_time = np.fromstring(np.array(body[:headers['max_time']]), dtype=np.float64)
+            self.max_data = np.fromstring(np.array(body[headers['max_time']:]), dtype=np.float64)
+            self.particle_data = self.max_data[:len(self.max_time)]
+            self.max_data = self.max_data[len(self.max_time):]
+            self.max_data = np.reshape(self.max_data, (int(len(self.max_time)), int(len(self.max_data)/len(self.max_time))))
 
-        print(len(self.max_time), len(self.max_data), len(self.particle_data))
+        # print("Length!!! why!!!!: ", len(self.max_time), len(self.max_data), len(self.particle_data))
 
         self.plot.set(self.max_time, self.max_data, self.particle_data)
 
@@ -96,7 +97,7 @@ class rmq_commumication(Thread):
 class scattergraph_handler():
     def __init__(self):
         ## constants for frame
-        self.n = int(5512/50)  # Samples per a ramp up-time
+        self.n = int(11724/50)  # Samples per a ramp up-time
         # self.n = int(5512/50)
         self.zpad = 8 * (self.n / 2)  # the number of data in 0.08 seconds?
         # self.lfm = [2260E6, 2590E6]  # Radar frequency sweep range
@@ -148,7 +149,7 @@ class scattergraph_handler():
     def animate(self, time):
         self.get()
 
-        print(len(self.data_t), len(self.data_val), len(self.data_particle))
+        # print(len(self.data_t), len(self.data_val), len(self.data_particle))
 
         time = time+1
 
@@ -163,7 +164,10 @@ class scattergraph_handler():
 
 
         # draw points of threshold data in color red and draw points of particle filter in green
-        plt.scatter(self.data_t + (time - 1), self.data_val, marker='o', s=1, c='red', edgecolor='red')
+        for xe, ye in zip(self.data_t, self.data_val):
+            # print(ye, type(ye))
+            # print(type(ye), ye.shape, ye)
+            plt.scatter([xe + (time - 1)] * len(ye), ye, marker='o', s=1, c='red', edgecolor='red')
         plt.scatter(self.data_t + (time - 1), self.data_particle, marker='o', s=1, c='green', edgecolor='green')
 
         # plt.plot(self.data_t, self.data_particle, c='blue')
@@ -190,7 +194,7 @@ if __name__ == '__main__':
             # print('main while(True)')
             if splot.q_max_data.empty():
                 # print('queue is empty')
-                time.sleep(1)
+                time.sleep(0.2)
             else:
                 # print('queue is not empty')
                 break

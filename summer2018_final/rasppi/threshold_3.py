@@ -17,8 +17,8 @@ class rmq_commumication():
         self.connection = self.get_connection()
         self.in_queue = self.subscribe(self.connection)
 
-    # def get_connection(self, url='amqp://localhost'):
-    def get_connection(self, url='amqp://192.168.20.83'):
+    def get_connection(self, url='amqp://localhost'):
+    # def get_connection(self, url='amqp://192.168.20.83'):
         parameters = pika.URLParameters(url)
 
         parameters.connection_attempts = 5
@@ -107,7 +107,7 @@ class sort_by_threshold():
         self.unit_dist = self.max_distance / 234
 
     def sorting(self, result_data):
-        print("in sorting function: ", result_time.shape, result_data.shape)  # (50,), (50, 234) when the sampling rate is 11724
+        # print("in sorting function: ", result_time.shape, result_data.shape)  # (50,), (50, 234) when the sampling rate is 11724
 
         self.max_data = []
         self.particle_max_data = []
@@ -115,12 +115,13 @@ class sort_by_threshold():
         for i in range(len(result_data)):   # must 50  # was 44 or 46
             # for j in range(3, len(result_data[i])//5):    # 220 (44=17m)       # TODO threshold for y  # then 250 (50?)
             self.comp_result_data = result_data[i]
-            for j in range(20):
+            while len(self.max_data) < 20:
                 self.idx = self.comp_result_data.argmax()
 
                 # Get distance
                 self.dist = self.unit_dist * self.idx
-                self.max_data.append(self.dist)
+                if self.dist < 50:
+                    self.max_data.append(self.dist)
 
                 # print(len(self.comp_result_data), self.dist)
 
@@ -130,12 +131,12 @@ class sort_by_threshold():
             self.max_data = []
 
         self.particle_max_data = np.array(self.particle_max_data)
-        print(self.particle_max_data, len(self.particle_max_data), type(self.particle_max_data))
+        # print(self.particle_max_data, len(self.particle_max_data), type(self.particle_max_data))
 
         return self.particle_max_data
 
     def sort_max(self, r_data):
-        print("in sorting function: ", result_time.shape, result_data.shape)  # (50,), (50, 234) when the sampling rate is 11724
+        # print("in sorting function: ", result_time.shape, result_data.shape)  # (50,), (50, 234) when the sampling rate is 11724
 
         self.max_data = []
 
@@ -181,6 +182,7 @@ if __name__ == '__main__':
 
             rabbitmq.publish_max(result_time, max_data)
             rabbitmq.publish_multi(result_time, particle_data)
+            # print(particle_data, len(particle_data), type(particle_data))
 
     except(KeyboardInterrupt, Exception) as ex:
         print(ex)
