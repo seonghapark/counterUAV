@@ -115,7 +115,7 @@ class sort_by_threshold():
         for i in range(len(result_data)):   # must 50  # was 44 or 46
             # for j in range(3, len(result_data[i])//5):    # 220 (44=17m)       # TODO threshold for y  # then 250 (50?)
             self.comp_result_data = result_data[i]
-            for j in range(100):
+            for j in range(50):
                 self.idx = self.comp_result_data.argmax()
 
                 # Get distance
