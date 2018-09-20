@@ -17,8 +17,8 @@ class rmq_commumication():
         self.connection = self.get_connection()
         self.in_queue = self.subscribe(self.connection)
 
-    def get_connection(self, url='amqp://localhost'):
-    # def get_connection(self, url='amqp://192.168.20.83'):
+    # def get_connection(self, url='amqp://localhost'):
+    def get_connection(self, url='amqp://192.168.20.83'):
         parameters = pika.URLParameters(url)
 
         parameters.connection_attempts = 5
@@ -122,7 +122,9 @@ class sort_by_threshold():
                 self.dist = self.unit_dist * self.idx
                 self.max_data.append(self.dist)
 
-                self.comp_result_data = np.delete(result_data[i], self.idx)
+                # print(len(self.comp_result_data), self.dist)
+
+                self.comp_result_data = np.delete(self.comp_result_data, self.idx)
 
             self.particle_max_data.append(self.max_data)
             self.max_data = []
