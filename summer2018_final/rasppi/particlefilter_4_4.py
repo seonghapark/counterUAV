@@ -9,8 +9,9 @@ class rmq_commumication():
         self.connection = self.get_connection()
         self.in_queue = self.subscribe(self.connection)
 
-    def get_connection(self, url='amqp://localhost'):
+    # def get_connection(self, url='amqp://localhost'):
     # def get_connection(self, url='amqp://192.168.20.83'):
+    def get_connection(self, url='amqp://10.31.81.51'):
         parameters = pika.URLParameters(url)
         parameters.connection_attempts = 5
         parameters.retry_delay = 5.0
@@ -164,7 +165,7 @@ if __name__ == '__main__':
             # print("ParticlFilter class implementation")
             pf_data = np.zeros(len(max_data))
             # pf_data = []
-            pf = ParticleFilter(N=10000, x_range=(0, 50), sensor_err=1, par_std=1)   # in
+            pf = ParticleFilter(N=1000, x_range=(0, 50), sensor_err=1, par_std=1)   # in
 
             for i in range(len(max_data)):
                 # print(max_data[i])
