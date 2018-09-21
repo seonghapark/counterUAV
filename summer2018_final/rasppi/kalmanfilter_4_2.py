@@ -16,8 +16,8 @@ class rmq_commumication():
         self.connection = self.get_connection()
         self.in_queue = self.subscribe(self.connection)
 
-    # def get_connection(self, url='amqp://localhost'):
-    def get_connection(self, url='amqp://192.168.20.83'):
+    def get_connection(self, url='amqp://localhost'):
+    # def get_connection(self, url='amqp://192.168.20.83'):
         parameters = pika.URLParameters(url)
         parameters.connection_attempts = 5
         parameters.retry_delay = 5.0

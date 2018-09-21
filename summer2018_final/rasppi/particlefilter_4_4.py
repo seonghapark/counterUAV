@@ -165,19 +165,15 @@ if __name__ == '__main__':
             # print("ParticlFilter class implementation")
             pf_data = np.zeros(len(max_data))
             # pf_data = []
-            pf = ParticleFilter(N=1000, x_range=(0, 50), sensor_err=1, par_std=1)   # in
+            pf = ParticleFilter(N=10000, x_range=(0, 50), sensor_err=1, par_std=1)   # in
 
             for i in range(len(max_data)):
-                # print(max_data[i])
                 pf_data[i] = pf.filterdata(data=max_data[i])
                 # pf_data[i].append(pf.filterdata(data=max_data[i]))
 
             et = time.time() * 1000
             print("Particle filter elapsed in %2.f" % (et-st))
 
-            # print("this is the result data: ", pf_data, len(max_time), len(max_data), len(pf_data))
-            # print("this is the result data: ", len(max_time), len(max_data), len(pf_data), max_time.shape, max_data.shape, pf_data.shape)
-            # print(pf_data)
             rabbitmq.publish(max_time, pf_data, max_data)
 
 

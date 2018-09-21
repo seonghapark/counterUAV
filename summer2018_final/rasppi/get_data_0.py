@@ -51,6 +51,13 @@ class rmq_commumication():
             routing_key='raw',
             body=raw)
 
+    def publish_write(self, raw):
+        print("PUBLISH")
+        self.connection.publish(
+            exchange=EXCHANGE_NAME,
+            routing_key='write',
+            body=raw)
+
 
 def main(args):
     # binary_data = open('/home/cuav/repo/counterUAV/summer2018_final/RealTime/raw_data/raw_recording.txt','wb')   # Create a file
@@ -72,6 +79,7 @@ def main(args):
                     #     rabbitmq.publish(data[:11025])
                     if len(data) >= 11724:
                         rabbitmq.publish(data[:11724])
+                        rabbitmq.publish_write(data[:11724])
 
                     # lengthMSb = bytes([11025 >> 8])
                     # lengthLSb = bytes([11025 & 0xFF])

@@ -33,8 +33,8 @@ class rmq_commumication(Thread):
         self.in_queue = self.subscribe(self.channel)
 
 
-    # def get_connection(self, url='amqp://localhost'):
-    def get_connection(self, url='amqp://192.168.20.83'):
+    def get_connection(self, url='amqp://localhost'):
+    # def get_connection(self, url='amqp://192.168.20.83'):
         parameters = pika.URLParameters(url)
 
         parameters.connection_attempts = 5
@@ -98,6 +98,7 @@ class scattergraph_handler():
     def __init__(self):
         ## constants for frame
         self.n = int(11724/50)  # Samples per a ramp up-time
+        # self.n = int(44100/50)
         # self.n = int(5512/50)
         self.zpad = 8 * (self.n / 2)  # the number of data in 0.08 seconds?
         # self.lfm = [2260E6, 2590E6]  # Radar frequency sweep range
@@ -195,13 +196,11 @@ if __name__ == '__main__':
             if splot.q_max_data.empty():
                 # print('queue is empty')
                 time.sleep(0.2)
-            else:
-                # print('queue is not empty')
-                break
+                continue
 
-        # print('while(False)')
+            # print('while(False)')
 
-        splot.draw_graph()  # It takes approximately 500 ms
+            splot.draw_graph()  # It takes approximately 500 ms
 
     except(KeyboardInterrupt, Exception) as ex:
         print(ex)

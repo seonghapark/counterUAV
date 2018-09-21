@@ -1,10 +1,6 @@
 #! /usr/bin/python3
-import sys
-import os
 import pika
 import time
-
-import argparse
 
 EXCHANGE_NAME = 'radar'
 
@@ -12,9 +8,11 @@ EXCHANGE_NAME = 'radar'
 class rmq_commumication():
     def __init__(self):
         self.connection = self.get_connection()
+        self.in_queue = self.subscribe(self.connection)
 
     # def get_connection(self, url='amqp://localhost'):
-    def get_connection(self, url='amqp://192.168.20.83'):
+    # def get_connection(self, url='amqp://192.168.20.83'):
+    def get_connection(self, url='amqp://10.31.81.51'):
         parameters = pika.URLParameters(url)
 
         parameters.connection_attempts = 5
@@ -37,7 +35,7 @@ class rmq_commumication():
         channel.queue_bind(
             queue=in_queue,
             exchange=EXCHANGE_NAME,
-            routing_key='raw'
+            routing_key='write'
         )
         return in_queue
 
@@ -46,9 +44,10 @@ class rmq_commumication():
         method, properties, body = self.connection.basic_get(queue=self.in_queue, no_ack=True)
 
         if method is None:
-            return None, None
+            return None
 
         data = bytearray(body)
+        print(data, type(data), len(data))
 
         return data
 
@@ -60,17 +59,14 @@ if __name__ == '__main__':
     timestr = time.strftime("%Y%m%d_%H%M%S")
     file = timestr + '_binary.txt'
 
-    binary_data = open(file,'w+')   # Create a file
+    binary_data = open(file,'wb+')   # Create a file
 
     try:
         while(True):
             data = rabbitmq.get()
-            if sync is None:
-                # print('no incomming data', data)
+            if data is None:
                 time.sleep(0.2)
                 continue
-            # else:
-            #     print('sync: ', sync, ' data: ', data)
 
             binary_data.write(data)
 

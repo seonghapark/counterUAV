@@ -165,9 +165,6 @@ if __name__ == '__main__':
     rabbitmq = rmq_commumication()
     ifft = ifft_handler()
 
-    # out_t = open('fft_result_time.txt','w+')   # Create a file
-    # out_sm = open('fft_result_data.txt','w+')   # Create a file
-
     try:
         while(True):
             st = time.time() * 1000
@@ -191,14 +188,6 @@ if __name__ == '__main__':
             print("analyzer elapsed in %2.f" % (et-st))
             # print(result_data)
 
-            # for k in range(0,len(result_time)):
-            #     out_t.write(str(result_time[k])+', ')
-            #     out_t.write("\n")
-            #     out_t.flush()
-            # for k in range(0,len(result_data)):
-            #     out_sm.write(str(result_data[k])+', ')
-            #     out_sm.write("\n")
-            #     out_sm.flush()
 
     except(KeyboardInterrupt, Exception) as ex:
         print(ex)

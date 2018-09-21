@@ -19,6 +19,8 @@ class rmq_commumication():
 
     def get_connection(self, url='amqp://localhost'):
     # def get_connection(self, url='amqp://192.168.20.83'):
+    # def get_connection(self, url='amqp://10.31.81.51'):
+
         parameters = pika.URLParameters(url)
 
         parameters.connection_attempts = 5
@@ -105,6 +107,8 @@ class sort_by_threshold():
 
         self.max_distance = 3E8/(2*(2500E6-2400E6))*int(11724/50)/2
         self.unit_dist = self.max_distance / 234
+        # self.max_distance = 3E8/(2*(2500E6-2400E6))*int(44100/50)/2
+        # self.unit_dist = self.max_distance / 2646
 
     def sorting(self, result_data):
         # print("in sorting function: ", result_time.shape, result_data.shape)  # (50,), (50, 234) when the sampling rate is 11724
@@ -182,7 +186,7 @@ if __name__ == '__main__':
 
             rabbitmq.publish_max(result_time, max_data)
             rabbitmq.publish_multi(result_time, particle_data)
-            # print(particle_data, len(particle_data), type(particle_data))
+            print(particle_data, len(particle_data), type(particle_data))
 
     except(KeyboardInterrupt, Exception) as ex:
         print(ex)
