@@ -22,7 +22,7 @@ def label_img(img, num_classes):
         one_hot_list[1] = 1
     elif word_label = 'tree':
         one_hot_list[2] = 1
-    else #Others
+    else: #Others
         one_hot_list[3] = 1
 
     return one_hot_list
@@ -44,7 +44,7 @@ def DataLoader(batch_idx, batch_size):
             with open(TRAIN_DIR + '/data_batch_' + str(batch_idx), mode='rb') as file:
                 batch = pickle.load(file, encoding='latin1')
 
-            features = batch['data'].reshape((len(batch['data']), 3, 32, 32)).transpose(0, 2, 3, 1)
+            features = batch['data'].reshape((len(batch['data']), 3, IMG_SIZE, IMG_SIZE)).transpose(0, 2, 3, 1)
             labels = batch['labels']
 
         except IOError:

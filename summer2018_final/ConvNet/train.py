@@ -1,6 +1,6 @@
 import tensorflow as tf
 from model import RadarNet
-from data_input import DataLoader, label_img 
+from data_input import DataLoader 
 
 NUM_CLASSES = 4
 save_model_path = ./radarnet_model_saved
