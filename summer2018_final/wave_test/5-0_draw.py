@@ -94,8 +94,8 @@ class colorgraph_handler():
         self.n = 882  # Samples per a ramp up-time
         # self.n = int(5512/50)
         self.zpad = 8 * (self.n / 2)  # the number of data in 0.08 seconds?
-        # self.lfm = [2260E6, 2590E6]  # Radar frequency sweep range
-        self.lfm = [2400E6, 2500E6]
+        self.lfm = [2260E6, 2590E6]  # Radar frequency sweep range
+        # self.lfm = [2400E6, 2500E6]
         self.max_detect = 3E8/(2*(self.lfm[1]-self.lfm[0]))*self.n/2 # Max detection distance according to the radar frequency
         self.set_t = 10 #int(sys.argv[1])  # Frame length on x axis
         # self.set_t = 25  # Frame length on x axis --> 25 seconds
@@ -130,8 +130,6 @@ class colorgraph_handler():
             self.q_result_time.put(result_time)
             self.q_result_data.put(result_data)
 
-        # print(self.previous, result_time.item(0), type(self.previous), type(result_time.item(0)))
-        # time.sleep(0.9)
 
     def get(self):
         if not self.q_result_time.empty():

@@ -51,16 +51,20 @@ class rmq_commumication():
             routing_key='raw',
             body=raw)
 
-    def publish_write(self, raw):
-        print("PUBLISH")
-        self.connection.publish(
-            exchange=EXCHANGE_NAME,
-            routing_key='write',
-            body=raw)
+    # def publish_write(self, raw):
+    #     print("PUBLISH")
+    #     self.connection.publish(
+    #         exchange=EXCHANGE_NAME,
+    #         routing_key='write',
+    #         body=raw)
 
 
 def main(args):
+    # timestr = time.strftime("%Y%m%d_%H%M%S")
+    # file = timestr + '_binary.txt'
+    # binary_data = open(file, 'wb+')
     # binary_data = open('/home/cuav/repo/counterUAV/summer2018_final/RealTime/raw_data/raw_recording.txt','wb')   # Create a file
+    
     try:
         data = bytearray()
         rabbitmq = rmq_commumication()
@@ -81,9 +85,10 @@ def main(args):
                         rabbitmq.publish(data[:11724])
                         rabbitmq.publish_write(data[:11724])
 
-                    # lengthMSb = bytes([11025 >> 8])
-                    # lengthLSb = bytes([11025 & 0xFF])
+                    # lengthMSb = bytes([11724 >> 8])
+                    # lengthLSb = bytes([11724 & 0xFF])
                     # binary_data.write(lengthMSb + lengthLSb + data)
+                    # binary_data.write(data)
 
                     data = bytearray()
                     start_time = current_time
@@ -91,6 +96,7 @@ def main(args):
         print(ex)
     finally:
         rabbitmq.connection.close()
+        binary_data.close()
 
 
 if __name__ == '__main__':

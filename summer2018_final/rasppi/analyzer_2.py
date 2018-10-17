@@ -17,7 +17,7 @@ class rmq_commumication():
         self.in_queue = self.subscribe(self.connection)
 
     def get_connection(self, url='amqp://localhost'):
-    # def get_connection(self, url='amqp://192.168.20.83'):
+    # def get_connection(self, url='amqp://10.31.81.51'):
         parameters = pika.URLParameters(url)
 
         parameters.connection_attempts = 5
@@ -65,7 +65,7 @@ class rmq_commumication():
             return None, None
 
         data = bytearray(body)
-        print(len(data))
+        # print(len(data))
 
         if len(data) < 2:
             return None, None
@@ -91,8 +91,9 @@ class rmq_commumication():
 class ifft_handler():
     def __init__(self):
         self.opp = 0
-        # self.fs = 44100  # Sampling rate
-        self.fs = 11724
+        self.fs = 44100  # Sampling rate
+        # self.fs = 11724
+        # self.fs = 11024  # When read Jul20Armory.txt 
         self.Tp = 0.020   # Radar ramp up-time
         self.n = int(self.Tp*self.fs)   # Samples per ramp up-time
         self.fsif = np.zeros([10000,self.n], dtype=np.int16)  # Zero array for further data storage
@@ -149,25 +150,25 @@ class ifft_handler():
         max_real = real_value.max() 
         result_data = real_value - max_real
 
-        print(len(result_time), len(result_data))
+        # print(len(result_time), len(result_data))
 
-        result_time = result_time[:50]
-        result_data = result_data[:50]
+        result_time = result_time[:80]
+        result_data = result_data[:80]
 
-        print(result_time, result_data)
-        print(result_time.shape, result_data.shape)
+        # print(result_time, result_data)
+        # print(result_time.shape, result_data.shape)
         # print(result_time.dtype, result_data.dtype)
         return result_time, result_data
 
 
 if __name__ == '__main__':  
-    print('Connect RMQ') 
+    # print('Connect RMQ') 
     rabbitmq = rmq_commumication()
     ifft = ifft_handler()
 
     try:
         while(True):
-            st = time.time() * 1000
+            # st = time.time() * 1000
 
             sync, data = rabbitmq.get()
             if sync is None:
@@ -175,17 +176,17 @@ if __name__ == '__main__':
                 time.sleep(0.2)
                 continue
             # else:
-            #     print('sync: ', sync, ' data: ', data)
+                # print('sync: ', sync, ' data: ', data)
 
             st = time.time()*1000
             result_time, result_data = ifft.data_process(sync, data)  # It takes approximately 500 ms
             et = time.time()*1000
-            print('FFT elapsed in %2.f' % (et-st), result_time.shape, result_data.shape)
+            # print('FFT elapsed in %2.f' % (et-st), result_time.shape, result_data.shape)
 
             rabbitmq.publish(result_time, result_data)
 
-            et = time.time() * 1000
-            print("analyzer elapsed in %2.f" % (et-st))
+            # et = time.time() * 1000
+            # print("analyzer elapsed in %2.f" % (et-st))
             # print(result_data)
 
 

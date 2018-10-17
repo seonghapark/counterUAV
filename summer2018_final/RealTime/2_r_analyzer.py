@@ -102,6 +102,7 @@ class ifft_handler():
         self.fsif = np.zeros([10000,self.n], dtype=np.int16)  # Zero array for further data storage
 
     def dbv(self, input):
+        input = input + 0.0000001
         return 20 * np.log10(abs(input))  # Calculate Decibel using received signal intensity value
 
 

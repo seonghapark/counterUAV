@@ -109,6 +109,7 @@ class inwav_handler():
 if __name__ == "__main__":
     # Read wav file
     # print('Open data file')
+    main()
     pwd = os.getcwd() # current working folder
     file_name = pwd+ '/' +sys.argv[1]
     inwav = inwav_handler(file_name)

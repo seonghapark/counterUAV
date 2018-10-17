@@ -53,6 +53,7 @@ if __name__ == '__main__':
         for i in range(int(len(read_line)//11025)):
             raw = read_line[i*11025:(i+1)*11025]
             rabbitmq.publish(raw)
+            time.sleep(1)
 
     except (KeyboardInterrupt, Exception) as ex:
         print(ex)

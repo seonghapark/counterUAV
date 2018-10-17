@@ -2,6 +2,9 @@
 import pika
 import time
 
+import sys
+import os
+
 EXCHANGE_NAME = 'radar'
 
 
@@ -67,6 +70,8 @@ if __name__ == '__main__':
             if data is None:
                 time.sleep(0.2)
                 continue
+
+            print("out")
 
             binary_data.write(data)
 

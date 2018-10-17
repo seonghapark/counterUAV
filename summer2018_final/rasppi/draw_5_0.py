@@ -31,9 +31,9 @@ class rmq_commumication(Thread):
         self.in_queue = self.subscribe(self.channel)
 
 
-    # def get_connection(self, url='amqp://localhost'):
+    def get_connection(self, url='amqp://localhost'):
     # def get_connection(self, url='amqp://192.168.20.83'):
-    def get_connection(self, url='amqp://10.31.81.51'):
+    # def get_connection(self, url='amqp://10.31.81.51'):
         parameters = pika.URLParameters(url)
 
         parameters.connection_attempts = 5
@@ -63,7 +63,7 @@ class rmq_commumication(Thread):
 
 
     def run(self):
-        print('run')
+        # print('run')
         self.channel.basic_consume(self._callback, queue=self.in_queue, no_ack=True)
         try:
             self.channel.start_consuming()
@@ -93,19 +93,21 @@ class colorgraph_handler():
     def __init__(self):
         ## constants for frame
         # self.n = int(5512/50)  # Samples per a ramp up-time
-        self.n = int(11724/50)/2
+        self.n = int((11724/2)/50)
+        # self.n = int(44100/50)
         self.zpad = 8 * (self.n / 2)  # the number of data in 0.08 seconds?
         # self.lfm = [2260E6, 2590E6]  # Radar frequency sweep range
-        self.lfm = [2400E6, 2500E6]
+        # self.lfm = [2400E6, 2500E6]
+        self.lfm = [2300E6, 2400E6]
         self.max_detect = 3E8/(2*(self.lfm[1]-self.lfm[0]))*self.n/2 # Max detection distance according to the radar frequency
-        self.set_t = 10 #int(sys.argv[1])  # Frame length on x axis
-        # self.set_t = 25  # Frame length on x axis --> 25 seconds
+        # self.set_t = 10 #int(sys.argv[1])  # Frame length on x axis
+        self.set_t = 25  # Frame length on x axis --> 25 seconds
 
         ## variables for incoming data
         self.y = np.linspace(0,self.max_detect, int(self.zpad/2))
         self.data_tlen = 0
-        self.data_t = np.zeros((50))
-        self.data_val = np.zeros((50, self.y.shape[0]))
+        self.data_t = np.zeros((80))
+        self.data_val = np.zeros((80, self.y.shape[0]))
 
         self.q_result_data = queue.Queue()
         self.q_result_time = queue.Queue()
@@ -126,7 +128,7 @@ class colorgraph_handler():
         self.processed_time = []
 
     def set(self, result_time, result_data):
-        print('set')
+        # print('set')
         if self.previous != result_time.item(0):
             self.previous = result_time.item(0)
             self.q_result_time.put(result_time)
@@ -144,14 +146,14 @@ class colorgraph_handler():
             self.data_tlen = len(self.data_t)
 
             self.processed_time = []
-            for i in range(50):
+            for i in range(len(self.data_t)):
                 temp_time = self.data_t[i] + 0.0016 * (i + 1)
                 self.processed_time.append(temp_time)
             self.processed_time = np.array(self.processed_time)
 
             self.data_t = self.processed_time
 
-            print(self.data_t)
+            # print(len(self.data_t))
 
             # print(self.data_t.item(0))
         # print(self.data_t, self.data_val)
@@ -191,7 +193,7 @@ if __name__ == '__main__':
 
     try:
         while(True):
-            st = time.time()*1000
+            # st = time.time()*1000
             if plot.q_result_time.empty():
                 # print('queue is empty')
                 time.sleep(1)
@@ -199,8 +201,8 @@ if __name__ == '__main__':
                 # print('queue is not empty')
                 break
 
-        et = time.time()*1000
-        print("Elapsed in %2.f" % (et-st))
+        # et = time.time()*1000
+        # print("Elapsed in %2.f" % (et-st))
 
         plot.draw_graph()  # It takes approximately 500 ms
 

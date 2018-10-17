@@ -40,19 +40,23 @@ if __name__ == '__main__':
 
     # read file
     pwd = os.getcwd() # current working folder
-    file_name = pwd+ '/' +sys.argv[1]
-    file = open(file_name, "rb")
-    read_line = file.readline()
+    # file_name = pwd+ '/' +sys.argv[1]
+    file_name = sys.argv[1]
+    file = open(file_name, 'rb')
+    read_data = file.read()
 
     data = bytearray()
-    print('Connect RMQ')
+    # print('Connect RMQ')
     rabbitmq = rmq_commumication()
 
     try:
         # divide input
-        for i in range(int(len(read_line)//11025)):
-            raw = read_line[i*11025:(i+1)*11025]
+        # sample_rate = 11025
+        sample_rate = 11724
+        for i in range(int(len(read_data)//sample_rate)):
+            raw = read_data[i*sample_rate:(i+1)*sample_rate]
             rabbitmq.publish(raw)
+            time.sleep(1)
 
     except (KeyboardInterrupt, Exception) as ex:
         print(ex)
