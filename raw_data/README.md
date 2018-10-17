@@ -1,6 +1,5 @@
 ## Binary file description
 
-
 20181009_100023_binary.txt: w/ a person
 20181009_101055_binary.txt: w/ a person
 20181009_101420_binary.txt: w/ a person
@@ -21,3 +20,7 @@
 20181016_135124_binary.txt: w/ a person
 20181016_142025_binary.txt: from 35 second, w/ a drone (DJI Phantom), w/ reflection tape
 20181016_142531_binary.txt: w/ a drone (DJI Phantom), w/o reflection tape
+
+## To read the files
+
+Use read_data.py
