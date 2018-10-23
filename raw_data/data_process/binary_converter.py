@@ -121,7 +121,7 @@ if __name__ == '__main__':
         if audio.shape[1] > 5862 * (headers['length'] - 1) :
             print('audio: ', audio.shape)
             wavfile.write(headers['name'] + ".wav", 5862, audio.T.astype(np.int16))
-            audio = np.array([]).reshape((2, -1))
+            #audio = np.array([]).reshape((2, -1))
             print('Finish to read... ')
             break
             
