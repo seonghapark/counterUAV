@@ -3,14 +3,6 @@
 Use 1_read_data.py with file name argument.
 * python 1_read_data.py *FILENAME*
 
-## To fft 
-
-Use 2_r_analyzer.py
-
-## To draw a plot
-
-Use 5-0_r_draw.py
-
 ## To convert the files to wav
 
 Use binary_converter.py.
