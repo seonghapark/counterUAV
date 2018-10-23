@@ -1,4 +1,4 @@
-mport sys
+import sys
 import os
 import pika
 import time
@@ -42,7 +42,8 @@ if __name__ == '__main__':
     # file_name = pwd+ '/' +sys.argv[1]
     file_name = sys.argv[1]
     file = open(file_name, "rb")
-    read_line = file.readline()
+    # read_line = file.readline()
+    read_line = file.read()
 
     data = bytearray()
     print('Connect RMQ')
@@ -50,9 +51,9 @@ if __name__ == '__main__':
 
     try:
         # divide input
-        print(len(read_line)//11025)
-        for i in range(int(len(read_line)//11025)):
-            raw = read_line[i*11025:(i+1)*11025]
+        print(len(read_line)//11724)
+        for i in range(int(len(read_line)//11724)):
+            raw = read_line[i*11724:(i+1)*11724]
             rabbitmq.publish(raw)
             time.sleep(1)
 
