@@ -90,7 +90,7 @@ class ifft_handler():
     def data_process(self, sync, data):
         count = 0
         result_time = [] # time is a list
-
+        self.fs = len(sync) # update sampling rate
         # print(data, data.shape, self.n)
         # print(sync, sync.shape)
 
