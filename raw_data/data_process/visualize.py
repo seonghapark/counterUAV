@@ -1,4 +1,3 @@
-import glob
 import os
 from os.path import isfile, isdir
 import numpy as np
@@ -36,7 +35,7 @@ class LoadPlot():
         fig = plt.figure(figsize=self.figsize, dpi=self.dpi)
         for n, f in zip(sound_names, raw_sounds):
             plt.subplot(len(raw_sounds), 1, i)
-            specgram(np.array(f), Fs=11724)
+            specgram(np.array(f), Fs=5862)
             plt.title(n.title())
             plt.xlim(0, 100)
             plt.ylim(0, 1000)
@@ -54,11 +53,11 @@ class LoadPlot():
 
             display.specshow(D, x_axis='time', y_axis='log')
             plt.title(n.title())
+            plt.xlim(0, 30)
+            plt.ylim(0, 100)
             i+=1
 
         plt.suptitle("Figure 2: Log-powered spectrogram", x=self.x, y=self.y, fontsize=self.fontsize)
-        plt.xlim(0, 60)
-        plt.ylim(0, 500)
         plt.show()
 
 if __name__ == "__main__":
@@ -76,3 +75,4 @@ if __name__ == "__main__":
     print('SOUND PATHS:', paths)
 
     loader.plot_specgram(sound_names, raw_sounds)
+    loader.plot_log_specgram(sound_names, raw_sounds)
