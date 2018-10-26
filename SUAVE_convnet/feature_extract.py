@@ -1,12 +1,7 @@
 import librosa
-import pickle
 import os
 import numpy as np
 import glob as g
-import tqdm
-import tarfile
-import requests
-from urllib.request import urlretrieve, urlopen
 from os.path import isfile, isdir
 
 FILE_EXT='*.wav'
@@ -47,7 +42,7 @@ class FeatureParser():
             for label, sub_dir in enumerate(sub_dirs):
                 for fn in g.glob(os.path.join(parent_dir, sub_dir, file_ext)):
                     sound_clip, sr = librosa.load(fn)
-                    lbl = fn.split('/')[7].split('-')[1]
+                    lbl = fn.split('/')[3].split('_')[1] # extract label from file name
                     for (start, end) in self.windows(sound_clip, window_size):
                         start = int(start)
                         end = int(end)
