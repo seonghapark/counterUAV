@@ -38,7 +38,7 @@ class FeatureParser():
         window_size = 512 * (frames - 1)
         log_specgrams = []
         labels = []
-        if not isfile('audio_CNNdataset.pickle'):
+        if not isfile('radar_CNNdataset.pickle'):
             for label, sub_dir in enumerate(sub_dirs):
                 for fn in g.glob(os.path.join(parent_dir, sub_dir, file_ext)):
                     sound_clip, sr = librosa.load(fn)
@@ -64,7 +64,7 @@ class FeatureParser():
     def parse_audio_files(self, parent_dir, sub_dirs, file_ext=FILE_EXT):
         features, labels = np.empty((2, 5862)), np.empty(0)
 
-        if not isfile('audio_dataset.pickle'):
+        if not isfile('radar_dataset.pickle'):
             for label, sub_dir in enumerate(sub_dirs):
                 print('Subdirectory path:{}'.format(sub_dir))
                 for fn in g.glob(os.path.join(parent_dir, sub_dir, file_ext)):
