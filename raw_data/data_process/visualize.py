@@ -25,6 +25,7 @@ class LoadPlot():
             if isfile(fp):
                 print('Loading .wav files...')
                 Y, sr = librosa.load(fp)
+                print('Value of .wav file:', Y)
                 raw_sounds.append(Y)
             else:
                 print('Invalid path:', path)

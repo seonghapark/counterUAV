@@ -24,3 +24,12 @@
 ## To read the files
 
 Use read_data.py
+
+## Class labels
+
+    0 - others
+    1 - person
+    2 - car
+    3 - uav
+
+    ex) 20181009_3_100023.wav is a UAV
