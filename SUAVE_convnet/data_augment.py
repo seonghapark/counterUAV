@@ -67,7 +67,7 @@ def main():
         print('IOError: Could not find file path')
 
     da = DataAugmentor()
-    ps_freq, sr = da.freq_shifting(raw_freq)
+    freq_data['ps_freq'], sr = da.freq_shifting(freq_data['raw_freq'])
 
     loader.plot_specgram(freq_data['labels'][:2], freq_data['raw_freq'][:2])
     loader.plot_specgram(freq_data['labels'][:2], freq_data['ps_freq'][:2])
