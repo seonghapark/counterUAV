@@ -63,7 +63,7 @@ class LoadPlot():
 
 if __name__ == "__main__":
     #Use only the specified sample data for visualization
-    sound_paths = ['20181009_100023_binary.wav', '20181009_102508_binary.wav']
+    sound_paths = ['20181009_1_100023.wav', '20181009_2_102508.wav']
     sound_names = ['Person', 'Car']
 
     loader = LoadPlot()
