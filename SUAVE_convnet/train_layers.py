@@ -158,5 +158,5 @@ class ConvNet():
             print('Test accuracy: ', round(sess.run(accuracy, feed_dict={X: test_x, Y: test_y}), 3))
             fig = plt.figure(figsize=(15,10))
             plt.plot(cost_history)
-            plt.axis([0, training_epochs, o, np.max(cost_history)])
+            plt.axis([0, training_epochs, 0, np.max(cost_history)])
             plt.show()

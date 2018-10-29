@@ -8,18 +8,33 @@ import numpy as np
 
 # For augmenting .wav data
 
+SAMPLE_RATE=5682
 FILE_EXT='*.wav'
 DATA_PATH='/home/jeonghwan/Desktop/counterUAV/raw_data'
 PATH='/home/jeonghwan/Desktop/counterUAV/raw_data/data_process'
 sys.path.insert(0, PATH)
 from visualize import LoadPlot
 
+"""
+This class contains data augmentation methods that increase the size and variance of our dataset.
+Data augmentation methods include:
+
+    1) Frequency shifting
+    2) Add random noise
+    3) Time stretching
+    4) Shifting frequency (use np.roll())
+
+All methods should return the following two values:
+    1) Y (augmented frequency values)
+    2) sr (sampling rate)
+"""
 class DataAugmentor():
     def __init__(self, file_ext=FILE_EXT):
         opt = {}
         opt['file_ext'] = file_ext
 
-    def freq_shifting(self, raw_freq, num_steps=4, sr=5682):
+    def freq_shifting(self, raw_freq, num_steps=4, sr=SAMPLE_RATE):
+    # Shifting frequency values of the signal by <num_setps> * half-steps
         Ys, fs = [], []
 
         for fr in raw_freq: 
@@ -30,7 +45,13 @@ class DataAugmentor():
 
         return Ys, sr
 
-#    def visualize
+    def add_noise(self, data, scale=0.005, sr=SAMPLE_RATE):
+    # Generate random noise to augment the data
+        noise = np.random.randn(len(data))
+        Yn = data + scale*noise
+
+        return Yn, sr
+#   def visualize
 
 def main():
     # Frequency shift and visualize in log-spectrogram
@@ -69,8 +90,8 @@ def main():
     da = DataAugmentor()
     freq_data['ps_freq'], sr = da.freq_shifting(freq_data['raw_freq'])
 
-    loader.plot_specgram(freq_data['labels'][:2], freq_data['raw_freq'][:2])
-    loader.plot_specgram(freq_data['labels'][:2], freq_data['ps_freq'][:2])
+    loader.plot_log_specgram(freq_data['labels'][:2], freq_data['raw_freq'][:2]) #visualize in log_spectrogram
+    loader.plot_log_specgram(freq_data['labels'][:2], freq_data['ps_freq'][:2]) 
     #loader.plot_log_specgram(lbl, raw_freq) 
 
 if __name__ == "__main__":
