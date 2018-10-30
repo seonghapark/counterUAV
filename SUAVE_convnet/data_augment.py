@@ -69,7 +69,8 @@ def main():
 
             lbl = []
             for p in file_paths:
-                freq_labels= p.split('/')[6].split('_')[1] # extract labels from the file name
+                path, filename = os.path.split(p)
+                freq_labels = filename.split('_')[1]    # extract labels from the file name
                 lbl.append(freq_labels)
 
             freq_data = {'raw_freq': raw_freq,
