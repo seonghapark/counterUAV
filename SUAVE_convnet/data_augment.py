@@ -10,8 +10,8 @@ import numpy as np
 
 SAMPLE_RATE=5682
 FILE_EXT='*.wav'
-DATA_PATH='/home/jeonghwan/Desktop/counterUAV/raw_data'
-PATH='/home/jeonghwan/Desktop/counterUAV/raw_data/data_process'
+DATA_PATH='../raw_data/'  # path of raw file
+PATH='../raw_data/data_process'  # path for visualize.py
 sys.path.insert(0, PATH)
 from visualize import LoadPlot
 
