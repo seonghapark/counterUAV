@@ -51,7 +51,20 @@ class DataAugmentor():
         Yn = data + scale*noise
 
         return Yn, sr
-#   def visualize
+
+    '''A function that streches the data on time axis.
+    Parameter raw_freq is array that has each data elements.
+
+    It returns an array that has each streched elements.
+    '''
+    def time_stretching(self, raw_freq, rate=2.0):
+        Ys = []
+        for fr in raw_freq:  # raw_freq has many data files.
+            Y_stretched = librosa.effects.time_stretch(fr, rate)
+            Ys.append(Y_stretched)
+        return Ys
+
+#    def visualize
 
 def main():
     # Frequency shift and visualize in log-spectrogram
