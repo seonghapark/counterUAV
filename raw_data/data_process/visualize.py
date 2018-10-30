@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import specgram
 
 PAR_DIR='~/Desktop/counterUAV/raw_data'
+labels = ['Others', 'Person', 'Car', 'UAV']
 
 class LoadPlot():
     def __init__(self, i=1, figsize=(12, 4), dpi=200, x=0.5, y=1, fontsize=7):
@@ -42,7 +43,7 @@ class LoadPlot():
         for n, f in zip(sound_names, raw_sounds):
             plt.subplot(len(raw_sounds), 1, i)
             specgram(np.array(f), Fs=5862)
-            plt.title(n.title())
+            plt.title(labels[int(n)])
             plt.xlim(0, 100)
             plt.ylim(0, 1000)
             i+=1
@@ -58,9 +59,9 @@ class LoadPlot():
             D = core.amplitude_to_db(np.abs(librosa.stft(f))**2, ref=np.max)
 
             display.specshow(D, x_axis='time', y_axis='log')
-            plt.title(n.title())
-            plt.xlim(0, 30)
-            plt.ylim(0, 100)
+            plt.title(labels[int(n)])
+            plt.xlim(0, 100)
+            plt.ylim(0, 1000)
             i+=1
 
         plt.suptitle("Figure 2: Log-powered spectrogram", x=self.x, y=self.y, fontsize=self.fontsize)
