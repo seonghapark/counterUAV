@@ -103,6 +103,7 @@ def main():
 
     da = DataAugmentor()
     freq_data['ps_freq'], sr = da.freq_shifting(freq_data['raw_freq'])
+    # freq_data['ps_freq'] = da.time_stretching(freq_data['raw_freq'])
 
     loader.plot_log_specgram(freq_data['labels'][:2], freq_data['raw_freq'][:2]) #visualize in log_spectrogram
     loader.plot_log_specgram(freq_data['labels'][:2], freq_data['ps_freq'][:2]) 
