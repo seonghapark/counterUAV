@@ -4,7 +4,6 @@ import numpy as np
 import librosa
 import librosa.display as display
 import librosa.core as core
-import scipy.io.wavfile as wavfile
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import specgram
 
@@ -21,15 +20,21 @@ class LoadPlot():
 
     def load_sound_files(self, path, sr=5862):
         raw_sounds = []
+
         for fp in path:
             if isfile(fp):
                 print('Loading .wav files...')
                 Y, sr = librosa.load(fp, sr)
+                Y = self.trim_zeros(Y)  # remove zero-values on front
                 print('Value of .wav file:', Y)
                 raw_sounds.append(Y)
             else:
                 print('Invalid path:', path)
         return raw_sounds
+
+    def trim_zeros(self, y):
+        y = np.trim_zeros(y, 'f')
+        return y
 
     def plot_specgram(self, sound_names, raw_sounds):
         i = self.i
