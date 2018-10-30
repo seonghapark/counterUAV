@@ -19,6 +19,8 @@ Deep neural network models are used to classify the frequency data in a .wav for
 
 ## Codes
 
+    data_augment.py: make the data that time stretched, and frequency shifted by librosa.
+
     feature_extract.py: Extract features from .wav format files - read the comments for details
 
     train_layers.py: class FeedForward() is for Feed-forward neural network / class ConvNet() is for Convolutional neural network. Both models are implemented in Tensorflow framework. You must specify the hyperparameters at run.py (in case of FFN) or run_cnn.py (in case of CNN)
