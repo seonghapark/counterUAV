@@ -13,6 +13,7 @@ from visualize import LoadPlot
 class wav_helper():
     def __init__(self, path, file_ext="*.wav"):
         self.file_ext = file_ext
+        self.path = path
         self.file_paths = g.glob(os.path.join(path, file_ext))
         self.file_names = None  # list of file name
         self.raw_freq = None    # list of raw data
@@ -20,7 +21,7 @@ class wav_helper():
     '''
     Read all wav files in directory by filename, label, raw data.
     '''
-    def read_files(self):
+    def read_wavs(self):
         loader = LoadPlot()
         raw_freq = loader.load_sound_files(self.file_paths)
         labels = []
@@ -41,6 +42,18 @@ class wav_helper():
         self.file_names = file_names
 
     '''
+    Write data to wav files.
+    It needs to have one-to-one relationship between file_names and data.
+    '''
+    def write_wavs(self, data,  sr=5682, ext=".wav", tag=""):
+        assert len(data) == len(self.file_names)
+        for idx in range(len(data)):
+            librosa.output.write_wav(
+                os.path.join(self.path, self.file_names[idx] + tag + ext),
+                data[idx],
+                sr)
+
+    '''
     iterator that yields name, data, label
     '''
     def files(self):
@@ -52,7 +65,7 @@ class wav_helper():
 
 def main():
     helper = wav_helper(sys.argv[1])
-    helper.read_files()
+    helper.read_wavs()
 
     print('raw_freq: ', helper.raw_freq)
     print('labels: ', helper.labels)
