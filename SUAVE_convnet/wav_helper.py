@@ -10,7 +10,7 @@ sys.path.insert(0, PATH)
 from visualize import LoadPlot
 
 
-class WavHelper():
+class wav_helper():
     def __init__(self, path, file_ext='*.wav'):
         self.file_ext = file_ext
         self.file_paths = g.glob(os.path.join(path, file_ext))
