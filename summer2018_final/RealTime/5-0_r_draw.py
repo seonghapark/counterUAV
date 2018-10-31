@@ -93,7 +93,8 @@ class colorgraph_handler():
         ## constants for frame
         self.n = int(5512/50)  # Samples per a ramp up-time
         # self.n = int(5512/50)
-        self.zpad = 8 * (self.n / 2)  # the number of data in 0.08 seconds?
+        # self.zpad = 8 * (self.n / 2)  # the number of data in 0.08 seconds?
+        self.zpad = 468 * 2
         # self.lfm = [2260E6, 2590E6]  # Radar frequency sweep range
         self.lfm = [2400E6, 2500E6]
         self.max_detect = 3E8/(2*(self.lfm[1]-self.lfm[0]))*self.n/2 # Max detection distance according to the radar frequency
@@ -157,7 +158,7 @@ class colorgraph_handler():
             lim = self.ax.set_xlim(0, self.set_t)
 
         # print(self.data_t.shape, self.data_val.shape, self.data_tlen)
-        plt.pcolormesh(self.data_t, self.y, self.data_val[:self.data_tlen].T, cmap=self.cmap, norm=self.norm)
+        plt.pcolormesh(self.data_t, self.y, np.swapaxes(self.data_val[:self.data_tlen], 0, 1), cmap=self.cmap, norm=self.norm)
         # print('animate ')
 
         return self.ax

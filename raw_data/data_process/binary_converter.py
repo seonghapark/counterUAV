@@ -1,78 +1,23 @@
 #! /usr/lib/python3
-
 import numpy as np
 import sys
 from scipy.fftpack import fft
 from scipy.io import wavfile
 import librosa
 import os
-import pika
 
-import time
+class RadarBinaryParser():
+    def __init__(self, raw_data, sr=5862):
+        self.raw_data = raw_data
+        self.sr = sr
+        self.sync = None
+        self.data = None
 
-EXCHANGE_NAME = 'radar'
-
-
-class rmq_commumication():
-    def __init__(self):
-        # self.sync = np.array([])
-        # self.data = np.array([])
-        # self.sign = 0
-        self.connection = self.get_connection()
-        self.in_queue = self.subscribe (self.connection)
-
-    def get_connection(self, url='amqp://localhost'):
-        parameters = pika.URLParameters(url)
-
-        parameters.connection_attempts = 5
-        parameters.retry_delay = 5.0
-        parameters.socket_timeout = 2.0
-        connection = pika.BlockingConnection(parameters)
-
-        channel = connection.channel()
-
-        channel.exchange_declare(
-            EXCHANGE_NAME,
-            exchange_type='direct',
-            durable=True
-        )
-        return channel
-
-
-    def subscribe(self, channel):
-        result = channel.queue_declare(exclusive=True)
-        in_queue = result.method.queue
-        channel.queue_bind(
-            queue=in_queue,
-            exchange=EXCHANGE_NAME,
-            routing_key='raw'
-        )
-        return in_queue
-
-
-    def publish(self, result_time, result_data):
-        data = result_time.tostring() + result_data.tostring()
-        # pika_properties = pika.BasicProperties(content_type='application/json', headers=headers)
-        self.connection.publish(
-            exchange=EXCHANGE_NAME,
-            # properties=pika_properties,
-            routing_key='ifft',
-            body=data)
-
+    '''get sync, data and headers from text binary file.
     '''
-        get sync, data and headers from rmq message.
-        headers include index of chunk(index), total length(length), file name(name)
-    '''
-    def get(self):
-        method, properties, body = self.connection.basic_get(queue=self.in_queue, no_ack=True)
-
-        if method is None:
-            return None, None, None
-
-        headers = properties.headers
-        data = bytearray(body)
+    def parse(self):
+        data = bytearray(self.raw_data)
         # print(len(data))
-
         # parse the sync and data signal in bytearray
         if len(data) < 2:
             return None, None
@@ -93,37 +38,41 @@ class rmq_commumication():
         self.data = np.array(values)
         
         # print(self.sync, self.data, len(self.sync), len(self.data))
-        return self.sync, self.data, headers
+        return self.sync, self.data
+
+
+def main():
+    # read binary file
+    print('Read file: ', sys.argv[1])
+    src_path = sys.argv[1]
+    src_basename = os.path.basename(src_path)
+
+    try:
+        file = open(src_path, "rb")
+        read_data = file.read()
+        filename = os.path.splitext(src_basename)[0]  # get file name
+    except (KeyboardInterrupt, Exception) as ex:
+        print('Unable to read file: ', file)
+        print(ex)
+        return
+    finally:
+        file.close()
+
+    # parse text binary file
+    parser = RadarBinaryParser(read_data, sr=5862)
+    sync, data = parser.parse()
+
+    # stacking audio data 
+    print('sync: ', sync, ' data: ', data)
+    print('get: ', len(sync), len(data))
+    audio = np.vstack((sync, data))
+    # print(audio.shape[1])
+
+    # write a wav file 
+    print('audio: ', audio)
+    wavfile.write(filename + ".wav", parser.sr, audio.T.astype(np.int16))
+    print('Finish to read... ')
+
 
 if __name__ == '__main__':  
-    print('Connect RMQ') 
-    rabbitmq = rmq_commumication()
-    audio = np.array([]).reshape((2, -1))
-
-    print('Start to read... ') 
-    while(True):
-        sync, data, headers = rabbitmq.get()
-        if sync is None:
-            # print('no incoming data', data)
-            time.sleep(0.1)
-            continue
-        else:
-            # stacking audio data 
-            print('sync: ', sync, ' data: ', data)
-            print('get: ', len(sync), len(data))
-            np_sync = np.array(sync, dtype=np.bool)
-            np_data = np.array(data, dtype=np.int16)
-            temp = np.vstack((sync, data))
-            audio = np.hstack((audio, temp))
-            # print(audio.shape[1])
-
-        # write a wav file when it finish reading binary data
-        if audio.shape[1] > 5862 * (headers['length'] - 1) :
-            print('audio: ', audio.shape)
-            wavfile.write(headers['name'] + ".wav", 5862, audio.T.astype(np.int16))
-            audio = np.array([]).reshape((2, -1))
-            print('Finish to read... ')
-            break
-            
-    rabbitmq.connection.close()
-    print('Close RMQ')
+    main()

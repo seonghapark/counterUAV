@@ -6,5 +6,5 @@ Use 1_read_data.py with file name argument.
 ## To convert the files to wav
 
 Use binary_converter.py.
-* Must execute 1_read_data.py to read binary file.
-* When converter get all binary data messages from rabbitmq, it converts data to wav file. 
+* `python binary_converter.py FILE_PATH`
+* When converter read binary data in text file, and converts to wav file. 
