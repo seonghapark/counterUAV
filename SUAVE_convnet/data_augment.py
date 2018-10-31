@@ -32,7 +32,9 @@ class DataAugmentor():
     def __init__(self, file_ext=FILE_EXT):
         opt = {}
         opt['file_ext'] = file_ext
-
+    '''
+    This method shifts the signal by n half-steps (n: # of steps)
+    '''
     def freq_shifting(self, raw_freq, num_steps=4, sr=SAMPLE_RATE):
     # Shifting frequency values of the signal by <num_setps> * half-steps
         Ys, fs = [], []
@@ -45,17 +47,28 @@ class DataAugmentor():
 
         return Ys, sr
 
-    def add_noise(self, data, scale=0.005, sr=SAMPLE_RATE):
+    '''
+    This method adds random noise to the signal
+    '''
+    def add_noise(self, data, scale = 0.005, sr=SAMPLE_RATE):
     # Generate random noise to augment the data
-        noise = np.random.randn(len(data))
-        Yn = data + scale*noise
+        Yn = []
+        
+        max_len_idx = max((len(l), i) for i, l in enumerate(data))[1] #Get index of longest subarray
+        max_len = len(data[max_len_idx])
+        noise = np.random.uniform(low=2, high=5, size=1) # Generate a random number within a range [low, high] with the length of the longest subarray
+        print('Noise value:', noise)
+        noise_val = np.full(max_len, noise)
+        for e in data:
+            Y = e + (noise_val[:len(e)] * scale)
+            Yn.append(Y)
 
         return Yn, sr
 
-    '''A function that streches the data on time axis.
-    Parameter raw_freq is array that has each data elements.
-
-    It returns an array that has each streched elements.
+    '''
+    This method streches the data on time axis.
+    Parameter raw_freq is a list of data amplitude values (5682 samples * time in seconds)
+    It returns a list with time-stretched elements
     '''
     def time_stretching(self, raw_freq, rate=2.0):
         Ys = []
@@ -74,6 +87,7 @@ def main():
     file_paths = g.glob(os.path.join(DATA_PATH, FILE_EXT))
     print('File path:', g.glob(os.path.join(DATA_PATH, FILE_EXT)))
 
+    # Pickling data file to reduce the size and speed up load time of the *.wav files
     try:
         if not isfile('radar_dataset.pickle'):
             print('radar_dataset.pickle not found: Pickling...')
@@ -102,11 +116,14 @@ def main():
         print('IOError: Could not find file path')
 
     da = DataAugmentor()
-    freq_data['ps_freq'], sr = da.freq_shifting(freq_data['raw_freq'])
-    #freq_data['noise_freq'], sr = da.freq_shifting(freq_data['noise_freq'])
+    #freq_data['ps_freq'], sr = da.freq_shifting(freq_data['raw_freq'])
+    freq_data['noise_freq'], sr = da.add_noise(freq_data['raw_freq'])
+
+    print('Value of original frequency:', freq_data['raw_freq'][0])
+    print('Value of noise added frequency:', freq_data['noise_freq'][0])
 
     loader.plot_log_specgram(freq_data['labels'][:2], freq_data['raw_freq'][:2]) #visualize in log_spectrogram
-    loader.plot_log_specgram(freq_data['labels'][:2], freq_data['ps_freq'][:2]) 
+    loader.plot_log_specgram(freq_data['labels'][:2], freq_data['noise_freq'][:2]) 
 
 if __name__ == "__main__":
     main()
