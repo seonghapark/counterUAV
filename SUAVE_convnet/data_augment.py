@@ -35,7 +35,7 @@ class DataAugmentor():
     '''
     This method shifts the signal by n half-steps (n: # of steps)
     '''
-    def freq_shifting(self, raw_freq, num_steps=4, sr=SAMPLE_RATE):
+    def freq_shifting(self, raw_freq, num_steps=32, sr=SAMPLE_RATE):
     # Shifting frequency values of the signal by <num_setps> * half-steps
         Ys, fs = [], []
 
@@ -50,7 +50,7 @@ class DataAugmentor():
     '''
     This method adds random noise to the signal
     '''
-    def add_noise(self, data, scale = 0.005, sr=SAMPLE_RATE):
+    def add_noise(self, data, scale = 0.05, sr=SAMPLE_RATE):
     # Generate random noise to augment the data
         Yn = []
         
@@ -116,14 +116,15 @@ def main():
         print('IOError: Could not find file path')
 
     da = DataAugmentor()
-    #freq_data['ps_freq'], sr = da.freq_shifting(freq_data['raw_freq'])
-    freq_data['noise_freq'], sr = da.add_noise(freq_data['raw_freq'])
+    freq_data['ps_freq'], sr = da.freq_shifting(freq_data['raw_freq'])
+    #freq_data['noise_freq'], sr = da.add_noise(freq_data['raw_freq'])
 
     print('Value of original frequency:', freq_data['raw_freq'][0])
-    print('Value of noise added frequency:', freq_data['noise_freq'][0])
+    print('Value of pitch shifted frequency:', freq_data['ps_freq'][0])
+    #print('Value of noise added frequency:', freq_data['noise_freq'][0])
 
     loader.plot_log_specgram(freq_data['labels'][:2], freq_data['raw_freq'][:2]) #visualize in log_spectrogram
-    loader.plot_log_specgram(freq_data['labels'][:2], freq_data['noise_freq'][:2]) 
+    loader.plot_log_specgram(freq_data['labels'][:2], freq_data['ps_freq'][:2]) 
 
 if __name__ == "__main__":
     main()
