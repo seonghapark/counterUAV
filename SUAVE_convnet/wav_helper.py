@@ -46,10 +46,11 @@ class wav_helper():
     It needs to have one-to-one relationship between file_names and data.
     '''
     def write_wavs(self, data,  filenames, sr=5682, ext=".wav", tag=""):
+        tag = "_" + tag
         assert len(data) == len(filenames)
         for idx in range(len(data)):
             librosa.output.write_wav(
-                os.path.join(self.path, self.file_names[idx] + tag + ext),
+                os.path.join(self.path, filenames[idx] + tag + ext),
                 data[idx],
                 sr)
 
