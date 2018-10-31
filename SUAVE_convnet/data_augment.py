@@ -74,12 +74,12 @@ class DataAugmentor():
     Parameter raw_freq is a list of data amplitude values (5682 samples * time in seconds)
     It returns a list with time-stretched elements
     '''
-    def time_stretching(self, raw_freq, rate=2.0):
+    def time_stretching(self, raw_freq, rate=2.0, sr=SAMPLE_RATE):
         Ys = []
         for fr in raw_freq:  # raw_freq has many data files.
             Y_stretched = librosa.effects.time_stretch(fr, rate)
             Ys.append(Y_stretched)
-        return Ys
+        return Ys, sr
 
 #    def visualize
 
@@ -125,6 +125,7 @@ def main():
     da = DataAugmentor()
     freq_data['ps_freq'], sr = da.freq_shifting(freq_data['raw_freq'])
     #freq_data['noise_freq'], sr = da.add_noise(freq_data['raw_freq'])
+    #freq_data['Tstretching_freq'], sr = da.time_stretching(freq_data['raw_freq'])
 
     # Write the augmented signals in a .wav file format
     # The tag is in a form of [augmentation method + n_steps]
@@ -135,9 +136,11 @@ def main():
     print('Value of original frequency:', freq_data['raw_freq'][0])
     print('Value of pitch shifted frequency:', freq_data['ps_freq'][0])
     #print('Value of noise added frequency:', freq_data['noise_freq'][0])
+    #print('Value of Tstretching added frequency:', freq_data['Tstretching_freq'][0])
 
     #loader.plot_log_specgram(freq_data['labels'][:2], freq_data['raw_freq'][:2]) #visualize in log_spectrogram
     #loader.plot_log_specgram(freq_data['labels'][:2], freq_data['ps_freq'][:2]) 
+    #loader.plot_log_specgram(freq_data['labels'][:2], freq_data['Tstretching_freq'][:2])
 
 if __name__ == "__main__":
     main()
