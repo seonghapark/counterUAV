@@ -13,7 +13,10 @@ FILE_EXT='*.wav'
 DATA_PATH='../raw_data/'  # path of raw file
 PATH='../raw_data/data_process'  # path for visualize.py
 sys.path.insert(0, PATH)
+sys.path.insert(0, './')
 from visualize import LoadPlot
+from wav_helper import wav_helper
+
 
 """
 This class contains data augmentation methods that increase the size and variance of our dataset.
@@ -37,6 +40,7 @@ class DataAugmentor():
     '''
     def freq_shifting(self, raw_freq, num_steps=32, sr=SAMPLE_RATE):
     # Shifting frequency values of the signal by <num_setps> * half-steps
+    # (i.e. num_steps=32)
         Ys, fs = [], []
 
         for fr in raw_freq: 
@@ -87,6 +91,7 @@ def main():
     file_paths = g.glob(os.path.join(DATA_PATH, FILE_EXT))
     print('File path:', g.glob(os.path.join(DATA_PATH, FILE_EXT)))
 
+    file_names = []
     # Pickling data file to reduce the size and speed up load time of the *.wav files
     try:
         if not isfile('radar_dataset.pickle'):
@@ -99,6 +104,7 @@ def main():
                 path, filename = os.path.split(p)
                 freq_labels = filename.split('_')[1]    # extract labels from the file name
                 lbl.append(freq_labels)
+                file_names.append(filename)
 
             freq_data = {'raw_freq': raw_freq,
                     'labels': lbl}
@@ -115,16 +121,23 @@ def main():
     except IOError:
         print('IOError: Could not find file path')
 
+    wavhelp = wav_helper(path=DATA_PATH)
     da = DataAugmentor()
     freq_data['ps_freq'], sr = da.freq_shifting(freq_data['raw_freq'])
     #freq_data['noise_freq'], sr = da.add_noise(freq_data['raw_freq'])
+
+    # Write the augmented signals in a .wav file format
+    # The tag is in a form of [augmentation method + n_steps]
+    # (i.e. ps32 - pitch shifting by 32 half-steps)
+    print('Writing augmented data as .wav files...')
+    wavhelp.write_wavs(freq_data['ps_freq'], filenames=file_names, tag='ps32')
 
     print('Value of original frequency:', freq_data['raw_freq'][0])
     print('Value of pitch shifted frequency:', freq_data['ps_freq'][0])
     #print('Value of noise added frequency:', freq_data['noise_freq'][0])
 
-    loader.plot_log_specgram(freq_data['labels'][:2], freq_data['raw_freq'][:2]) #visualize in log_spectrogram
-    loader.plot_log_specgram(freq_data['labels'][:2], freq_data['ps_freq'][:2]) 
+    #loader.plot_log_specgram(freq_data['labels'][:2], freq_data['raw_freq'][:2]) #visualize in log_spectrogram
+    #loader.plot_log_specgram(freq_data['labels'][:2], freq_data['ps_freq'][:2]) 
 
 if __name__ == "__main__":
     main()
