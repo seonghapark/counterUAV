@@ -96,8 +96,11 @@ def main():
     try:
         if not isfile('radar_dataset.pickle'):
             print('radar_dataset.pickle not found: Pickling...')
+            h_wav = wav_helper(DATA_PATH, file_ext=FILE_EXT)
+            h_wav.read_wavs()
+
             loader = LoadPlot()
-            raw_freq = loader.load_sound_files(file_paths)
+            raw_freq = h_wav.raw_freq
 
             lbl = []
             for p in file_paths:
