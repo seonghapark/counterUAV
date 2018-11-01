@@ -125,7 +125,7 @@ def main():
     da = DataAugmentor()
     freq_data['ps_freq'], sr = da.freq_shifting(freq_data['raw_freq'])
     #freq_data['noise_freq'], sr = da.add_noise(freq_data['raw_freq'])
-    #freq_data['Tstretching_freq'], sr = da.time_stretching(freq_data['raw_freq'])
+    #freq_data['ts_freq'], sr = da.time_stretching(freq_data['raw_freq'])
 
     # Write the augmented signals in a .wav file format
     # The tag is in a form of [augmentation method + n_steps]
@@ -136,11 +136,11 @@ def main():
     print('Value of original frequency:', freq_data['raw_freq'][0])
     print('Value of pitch shifted frequency:', freq_data['ps_freq'][0])
     #print('Value of noise added frequency:', freq_data['noise_freq'][0])
-    #print('Value of Tstretching added frequency:', freq_data['Tstretching_freq'][0])
+    #print('Value of time stretched frequency:', freq_data['ts_freq'][0])
 
     #loader.plot_log_specgram(freq_data['labels'][:2], freq_data['raw_freq'][:2]) #visualize in log_spectrogram
     #loader.plot_log_specgram(freq_data['labels'][:2], freq_data['ps_freq'][:2]) 
-    #loader.plot_log_specgram(freq_data['labels'][:2], freq_data['Tstretching_freq'][:2])
+    #loader.plot_log_specgram(freq_data['labels'][:2], freq_data['ts_freq'][:2])
 
 if __name__ == "__main__":
     main()
