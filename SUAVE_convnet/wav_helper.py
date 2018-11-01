@@ -16,14 +16,25 @@ class wav_helper():
         self.path = path
         self.file_paths = g.glob(os.path.join(path, file_ext))
         self.file_names = None  # list of file name
-        self.raw_freq = None    # list of raw data
+        self.raw_freq = None    # list of raw data (right channel)
+        self.raw_sync = None    # list of sync data (left channel)
         self.labels = None  # list of label
     '''
     Read all wav files in directory by filename, label, raw data.
     '''
     def read_wavs(self):
+        raw_sync = []
+        raw_freq = []
+
         loader = LoadPlot()
-        raw_freq = loader.load_sound_files(self.file_paths)
+        raw_data = loader.load_sound_files(self.file_paths)
+        
+        # split sync and frequency
+        datalen = len(raw_data)
+        for r in range(datalen):
+            raw_sync.append(raw_data[r][0])
+            raw_freq.append(raw_data[r][1])
+
         labels = []
         file_names = []
 
