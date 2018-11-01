@@ -16,14 +16,25 @@ class wav_helper():
         self.path = path
         self.file_paths = g.glob(os.path.join(path, file_ext))
         self.file_names = None  # list of file name
-        self.raw_freq = None    # list of raw data
+        self.raw_freq = None    # list of raw data (right channel)
+        self.raw_sync = None    # list of sync data (left channel)
         self.labels = None  # list of label
     '''
     Read all wav files in directory by filename, label, raw data.
     '''
     def read_wavs(self):
+        raw_sync = []
+        raw_freq = []
+
         loader = LoadPlot()
-        raw_freq = loader.load_sound_files(self.file_paths)
+        raw_data = loader.load_sound_files(self.file_paths)
+        
+        # split sync and frequency
+        datalen = len(raw_data)
+        for r in range(datalen):
+            raw_sync.append(raw_data[r][0])
+            raw_freq.append(raw_data[r][1])
+
         labels = []
         file_names = []
 
@@ -38,6 +49,7 @@ class wav_helper():
         assert len(labels) == len(file_names)
 
         self.raw_freq = raw_freq
+        self.raw_sync = raw_sync
         self.labels = labels
         self.file_names = file_names
 
@@ -45,11 +57,12 @@ class wav_helper():
     Write data to wav files.
     It needs to have one-to-one relationship between file_names and data.
     '''
-    def write_wavs(self, data,  sr=5682, ext=".wav", tag=""):
-        assert len(data) == len(self.file_names)
+    def write_wavs(self, data,  filenames, sr=5682, ext=".wav", tag=""):
+        tag = "_" + tag
+        assert len(data) == len(filenames)
         for idx in range(len(data)):
             librosa.output.write_wav(
-                os.path.join(self.path, self.file_names[idx] + tag + ext),
+                os.path.join(self.path, filenames[idx] + tag + ext),
                 data[idx],
                 sr)
 

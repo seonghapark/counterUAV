@@ -25,7 +25,7 @@ class LoadPlot():
         for fp in path:
             if isfile(fp):
                 print('Loading .wav files...')
-                Y, sr = librosa.load(fp, sr)
+                Y, sr = librosa.load(fp, sr, mono=False)
                 Y = self.trim_zeros(Y)  # remove zero-values on front
                 print('Value of .wav file:', Y)
                 raw_sounds.append(Y)
@@ -34,8 +34,19 @@ class LoadPlot():
         return raw_sounds
 
     def trim_zeros(self, y):
-        y = np.trim_zeros(y, 'f')
-        return y
+        assert y.ndim == 2
+        sync = y[0]
+        data = y[1]
+
+        data = np.trim_zeros(data, 'f')
+
+        # match length of two channel
+        d = len(sync) - len(data)
+        sync = sync[d:]
+
+        assert len(sync) == len(data)
+        _y = np.vstack((sync, data))
+        return _y
 
     def plot_specgram(self, sound_names, raw_sounds):
         i = self.i
