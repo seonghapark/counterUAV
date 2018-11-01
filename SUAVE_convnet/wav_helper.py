@@ -49,6 +49,7 @@ class wav_helper():
         assert len(labels) == len(file_names)
 
         self.raw_freq = raw_freq
+        self.raw_sync = raw_sync
         self.labels = labels
         self.file_names = file_names
 
