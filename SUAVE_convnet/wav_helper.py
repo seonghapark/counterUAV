@@ -22,14 +22,14 @@ class wav_helper():
     '''
     Read all wav files in directory by filename, label, raw data.
     '''
-    def read_wavs(self):
+    def read_wavs(self, raw=False):
         raw_sync = []
         raw_freq = []
 
         loader = LoadPlot()
-        raw_data = loader.load_sound_files(self.file_paths)
-        
-        # split sync and frequency
+        raw_data = loader.load_sound_files(self.file_paths, raw=raw)
+
+        # split sync and frequency               
         datalen = len(raw_data)
         for r in range(datalen):
             raw_sync.append(raw_data[r][0])
@@ -59,6 +59,7 @@ class wav_helper():
     '''
     def write_wavs(self, data,  filenames, sr=5682, ext=".wav", tag=""):
         tag = "_" + tag
+        print(len(data), len(filenames))
         assert len(data) == len(filenames)
         for idx in range(len(data)):
             librosa.output.write_wav(
@@ -72,8 +73,22 @@ class wav_helper():
     def files(self):
         i = 0
         while i < len(self.file_names):
-            yield self.file_names[i], self.raw_freq[i], self.labels[i]
+            yield self.file_names[i], self.raw_sync[i], self.raw_freq[i]
             i += 1
+
+    '''
+    filename to label
+    '''
+    def get_label(self, filename):
+        label = filename.split('_')[1]    # extract labels from the file name
+        return label
+
+    def chunks(self, y, sr):
+        # print("Get Chunk")
+        i = 0
+        while i < len(y.shape[1]):
+            yield y[0, i:i+sr], y[1, i:i+sr]
+            i += sr
 
 
 def main():
