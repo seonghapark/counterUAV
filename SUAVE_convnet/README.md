@@ -17,6 +17,10 @@ Deep neural network models are used to classify the frequency data in a .wav for
 
     sh train_cnn.sh
 
+## Draw Range-time intensity plot
+
+    python draw_rti.py *wave file path* (path only until the wave files' parent dir)
+
 ## Codes
 
     data_augment.py: make the data that time stretched, and frequency shifted by librosa.
@@ -24,3 +28,5 @@ Deep neural network models are used to classify the frequency data in a .wav for
     feature_extract.py: Extract features from .wav format files - read the comments for details
 
     train_layers.py: class FeedForward() is for Feed-forward neural network / class ConvNet() is for Convolutional neural network. Both models are implemented in Tensorflow framework. You must specify the hyperparameters at run.py (in case of FFN) or run_cnn.py (in case of CNN)
+
+    draw_rti.py: draws the frequency in a time-range graph 
