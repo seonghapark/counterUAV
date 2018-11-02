@@ -12,7 +12,7 @@ class ifft_handler():
     def __init__(self, sr=5862, ramp_time=0.020):
         # self.fs = 44100
         # Sampling rate
-        self.fs = s
+        self.fs = sr
         # Radar ramp up-time
         self.Tp = ramp_time
         # Samples per ramp up-time

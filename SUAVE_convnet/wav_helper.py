@@ -27,7 +27,7 @@ class wav_helper():
         raw_freq = []
 
         loader = LoadPlot()
-        raw_data = loader.load_sound_files(self.file_paths, raw=raw)
+        raw_data = loader.load_sound_files(self.file_paths)
 
         # split sync and frequency               
         datalen = len(raw_data)
