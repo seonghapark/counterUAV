@@ -57,7 +57,6 @@ class DataAugmentor():
     def add_noise(self, data, scale = 0.05, sr=SAMPLE_RATE):
     # Generate random noise to augment the data
         Yn = []
-        
         max_len_idx = max((len(l), i) for i, l in enumerate(data))[1] #Get index of longest subarray
         max_len = len(data[max_len_idx])
         noise = np.random.uniform(low=2, high=5, size=1) # Generate a random number within a range [low, high] with the length of the longest subarray

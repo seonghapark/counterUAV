@@ -25,7 +25,7 @@ class LoadPlot():
         for fp in path:
             if isfile(fp):
                 print('Loading .wav files...')
-                Y, sr = librosa.load(fp, sr, mono=False)
+                Y, sr = librosa.load(fp, sr, mono=False) # Load .wav file as a stereo file (2 channels)
                 Y = self.trim_zeros(Y)  # remove zero-values on front
                 print('Value of .wav file:', Y)
                 raw_sounds.append(Y)
