@@ -17,6 +17,10 @@ Deep neural network models are used to classify the frequency data in a .wav for
 
     sh train_cnn.sh
 
+## Draw Range-time intensity plot
+
+    python draw_rti.py *wave_files_path*
+
 ## Codes
 
     data_augment.py: make the data that time stretched, and frequency shifted by librosa.
