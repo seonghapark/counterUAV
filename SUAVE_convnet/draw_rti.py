@@ -32,8 +32,9 @@ def main():
 
     h_ifft = ifft_handler()
     for name, sync, freq in h_wav.files():
-        # print('sync: ', sync)
-        # print('freq: ', freq)
+        print('Processing IFFT from the retrieved data...')
+        print('sync: ', sync)
+        print('freq: ', freq)
         r_time, r_data = h_ifft.data_process(sync.astype(np.bool), freq.astype(np.int16))
         # print('freq: ', freq.astype(np.int16))
 

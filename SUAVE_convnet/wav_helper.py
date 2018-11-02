@@ -25,7 +25,6 @@ class wav_helper():
     def read_wavs(self, raw=False):
         raw_sync = []
         raw_freq = []
-
         loader = LoadPlot()
         raw_data = loader.load_sound_files(self.file_paths)
 
@@ -63,7 +62,7 @@ class wav_helper():
         assert len(data) == len(filenames)
         for idx in range(len(data)):
             librosa.output.write_wav(
-                os.path.join(self.path, filenames[idx] + tag + ext),
+                os.path.join(self.path, filenames[idx].split('.')[0] + tag + ext),
                 data[idx],
                 sr)
 
@@ -72,6 +71,7 @@ class wav_helper():
     '''
     def files(self):
         i = 0
+        print('Length of files:', len(self.file_names))
         while i < len(self.file_names):
             yield self.file_names[i], self.raw_sync[i], self.raw_freq[i]
             i += 1

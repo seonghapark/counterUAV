@@ -91,6 +91,13 @@ def main():
     print('File path:', g.glob(os.path.join(DATA_PATH, FILE_EXT)))
 
     file_names = []
+    lbl = []
+    for p in file_paths:
+        path, filename = os.path.split(p)
+        freq_labels = filename.split('_')[1] # extract labels from the file name
+        lbl.append(freq_labels)
+        file_names.append(filename)
+        
     # Pickling data file to reduce the size and speed up load time of the *.wav files
     try:
         if not isfile('radar_dataset.pickle'):
@@ -100,13 +107,6 @@ def main():
 
             loader = LoadPlot()
             raw_freq = h_wav.raw_freq
-
-            lbl = []
-            for p in file_paths:
-                path, filename = os.path.split(p)
-                freq_labels = filename.split('_')[1]    # extract labels from the file name
-                lbl.append(freq_labels)
-                file_names.append(filename)
 
             freq_data = {'raw_freq': raw_freq,
                     'labels': lbl}
@@ -133,10 +133,12 @@ def main():
     # The tag is in a form of [augmentation method + n_steps]
     # (i.e. ps32 - pitch shifting by 32 half-steps)
     print('Writing augmented data as .wav files...')
+    print('FILE NAMES:', file_names)
     wavhelp.write_wavs(freq_data['ps_freq'], filenames=file_names, tag='ps32')
 
-    print('Value of original frequency:', freq_data['raw_freq'][0])
-    print('Value of pitch shifted frequency:', freq_data['ps_freq'][0])
+    #d = np.asarray(freq_data['raw_freq'])
+    #print('Value of original frequency:', freq_data['raw_freq'], '\nShape of original frequency:', d.shape)
+    #print('Value of pitch shifted frequency:', freq_data['ps_freq'][0])
     #print('Value of noise added frequency:', freq_data['noise_freq'][0])
     #print('Value of time stretched frequency:', freq_data['ts_freq'][0])
 
