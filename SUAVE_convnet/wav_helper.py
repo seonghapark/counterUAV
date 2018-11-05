@@ -23,17 +23,18 @@ class wav_helper():
     Read all wav files in directory by filename, label, raw data.
     '''
     def read_wavs(self, raw=False):
-        raw_sync = []
-        raw_freq = []
         loader = LoadPlot()
         raw_data = loader.load_sound_files(self.file_paths)
+        raw_sync = []
+        raw_freq = []
 
-        # split sync and frequency               
+        '''
+        # split sync and frequency
         datalen = len(raw_data)
         for r in range(datalen):
             raw_sync.append(raw_data[r][0])
             raw_freq.append(raw_data[r][1])
-
+        '''
         labels = []
         file_names = []
 
@@ -47,6 +48,9 @@ class wav_helper():
         assert len(raw_freq) == len(labels)
         assert len(labels) == len(file_names)
 
+        #print('raw_freq : raw_sync', raw_freq, '::', raw_sync)
+
+        self.raw_data = raw_data
         self.raw_freq = raw_freq
         self.raw_sync = raw_sync
         self.labels = labels
@@ -95,7 +99,7 @@ def main():
     helper = wav_helper(sys.argv[1])
     helper.read_wavs()
 
-    print('raw_freq: ', helper.raw_freq)
+    #print('raw_freq: ', helper.raw_freq)
     print('labels: ', helper.labels)
     print('filenames: ', helper.file_names)
 

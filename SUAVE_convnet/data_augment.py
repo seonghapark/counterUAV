@@ -41,29 +41,30 @@ class DataAugmentor():
     def freq_shifting(self, raw_freq, num_steps=32, sr=SAMPLE_RATE):
     # Shifting frequency values of the signal by <num_setps> * half-steps
     # (i.e. num_steps=32)
-        Ys, fs = [], []
+        Y = []
 
         for fr in raw_freq: 
             # Shift up by a major third (four half-steps)
-            Y_shifted = librosa.effects.pitch_shift(fr, sr, num_steps)
-            Ys.append(Y_shifted)
-            fs.append(sr)
-
-        return Ys, sr
+            # Shifting both the data and sync channels
+            Ysync_shifted = librosa.effects.pitch_shift(fr[0], sr, num_steps)
+            Ydata_shifted = librosa.effects.pitch_shift(fr[1], sr, num_steps)
+            Y_ps = np.vstack((Ysync_shifted, Ydata_shifted))
+            Y.append(Y_ps)
+        return Y, sr
 
     '''
     This method adds random noise to the signal
     '''
-    def add_noise(self, data, scale = 0.05, sr=SAMPLE_RATE):
+    def add_noise(self, raw_freq, scale = 0.05, sr=SAMPLE_RATE):
     # Generate random noise to augment the data
         Yn = []
-        max_len_idx = max((len(l), i) for i, l in enumerate(data))[1] #Get index of longest subarray
-        max_len = len(data[max_len_idx])
+        max_len_idx = max((len(l), i) for i, l in enumerate(raw_freq))[1] #Get index of longest subarray
+        max_len = len(raw_freq[max_len_idx])
         noise = np.random.uniform(low=2, high=5, size=1) # Generate a random number within a range [low, high] with the length of the longest subarray
         print('Noise value:', noise)
         noise_val = np.full(max_len, noise)
-        for e in data:
-            Y = e + (noise_val[:len(e)] * scale)
+        for e in raw_freq[]:
+            Yn = e + (noise_val[:len(e)] * scale)
             Yn.append(Y)
 
         return Yn, sr
@@ -75,9 +76,12 @@ class DataAugmentor():
     '''
     def time_stretching(self, raw_freq, rate=2.0, sr=SAMPLE_RATE):
         Ys = []
-        for fr in raw_freq:  # raw_freq has many data files.
-            Y_stretched = librosa.effects.time_stretch(fr, rate)
-            Ys.append(Y_stretched)
+        for fr in raw_freq:  # raw_freq has many data files
+            # Shifting both the data and sync channels
+            Ysync_stretched = librosa.effects.time_stretch(fr[0], rate)
+            Ydata_stretched = librosa.effects.time_stretch(fr[1], rate)
+            Y = np.vstack((Ysync_stretched, Ydata_stretched))
+            Ys.append(Y)
         return Ys, sr
 
 #    def visualize
@@ -106,9 +110,9 @@ def main():
             h_wav.read_wavs()
 
             loader = LoadPlot()
-            raw_freq = h_wav.raw_freq
+            raw_freq = h_wav.raw_data
 
-            freq_data = {'raw_freq': raw_freq,
+            freq_data = {'raw_freq': raw_data,
                     'labels': lbl}
 
             with open('radar_dataset.pickle', 'wb') as handle:
@@ -125,7 +129,7 @@ def main():
 
     wavhelp = wav_helper(path=DATA_PATH)
     da = DataAugmentor()
-    freq_data['ps_freq'], sr = da.freq_shifting(freq_data['raw_freq'])
+    #freq_data['ps_freq'], sr = da.freq_shifting(freq_data['raw_freq'])
     #freq_data['noise_freq'], sr = da.add_noise(freq_data['raw_freq'])
     #freq_data['ts_freq'], sr = da.time_stretching(freq_data['raw_freq'])
 
@@ -134,7 +138,7 @@ def main():
     # (i.e. ps32 - pitch shifting by 32 half-steps)
     print('Writing augmented data as .wav files...')
     print('FILE NAMES:', file_names)
-    wavhelp.write_wavs(freq_data['ps_freq'], filenames=file_names, tag='ps32')
+    #wavhelp.write_wavs(freq_data['ps_freq'], filenames=file_names, tag='ps32')
 
     #d = np.asarray(freq_data['raw_freq'])
     #print('Value of original frequency:', freq_data['raw_freq'], '\nShape of original frequency:', d.shape)
