@@ -82,6 +82,7 @@ class DataAugmentor():
             Ydata_stretched = librosa.effects.time_stretch(fr[1], rate)
             Y = np.vstack((Ysync_stretched, Ydata_stretched))
             Ys.append(Y)
+
         return Ys, sr
 
 #    def visualize
