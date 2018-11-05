@@ -63,7 +63,7 @@ class DataAugmentor():
         noise = np.random.uniform(low=2, high=5, size=1) # Generate a random number within a range [low, high] with the length of the longest subarray
         print('Noise value:', noise)
         noise_val = np.full(max_len, noise)
-        for e in raw_freq[]:
+        for e in raw_freq[]: #TODO Fix to access the raw_freq in axis=1
             Yn = e + (noise_val[:len(e)] * scale)
             Yn.append(Y)
 

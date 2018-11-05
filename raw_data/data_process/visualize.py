@@ -27,10 +27,14 @@ class LoadPlot():
                 print('Loading .wav files...')
                 Y, sr = librosa.load(fp, sr, mono=False) # Load .wav file as a stereo file (2 channels)
                 Y = self.trim_zeros(Y)  # remove zero-values on front
-                print('Value of .wav file:', Y)
+                #print('Value of .wav file:', Y)
                 raw_sounds.append(Y)
             else:
                 print('Invalid path:', path)
+
+        print('Value of .wav file:', Y)
+        print('Shape of .wav file:', np.asarray(Y).shape)
+        print('Sync of .wav file:', Y[0], '\nData of .wav file:', Y[1])
         return raw_sounds
 
     def trim_zeros(self, y):
