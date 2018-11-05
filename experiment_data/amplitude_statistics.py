@@ -19,7 +19,7 @@ def windows(data, window_size):
 
 #statistics of amplitude data
 def extract_amp_stats(parent_dir, sub_dirs, file_ext=FILE_EXT, bands=60, frames=41):
-        window_size = 512 * (frames - 1)
+        window_size = 128 * (frames - 1)
         labels = []
         amp_med = []
         amp_mean = []
@@ -73,7 +73,7 @@ def extract_amp_stats(parent_dir, sub_dirs, file_ext=FILE_EXT, bands=60, frames=
         return amp_stat
 
 def extract_diffamp_stats_1(parent_dir, sub_dirs, file_ext=FILE_EXT, bands=60, frames=41):
-        window_size = 512 * (frames - 1)
+        window_size = 128 * (frames - 1)
         labels = []
         amp_med = []
         amp_mean = []
@@ -128,7 +128,7 @@ def extract_diffamp_stats_1(parent_dir, sub_dirs, file_ext=FILE_EXT, bands=60, f
         return diffamp_stat_1
 
 def extract_diffamp_stats_2(parent_dir, sub_dirs, file_ext=FILE_EXT, bands=60, frames=41):
-        window_size = 512 * (frames - 1)
+        window_size = 128 * (frames - 1)
         labels = []
         amp_med = []
         amp_mean = []
