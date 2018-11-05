@@ -73,11 +73,25 @@ class DataAugmentor():
     Parameter raw_freq is a list of data amplitude values (5682 samples * time in seconds)
     It returns a list with time-stretched elements
     '''
-    def time_stretching(self, raw_freq, rate=2.0, sr=SAMPLE_RATE):
-        Ys = []
-        for fr in raw_freq:  # raw_freq has many data files.
-            Y_stretched = librosa.effects.time_stretch(fr, rate)
-            Ys.append(Y_stretched)
+    def time_stretching(self, raw_freq, rate=0.5, sr=SAMPLE_RATE):
+        sy, fr, Ys = [], [], []
+
+        ts_wave = wav_helper(DATA_PATH)
+        ts_wave.read_wavs()
+        ts_freq = ts_wave.raw_freq
+        ts_sync = ts_wave.raw_sync
+
+        # split sync and frequency               
+        for sl in ts_sync: 
+            sync_str = librosa.effects.time_stretch(sl, rate)
+            sy.append(sync_str)
+        
+        for fl in ts_freq:
+            freq_str = librosa.effects.time_stretch(fl, rate)
+            fr.append(freq_str)
+
+        for i in range(len(raw_freq)):
+            Ys.append(np.vstack((sy[i],fr[i])))
         return Ys, sr
 
 #    def visualize
