@@ -67,7 +67,7 @@ class rmq_commumication():
             return None, None
 
         data = bytearray(body)
-        print(len(data))
+        print('Data length:', len(data))
 
         if len(data) < 2:
             return None, None
@@ -96,19 +96,29 @@ class rmq_commumication():
 class ifft_handler():
     def __init__(self):
         self.opp = 0
-        self.fs = 44100  # Sampling rate
+        #self.fs = 44100  # Sampling rate
+        self.fs = 11724
         self.Tp = 0.020   # Radar ramp up-time
         self.n = int(self.Tp*self.fs)   # Samples per ramp up-time
         self.fsif = np.zeros([10000,self.n], dtype=np.int16)  # Zero array for further data storage
 
-    def dbv(self, input):
-        return 20 * np.log10(abs(input))  # Calculate Decibel using received signal intensity value
+    def dbv(self, inp):
+
+        """
+            # print("Input to method dbv:", inp)
+            # print("Zero values in input:", inp == 0)
+            if np.any(inp == 0):
+            # Remove any zero values from the input to eradicate divide by zero warning
+                min_nonzero = np.min(inp[np.nonzero(inp)])
+                inp[inp == 0] = min_nonzero
+        """
+        return 20 * np.log10(abs(inp))  # Calculate Decibel using received signal intensity value
 
 
     def data_process(self, sync, data):
         count = 0
         result_time = [] # time is a list
-        self.fs = len(sync)
+        # self.fs = len(sync)
         self.n = int(self.Tp*self.fs)
         self.fsif = np.zeros([10000,self.n], dtype=np.int16) 
         # print(self.fs)
