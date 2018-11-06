@@ -58,13 +58,12 @@ class wav_helper():
                 sr)
 
     '''
-    iterator that yields name, data, label
+    iterator that yields name, sync, data
     '''
     def files(self):
         i = 0
-        print('Length of files:', len(self.file_names))
         while i < len(self.file_names):
-            yield self.file_names[i], self.raw_data[i][1], self.raw_data[i][0]
+            yield self.file_names[i], self.raw_data[i][0], self.raw_data[i][1]
             i += 1
 
     '''
