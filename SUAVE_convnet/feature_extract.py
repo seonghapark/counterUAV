@@ -35,7 +35,7 @@ class FeatureParser():
 
     # Extracting and preprocessing features for ConvNet
     def extract_CNNfeature(self, parent_dir, sub_dirs, file_ext=FILE_EXT, bands = 60, frames = 41):
-        window_size = 512 * (frames - 1)
+        window_size = 128 * (frames - 1)
         log_specgrams = []
         labels = []
         if not isfile('radar_CNNdataset.pickle'):

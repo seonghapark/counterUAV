@@ -16,23 +16,14 @@ class wav_helper():
         self.path = path
         self.file_paths = g.glob(os.path.join(path, file_ext))
         self.file_names = None  # list of file name
-        self.raw_freq = None    # list of raw data (right channel)
-        self.raw_sync = None    # list of sync data (left channel)
+        self.raw_data = None
         self.labels = None  # list of label
     '''
     Read all wav files in directory by filename, label, raw data.
     '''
-    def read_wavs(self, raw=False):
-        raw_sync = []
-        raw_freq = []
+    def read_wavs(self, intval=False):
         loader = LoadPlot()
-        raw_data = loader.load_sound_files(self.file_paths)
-
-        # split sync and frequency               
-        datalen = len(raw_data)
-        for r in range(datalen):
-            raw_sync.append(raw_data[r][0])
-            raw_freq.append(raw_data[r][1])
+        raw_data = loader.load_sound_files(self.file_paths, intval=intval)
 
         labels = []
         file_names = []
@@ -43,12 +34,12 @@ class wav_helper():
             freq_labels = filename.split('_')[1]    # extract labels from the file name
             file_names.append(filename)
             labels.append(freq_labels)
-            
-        assert len(raw_freq) == len(labels)
+        
+        print('Length of raw_freq:', len(raw_data), '\nLength of labels', len(labels)) 
+        assert len(raw_data) == len(labels)
         assert len(labels) == len(file_names)
 
-        self.raw_freq = raw_freq
-        self.raw_sync = raw_sync
+        self.raw_data = raw_data
         self.labels = labels
         self.file_names = file_names
 
@@ -67,13 +58,12 @@ class wav_helper():
                 sr)
 
     '''
-    iterator that yields name, data, label
+    iterator that yields name, sync, data
     '''
     def files(self):
         i = 0
-        print('Length of files:', len(self.file_names))
         while i < len(self.file_names):
-            yield self.file_names[i], self.raw_sync[i], self.raw_freq[i]
+            yield self.file_names[i], self.raw_data[i][0], self.raw_data[i][1]
             i += 1
 
     '''
@@ -95,7 +85,7 @@ def main():
     helper = wav_helper(sys.argv[1])
     helper.read_wavs()
 
-    print('raw_freq: ', helper.raw_freq)
+    #print('raw_freq: ', helper.raw_freq)
     print('labels: ', helper.labels)
     print('filenames: ', helper.file_names)
 
