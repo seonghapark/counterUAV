@@ -19,15 +19,20 @@ class LoadPlot():
         self.y = y
         self.fontsize = fontsize
 
-    def load_sound_files(self, path, sr=5862):
+    def load_sound_files(self, path, sr=5862, intval=False):
         raw_sounds = []
 
         for fp in path:
             if isfile(fp):
                 print('Loading .wav files...')
-                Y, sr = librosa.load(fp, sr, mono=False) # Load .wav file as a stereo file (2 channels)
+                if intval is False:
+                    # Load .wav file as a stereo file (2 channels)
+                    Y, sr = librosa.load(fp, sr, mono=False)
+                else:
+                    sr, Y = wavfile.read(fp)
+                    Y = Y.T
+                print('Value of .wav file:', Y)
                 Y = self.trim_zeros(Y)  # remove zero-values on front
-                #print('Value of .wav file:', Y)
                 raw_sounds.append(Y)
             else:
                 print('Invalid path:', path)
@@ -38,6 +43,11 @@ class LoadPlot():
         return raw_sounds
 
     def trim_zeros(self, y):
+        # in mono
+        if y.ndim == 1:
+            _y = np.trim_zeros(y, 'f')
+            return _y
+
         assert y.ndim == 2
         sync = y[0]
         data = y[1]
