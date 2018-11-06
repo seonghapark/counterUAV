@@ -22,9 +22,9 @@ class wav_helper():
     '''
     Read all wav files in directory by filename, label, raw data.
     '''
-    def read_wavs(self, raw=False):
+    def read_wavs(self, intval=False):
         loader = LoadPlot()
-        raw_data = loader.load_sound_files(self.file_paths)
+        raw_data = loader.load_sound_files(self.file_paths, intval=intval)
         raw_sync = []
         raw_freq = []
 
