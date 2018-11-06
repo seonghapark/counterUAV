@@ -142,8 +142,8 @@ def main():
 
     wavhelp = wav_helper(path=DATA_PATH)
     da = DataAugmentor()
-    #freq_data['ps_freq'], sr = da.freq_shifting(freq_data['raw_freq'])
-    freq_data['ns_freq'], sr = da.add_noise(freq_data['raw_freq'])
+    freq_data['ps_freq'], sr = da.freq_shifting(freq_data['raw_freq'])
+    #freq_data['ns_freq'], sr = da.add_noise(freq_data['raw_freq'])
     #freq_data['ts_freq'], sr = da.time_stretching(freq_data['raw_freq'])
 
     # Write the augmented signals in a .wav file format
@@ -161,7 +161,7 @@ def main():
 
     raw = []
     aug = []
-    for i, j in zip(freq_data['raw_freq'], freq_data['ns_freq']):
+    for i, j in zip(freq_data['raw_freq'], freq_data['ps_freq']):
         print('Raw_freq #1~2:', i[1])
         print('Noise_freq #1~2:', j[1])
         raw.append(i[1])
