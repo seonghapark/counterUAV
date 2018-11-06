@@ -27,7 +27,7 @@ def extract_amp_stats(parent_dir, sub_dirs, file_ext=FILE_EXT, bands=60, frames=
         amp_min = []
         amp_max = []
         amp_rge = [] #range (max-min)
-        amp_ratio = [] #ration (max/min)
+        amp_ratio = [] #ratio (max/min)
 
         for sub_dir in sub_dirs:
             for fn in g.glob(os.path.join(parent_dir, sub_dir, file_ext)):
@@ -67,8 +67,8 @@ def extract_amp_stats(parent_dir, sub_dirs, file_ext=FILE_EXT, bands=60, frames=
         amp_stat = np.append(amp_stat, r_amp_rge, axis=1)
         amp_stat = np.append(amp_stat, r_amp_ratio, axis=1)
         
-        print(amp_stat[0][0])
-        print(np.ndim(amp_stat))
+        #print(amp_stat[0][0])
+        #print(np.ndim(amp_stat))
                 
         return amp_stat
 
@@ -81,7 +81,7 @@ def extract_diffamp_stats_1(parent_dir, sub_dirs, file_ext=FILE_EXT, bands=60, f
         amp_min = []
         amp_max = []
         amp_rge = [] #range (max-min)
-        amp_ratio = [] #ration (max/min)
+        amp_ratio = [] #ratio (max/min)
 
         for sub_dir in sub_dirs:
             for fn in g.glob(os.path.join(parent_dir, sub_dir, file_ext)):
@@ -122,8 +122,8 @@ def extract_diffamp_stats_1(parent_dir, sub_dirs, file_ext=FILE_EXT, bands=60, f
         diffamp_stat_1 = np.append(diffamp_stat_1, r_amp_rge, axis=1)
         diffamp_stat_1 = np.append(diffamp_stat_1, r_amp_ratio, axis=1)
         
-        print(diffamp_stat_1[0][0])
-        print(len(diffamp_stat_1))
+        #print(diffamp_stat_1[0][0])
+        #print(len(diffamp_stat_1))
                 
         return diffamp_stat_1
 
@@ -136,7 +136,7 @@ def extract_diffamp_stats_2(parent_dir, sub_dirs, file_ext=FILE_EXT, bands=60, f
         amp_min = []
         amp_max = []
         amp_rge = [] #range (max-min)
-        amp_ratio = [] #ration (max/min)
+        amp_ratio = [] #ratio (max/min)
 
         for sub_dir in sub_dirs:
             for fn in g.glob(os.path.join(parent_dir, sub_dir, file_ext)):
@@ -177,8 +177,8 @@ def extract_diffamp_stats_2(parent_dir, sub_dirs, file_ext=FILE_EXT, bands=60, f
         diffamp_stat_2 = np.append(diffamp_stat_2, r_amp_rge, axis=1)
         diffamp_stat_2 = np.append(diffamp_stat_2, r_amp_ratio, axis=1)
         
-        print(diffamp_stat_2[0][0])
-        print(len(diffamp_stat_2))
+        #print(diffamp_stat_2[0][0])
+        #print(len(diffamp_stat_2))
                 
         return diffamp_stat_2
     

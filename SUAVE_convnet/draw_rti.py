@@ -28,7 +28,7 @@ def main():
     norm = colors.BoundaryNorm([i for i in range(-80, 1)], ncolors=cmap.N, clip=True)
 
     h_wav = wav_helper(sys.argv[1])
-    h_wav.read_wavs(raw=True)
+    h_wav.read_wavs(intval=True)
 
     h_ifft = ifft_handler()
     for name, sync, freq in h_wav.files():
