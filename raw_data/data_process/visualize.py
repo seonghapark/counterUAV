@@ -80,6 +80,7 @@ class LoadPlot():
             i+=1
 
         plt.suptitle("Figure 2: Log-powered spectrogram", x=self.x, y=self.y, fontsize=self.fontsize)
+        plt.tight_layout()
         plt.show()
 
 if __name__ == "__main__":

@@ -44,8 +44,9 @@ class wav_helper():
             freq_labels = filename.split('_')[1]    # extract labels from the file name
             file_names.append(filename)
             labels.append(freq_labels)
-            
-        assert len(raw_freq) == len(labels)
+        
+        print('Length of raw_freq:', len(raw_data), '\nLength of labels', len(labels)) 
+        assert len(raw_data) == len(labels)
         assert len(labels) == len(file_names)
 
         #print('raw_freq : raw_sync', raw_freq, '::', raw_sync)
