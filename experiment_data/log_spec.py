@@ -3,6 +3,9 @@ import os
 import numpy as np
 import glob as g
 from os.path import isfile, isdir
+import time
+
+start_time = time.time()
 
 FILE_EXT='*.wav'
 
@@ -38,21 +41,21 @@ def extract_log_spec (parent_dir, sub_dirs, file_ext=FILE_EXT, bands=60, frames=
                         log_specgrams.append(logspec)
                         labels.append(lbl)
 
-        print(len(log_specgrams))
-        print(np.ndim(log_specgrams))
-        print(len(log_specgrams[0][0]))
-        print(log_specgrams[0])
-        print(len(log_specgrams[0]))
         log_specgrams = np.asarray(log_specgrams).reshape(len(log_specgrams),bands,frames,1)
-        print(np.ndim(log_specgrams))
         features = np.concatenate((log_specgrams, np.zeros(np.shape(log_specgrams))), axis = 3)
 
         for i in range(len(features)):
             features[i, :, :, 1] = librosa.feature.delta(features[i, :, :, 0])
     
-        return 0
+        return np.array(features), np.array(labels,dtype = np.int)
+
+def one_hot_encode(labels):
+    n_labels = len(labels)
+    n_unique_labels = len(np.unique(labels))
+    one_hot_encode = np.zeros((n_labels,n_unique_labels))
+    one_hot_encode[np.arange(n_labels), labels] = 1
+    return one_hot_encode
 
 
-print(extract_log_spec('C:/Users/USER/Desktop/counterUAV/experiment_data',sub_dirs))
 
 

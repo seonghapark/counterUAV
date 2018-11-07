@@ -3,6 +3,9 @@ import os
 import numpy as np
 import glob as g
 from os.path import isfile, isdir
+import time
+
+start_time = time.time()
 
 FILE_EXT='*.wav'
 
@@ -67,10 +70,11 @@ def extract_amp_stats(parent_dir, sub_dirs, file_ext=FILE_EXT, bands=60, frames=
         amp_stat = np.append(amp_stat, r_amp_rge, axis=1)
         amp_stat = np.append(amp_stat, r_amp_ratio, axis=1)
         
-        #print(amp_stat[0][0])
-        #print(np.ndim(amp_stat))
+        print(amp_stat[0])
+        print(len(amp_stat))
+        print(np.ndim(amp_stat))
                 
-        return amp_stat
+        return 0
 
 def extract_diffamp_stats_1(parent_dir, sub_dirs, file_ext=FILE_EXT, bands=60, frames=41):
         window_size = 128 * (frames - 1)
@@ -183,5 +187,6 @@ def extract_diffamp_stats_2(parent_dir, sub_dirs, file_ext=FILE_EXT, bands=60, f
         return diffamp_stat_2
     
         
-print(extract_diffamp_stats_1('C:/Users/USER/Desktop/counterUAV/experiment_data',sub_dirs))
-print(extract_diffamp_stats_2('C:/Users/USER/Desktop/counterUAV/experiment_data',sub_dirs))
+print(extract_amp_stats('C:/Users/USER/Desktop/counterUAV/experiment_data',sub_dirs))
+#print(extract_diffamp_stats_2('C:/Users/USER/Desktop/counterUAV/experiment_data',sub_dirs))
+print("--- %s seconds ---" % (time.time() - start_time))
