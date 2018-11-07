@@ -33,3 +33,9 @@ Use read_data.py
     3 - uav
 
     ex) 20181009_3_100023.wav is a UAV
+
+## Tags
+
+    ps - pitch shifted
+    ts - time stretched
+    ns - noise added
