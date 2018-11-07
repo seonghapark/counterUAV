@@ -17,14 +17,15 @@ HIDDEN1 = 500
 DEPTH = 20
 
 PARENT_DIR='../raw_data'
-LEARNING_RATE=1e-2
-NUM_CLASSES = 10
+LEARNING_RATE=1e-3
+NUM_CLASSES = 4
 
 def main():
     tf.reset_default_graph()
 
     parent_dir = PARENT_DIR
-    sub_dir = ['fold1', 'fold2', 'fold3', 'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10']
+    sub_dir = ''
+    #sub_dir = ['fold1', 'fold2', 'fold3', 'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10']
 
     print('PATH:', os.path.join(parent_dir, sub_dir[0]))
 

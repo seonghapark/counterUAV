@@ -11,6 +11,7 @@ import numpy as np
 SAMPLE_RATE=5682
 FILE_EXT='*.wav'
 DATA_PATH='../raw_data/'  # path of raw file
+AUG_PATH='../raw_data/augment_data'
 PATH='../raw_data/data_process'  # path for visualize.py
 sys.path.insert(0, PATH)
 sys.path.insert(0, './')
@@ -140,18 +141,18 @@ def main():
     except IOError:
         print('IOError: Could not find file path')
 
-    wavhelp = wav_helper(path=DATA_PATH)
+    wavhelp = wav_helper(path=AUG_PATH)
     da = DataAugmentor()
-    freq_data['ps_freq'], sr = da.freq_shifting(freq_data['raw_freq'])
+    #freq_data['ps_freq'], sr = da.freq_shifting(freq_data['raw_freq'])
     #freq_data['ns_freq'], sr = da.add_noise(freq_data['raw_freq'])
-    #freq_data['ts_freq'], sr = da.time_stretching(freq_data['raw_freq'])
+    freq_data['ts_freq'], sr = da.time_stretching(freq_data['raw_freq'])
 
     # Write the augmented signals in a .wav file format
     # The tag is in a form of [augmentation method + n_steps]
     # (i.e. ps32 - pitch shifting by 32 half-steps)
     print('Writing augmented data as .wav files...')
     print('FILE NAMES:', file_names)
-    #wavhelp.write_wavs(freq_data['ns_freq'], filenames=file_names, tag='ns')
+    wavhelp.write_wavs(freq_data['ts_freq'], filenames=file_names, tag='ts')
 
     #d = np.asarray(freq_data['raw_freq'])
     #print('Value of original frequency:', freq_data['raw_freq'], '\nShape of original frequency:', d.shape)
@@ -159,9 +160,10 @@ def main():
     #print('Value of noise added frequency:', freq_data['ns_freq'][0])
     #print('Value of time stretched frequency:', freq_data['ts_freq'][0])
 
+    '''
     raw = []
     aug = []
-    for i, j in zip(freq_data['raw_freq'], freq_data['ps_freq']):
+    for i, j in zip(freq_data['raw_freq'], freq_data['ns_freq']):
         print('Raw_freq #1~2:', i[1])
         print('Noise_freq #1~2:', j[1])
         raw.append(i[1])
@@ -169,6 +171,6 @@ def main():
 
     loader.plot_log_specgram(freq_data['labels'][:2], raw[:2]) #visualize in log_spectrogram
     loader.plot_log_specgram(freq_data['labels'][:2], aug[:2])
-
+    '''
 if __name__ == "__main__":
     main()
