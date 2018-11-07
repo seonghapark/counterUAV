@@ -139,7 +139,6 @@ class ConvNet():
         out = tf.nn.softmax(tf.matmul(f, out_weights) + out_biases)
 
         cost = tf.reduce_mean(-tf.reduce_sum(Y * tf.log(out), reduction_indices=[1]))
-        #cross_entropy = -tf.reduce_sum(Y * tf.log(out))
         optimizer = tf.train.AdamOptimizer(learning_rate=self.opt['learning_rate']).minimize(cost)
         correct_pred = tf.equal(tf.argmax(out, 1), tf.argmax(Y, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
