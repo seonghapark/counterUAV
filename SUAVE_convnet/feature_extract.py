@@ -98,7 +98,7 @@ class FeatureParser():
 
         # make folds
         for i in range(1, k):
-            k_fold_dict['fold' + str(i)] = []
+            k_fold_dict['fold' + str(i)] = [[], []]
 
         # counter for each label
         counter = [0] * (len(np.unique(labels)) + 1)
@@ -106,7 +106,8 @@ class FeatureParser():
         # make k_fold_dict
         for feature, label in zip(features, labels):
             n = counter[label] % k + 1
-            k_fold_dict['fold' + str(n)].append((feature, label))
+            k_fold_dict['fold' + str(n)][0].append(feature)
+            k_fold_dict['fold' + str(n)][1].append(label)
 
         return k_fold_dict
 
