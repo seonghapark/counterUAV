@@ -16,7 +16,7 @@ KERNEL_SIZE = 30
 HIDDEN1 = 500
 DEPTH = 20
 
-PARENT_DIR='../raw_data'
+PARENT_DIR='../raw_data/data'
 LEARNING_RATE=1e-3
 NUM_CLASSES = 4
 
@@ -24,8 +24,7 @@ def main():
     tf.reset_default_graph()
 
     parent_dir = PARENT_DIR
-    sub_dir = ''
-    #sub_dir = ['fold1', 'fold2', 'fold3', 'fold4', 'fold5', 'fold6', 'fold7', 'fold8', 'fold9', 'fold10']
+    sub_dir = ['0', '1', '2', '3']
 
     print('PATH:', os.path.join(parent_dir, sub_dir[0]))
 
@@ -34,18 +33,22 @@ def main():
         print('Parsing audio files...')
         print('Extracting features...')
         features, labels = f.extract_CNNfeature(parent_dir, sub_dir)
+        print('features, labels: ', features, labels)
+
         labels = f.one_hot_encode(labels)
 
         tr_ts_split = np.random.rand(len(features)) < 0.70
         train_x = features[tr_ts_split]
-        train_y = features[tr_ts_split]
+        train_y = labels[tr_ts_split]
         test_x = features[~tr_ts_split]
-        test_y = features[~tr_ts_split]
+        test_y = labels[~tr_ts_split]
 
-        data = {'tr_features': train_x,
+        data = {
+            'tr_features': train_x,
                      'tr_labels': train_y,
                      'ts_features': test_x,
-                     'ts_labels': test_y}
+            'ts_labels': test_y
+        }
 
         with open('audio_CNNdataset.pickle', 'wb') as handle:
             pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
