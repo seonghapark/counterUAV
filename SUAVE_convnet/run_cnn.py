@@ -45,8 +45,8 @@ def main():
 
         data = {
             'tr_features': train_x,
-                     'tr_labels': train_y,
-                     'ts_features': test_x,
+            'tr_labels': train_y,
+            'ts_features': test_x,
             'ts_labels': test_y
         }
 
@@ -60,7 +60,7 @@ def main():
 #    with tf.Session() as sess:
 #        print('Shape of train_x:{}'.format(sess.run(tf.shape(data['tr_features']))))
 
-    print('TRAIN_X:{}\nTEST_X:{}'.format(data['tr_features'], data['ts_features']))
+    #print('TRAIN_X:{}\nTEST_X:{}'.format(data['tr_features'], data['ts_features']))
     #print('FEATURE_SHAPE:{}'.format(features.shape[1]))
 
     # Initialize the ConvNet model
