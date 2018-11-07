@@ -34,8 +34,8 @@ def pick_dataset(k_fold_dict, k, idx):
     ts_features = []
     ts_labels = []
 
-    for i in range(1, k):
-        tag = 'fold'+str(i)
+    for i in range(1, k + 1):
+        tag = 'fold' + str(i)
         if i == idx:
             print('set')
             ts_features += k_fold_dict[tag][0]
