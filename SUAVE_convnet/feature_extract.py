@@ -90,9 +90,10 @@ class FeatureParser():
         one_hot_encode[np.arange(n_labels), labels] = 1
         return one_hot_encode
 
-def main():
+#def main():
     # Sample code for running methods within the current file
 
-
+'''
 if __name__ == '__main__':
     main()
+'''
