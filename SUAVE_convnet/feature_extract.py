@@ -41,9 +41,11 @@ class FeatureParser():
         if not isfile('radar_CNNdataset.pickle'):
             for label, sub_dir in enumerate(sub_dirs):
                 for fn in g.glob(os.path.join(parent_dir, sub_dir, file_ext)):
-                    sound_clip, sr = librosa.load(fn)
-                    lbl = fn.split('/')[4].split('_')[1] # extract label from file name
+                    path, filename = os.path.split(fn)
+                    lbl = filename.split('_')[1] # extract label from file name
                     #print('LABEL:', lbl)
+
+                    sound_clip, sr = librosa.load(fn)
                     for (start, end) in self.windows(sound_clip, window_size):
                         start = int(start)
                         end = int(end)
@@ -97,17 +99,18 @@ class FeatureParser():
         print(features.shape, labels.shape)
 
         # make folds
-        for i in range(1, k):
+        for i in range(1, k + 1):
             k_fold_dict['fold' + str(i)] = [[], []]
 
         # counter for each label
-        counter = [0] * (len(np.unique(labels)) + 1)
+        counter = [0] * (len(np.unique(labels)))
         
         # make k_fold_dict
         for feature, label in zip(features, labels):
             n = counter[label] % k + 1
             k_fold_dict['fold' + str(n)][0].append(feature)
             k_fold_dict['fold' + str(n)][1].append(label)
+            counter[label] += 1
 
         return k_fold_dict
 
