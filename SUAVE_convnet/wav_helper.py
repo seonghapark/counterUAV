@@ -47,7 +47,7 @@ class wav_helper():
     Write data to wav files.
     It needs to have one-to-one relationship between file_names and data.
     '''
-    def write_wavs(self, data,  filenames, sr=5682, ext=".wav", tag=""):
+    def write_wavs(self, data, filenames, sr=5682, ext=".wav", tag=""):
         tag = "_" + tag
         print(len(data), len(filenames))
         assert len(data) == len(filenames)

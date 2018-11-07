@@ -17,7 +17,7 @@ class FeatureParser():
         while start < len(data):
             yield start, start + window_size
             start += (window_size / 2)
-
+    '''
     def extract_feature(self, path, pickle_exists=False):
     # Extracting tradition features (i.e. MFCC, chroma) from .wav audio file for Feed-forward neural network
         if pickle_exists is False:
@@ -32,17 +32,18 @@ class FeatureParser():
         contrast = np.mean(librosa.feature.spectral_contrast(S=stft, sr=sample_rate).T, axis=0)
         tonnetz = np.mean(librosa.feature.tonnetz(y=librosa.effects.harmonic(Y), sr=sample_rate).T, axis=0)
         return mfcc, chroma, mel, contrast, tonnetz
-
+    '''
     # Extracting and preprocessing features for ConvNet
     def extract_CNNfeature(self, parent_dir, sub_dirs, file_ext=FILE_EXT, bands = 60, frames = 41):
-        window_size = 128 * (frames - 1) #Window size = 128
+        window_size = 512 * (frames - 1) #Window size = 128
         log_specgrams = []
         labels = []
         if not isfile('radar_CNNdataset.pickle'):
             for label, sub_dir in enumerate(sub_dirs):
                 for fn in g.glob(os.path.join(parent_dir, sub_dir, file_ext)):
                     sound_clip, sr = librosa.load(fn)
-                    lbl = fn.split('/')[3].split('_')[1] # extract label from file name
+                    lbl = fn.split('/')[4].split('_')[1] # extract label from file name
+                    #print('LABEL:', lbl)
                     for (start, end) in self.windows(sound_clip, window_size):
                         start = int(start)
                         end = int(end)
@@ -61,6 +62,7 @@ class FeatureParser():
         
         return np.array(features), np.array(labels, dtype=np.int)
 
+    '''
     def parse_audio_files(self, parent_dir, sub_dirs, file_ext=FILE_EXT):
         features, labels = np.empty((2, 5862)), np.empty(0)
 
@@ -81,6 +83,7 @@ class FeatureParser():
                     labels = np.append(labels, fn.split('/')[7].split('-')[1])
 
         return np.array(features), np.array(labels, dtype = np.int)
+    '''
 
     def one_hot_encode(self, labels):
         n_labels = len(labels)
@@ -89,9 +92,10 @@ class FeatureParser():
         one_hot_encode[np.arange(n_labels), labels] = 1
         return one_hot_encode
 
-def main():
+#def main():
     # Sample code for running methods within the current file
 
-
+'''
 if __name__ == '__main__':
     main()
+'''
