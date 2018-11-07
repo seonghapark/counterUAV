@@ -17,13 +17,13 @@ feature_size = 2460 # 60 X 41
 num_channels = 2
 num_labels = 4
 
-batch_size = 50
-kernel_size = 30
-num_hidden = 200
-depth = 20
+batch_size = 16 
+kernel_size = 15 #filter size
+num_hidden = 200 #fully connected node 개수
+depth = 20 #filter 개수
 
 PARENT_DIR='../experiment_data'
-learning_rate = 1e-2
+learning_rate = 1e-3
 total_iterations = 2000
 
 tr_sub_dirs= ['fold1','fold2']
