@@ -152,8 +152,11 @@ class ConvNet():
                 offset = (i * self.opt['batch_size']) % (train_y.shape[0] - self.opt['batch_size'])
                 batch_x = train_x[offset:(offset + self.opt['batch_size']), :, :, :]
                 batch_y = train_y[offset:(offset + self.opt['batch_size']), :]
-                _, loss = sess.run([optimizer, cost], feed_dict={X: batch_x, Y: batch_y})
+                _, loss, acc = sess.run([optimizer, cost, accuracy], feed_dict={X: batch_x, Y: batch_y})
                 cost_history = np.append(cost_history, loss)
+
+                if (i + 1) % 100 == 0:
+                    print('Epoch: {}, Cost: {:.3f}, Accuracy: {:.3f}'.format(i + 1, loss, acc))
 
             print('Test accuracy: ', round(sess.run(accuracy, feed_dict={X: test_x, Y: test_y}), 3))
             fig = plt.figure(figsize=(15,10))

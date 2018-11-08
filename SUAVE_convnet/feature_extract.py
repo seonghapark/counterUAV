@@ -34,8 +34,8 @@ class FeatureParser():
         return mfcc, chroma, mel, contrast, tonnetz
     '''
     # Extracting and preprocessing features for ConvNet
-    def extract_CNNfeature(self, parent_dir, sub_dirs, file_ext=FILE_EXT, bands = 60, frames = 41):
-        window_size = 512 * (frames - 1) #Window size = 128
+    def extract_CNNfeature(self, parent_dir, sub_dirs, file_ext=FILE_EXT, bands = 60, frames = 41, hop_length=512):
+        window_size = hop_length * (frames - 1) #Window size = 128
         log_specgrams = []
         labels = []
         if not isfile('radar_CNNdataset.pickle'):
@@ -51,7 +51,7 @@ class FeatureParser():
                         end = int(end)
                         if(len(sound_clip[start:end]) == window_size):
                             signal = sound_clip[start:end]
-                            melspec = librosa.feature.melspectrogram(signal, n_mels = bands)
+                            melspec = librosa.feature.melspectrogram(signal, n_mels = bands, hop_length=hop_length)
                             logspec = librosa.core.amplitude_to_db(melspec)
                             logspec = logspec.T.flatten()[:, np.newaxis].T
                             log_specgrams.append(logspec)

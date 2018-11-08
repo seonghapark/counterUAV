@@ -8,20 +8,24 @@ from train_layers import ConvNet
 
 FRAMES = 41
 BANDS = 60
+HOP_LENGTH = 512
 
-FEATURE_SIZE = 2460 # 60 X 41
+FEATURE_SIZE = FRAMES * BANDS # 60 X 41
 NUM_CH = 2
-BATCH_SIZE = 50
-KERNEL_SIZE = 30
+BATCH_SIZE = 8
+KERNEL_SIZE = 15
 HIDDEN1 = 500
 DEPTH = 20
 
-PICKLE_FILE='audio_CNNdataset_fold.pickle'
+PICKLE_FILE='audio_CNNdataset_'\
+    + str(BANDS) + 'x' + str(FRAMES)\
+    + '_' + str(HOP_LENGTH)\
+    + '_fold.pickle'
 PARENT_DIR='../experiment_data'
+LEARNING_RATE=1e-6
 NUM_CLASSES = 4
 
 def one_hot_encode(labels):
-    print(labels)
     n_labels = len(labels)
     n_unique_labels = len(np.unique(labels))
     one_hot_encode = np.zeros((n_labels, n_unique_labels))
@@ -37,7 +41,6 @@ def pick_dataset(k_fold_dict, k, idx):
     for i in range(1, k + 1):
         tag = 'fold' + str(i)
         if i == idx:
-            print('set')
             ts_features += k_fold_dict[tag][0]
             ts_labels += k_fold_dict[tag][1]
         else:
@@ -58,7 +61,7 @@ def main():
         f = FeatureParser()
         print('Parsing audio files...')
         print('Extracting features...')
-        features, labels = f.extract_CNNfeature(parent_dir, sub_dir)
+        features, labels = f.extract_CNNfeature(parent_dir, sub_dir, bands=BANDS, frames=FRAMES, hop_length=HOP_LENGTH)
 
         # k-folding with k=6  
         k_fold_dict = f.k_fold(features, labels, k=6, seed=2018)
