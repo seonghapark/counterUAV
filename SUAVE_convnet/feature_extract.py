@@ -122,7 +122,7 @@ class FeatureParser():
         return one_hot_encode
 
     # Separating dataset in k-folds for cross validation
-    def pick_dataset(k_fold_dict, k, idx):
+    def pick_dataset(self, k_fold_dict, k, idx):
         tr_features = []
         tr_labels = []
         ts_features = []
