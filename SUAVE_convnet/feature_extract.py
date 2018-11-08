@@ -121,6 +121,26 @@ class FeatureParser():
         one_hot_encode[np.arange(n_labels), labels] = 1
         return one_hot_encode
 
+    # Separating dataset in k-folds for cross validation
+    def pick_dataset(self, k_fold_dict, k, idx):
+        tr_features = []
+        tr_labels = []
+        ts_features = []
+        ts_labels = []
+
+        for i in range(1, k + 1):
+            tag = 'fold'+str(i)
+            if i == idx:
+                print('set')
+                ts_features += k_fold_dict[tag][0]
+                ts_labels += k_fold_dict[tag][1]
+            else:
+                tr_features += k_fold_dict[tag][0]
+                tr_labels += k_fold_dict[tag][1]
+
+        return np.array(tr_features), np.array(tr_labels), np.array(ts_features), np.array(ts_labels)
+
+
 #def main():
     # Sample code for running methods within the current file
 
