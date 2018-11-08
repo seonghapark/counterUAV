@@ -57,8 +57,8 @@ def main():
 
     print('PATH:', os.path.join(parent_dir, sub_dir[0]))
 
+    f = FeatureParser()
     if not isfile(PICKLE_FILE):
-        f = FeatureParser()
         print('Parsing audio files...')
         print('Extracting features...')
         features, labels = f.extract_CNNfeature(parent_dir, sub_dir, bands=BANDS, frames=FRAMES, hop_length=HOP_LENGTH)
@@ -80,18 +80,15 @@ def main():
 
     #print('TRAIN_X:{}\nTEST_X:{}'.format(data['tr_features'], data['ts_features']))
 
-    tr_features, tr_labels, ts_features, ts_labels = pick_dataset(data, 6, 6)
+    tr_features, tr_labels, ts_features, ts_labels = f.pick_dataset(data, 6, 6) #Tr_features and ts_features in k-fold fashion
 
     print('tr_features: ', tr_features.shape)
     print('tr_labels: ', tr_labels.shape)
     print('ts_features: ', ts_features.shape)
     print('ts_labels: ', ts_labels.shape)
 
-    tr_labels = one_hot_encode(tr_labels)
-    ts_labels = one_hot_encode(ts_labels)
-
-    # model = ConvNet(data['tr_features'].shape[1], NUM_CLASSES, LEARNING_RATE, FRAMES, BANDS, NUM_CH, BATCH_SIZE, KERNEL_SIZE, HIDDEN1, DEPTH) 
-    # model.train_layers(data['tr_features'], data['tr_labels'], data['ts_features'], data['ts_labels'])
+    tr_labels = f.one_hot_encode(tr_labels)
+    ts_labels = f.one_hot_encode(ts_labels)
 
     # Initialize the ConvNet model
     model = ConvNet(tr_features.shape[1], NUM_CLASSES, LEARNING_RATE, FRAMES, BANDS, NUM_CH, BATCH_SIZE, KERNEL_SIZE, HIDDEN1, DEPTH) 

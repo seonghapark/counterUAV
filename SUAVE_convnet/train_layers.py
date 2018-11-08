@@ -122,6 +122,7 @@ class ConvNet():
     def train_layers(self, train_x, train_y, test_x, test_y):
         X = tf.placeholder(tf.float32, shape=[None, self.opt['bands'], self.opt['frames'], self.opt['num_channels']])
         Y = tf.placeholder(tf.float32, shape=[None, self.opt['n_classes']])
+        keep_prob = tf.placeholder(tf.float32) # 'p' for dropout probability
 
         conv_layer = self.apply_convolution(X, self.opt['k_size'], self.opt['num_channels'], self.opt['depth'])
 
@@ -136,10 +137,10 @@ class ConvNet():
 
         out_weights = self.weight_variable([self.opt['num_hidden'], self.opt['n_classes']])
         out_biases = self.bias_variable([self.opt['n_classes']])
-        out = tf.nn.softmax(tf.matmul(f, out_weights) + out_biases)
+        drop_layer = tf.nn.dropout(tf.matmul(f, out_weights) + out_biases, keep_prob)
+        out = tf.nn.softmax(drop_layer)
 
         cost = tf.reduce_mean(-tf.reduce_sum(Y * tf.log(out), reduction_indices=[1]))
-        #cross_entropy = -tf.reduce_sum(Y * tf.log(out))
         optimizer = tf.train.AdamOptimizer(learning_rate=self.opt['learning_rate']).minimize(cost)
         correct_pred = tf.equal(tf.argmax(out, 1), tf.argmax(Y, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
@@ -152,13 +153,13 @@ class ConvNet():
                 offset = (i * self.opt['batch_size']) % (train_y.shape[0] - self.opt['batch_size'])
                 batch_x = train_x[offset:(offset + self.opt['batch_size']), :, :, :]
                 batch_y = train_y[offset:(offset + self.opt['batch_size']), :]
-                _, loss, acc = sess.run([optimizer, cost, accuracy], feed_dict={X: batch_x, Y: batch_y})
+                _, loss, acc = sess.run([optimizer, cost, accuracy], feed_dict={X: batch_x, Y: batch_y, keep_prob: 0.5}) #Dropout p=0.5
                 cost_history = np.append(cost_history, loss)
 
                 if (i + 1) % 100 == 0:
                     print('Epoch: {}, Cost: {:.3f}, Accuracy: {:.3f}'.format(i + 1, loss, acc))
 
-            print('Test accuracy: ', round(sess.run(accuracy, feed_dict={X: test_x, Y: test_y}), 3))
+            print('Test accuracy: ', round(sess.run(accuracy, feed_dict={X: test_x, Y: test_y, keep_prob: 1.0}), 3))
             fig = plt.figure(figsize=(15,10))
             plt.plot(cost_history)
             plt.axis([0, training_epochs, 0, np.max(cost_history)])
