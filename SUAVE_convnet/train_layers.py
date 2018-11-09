@@ -168,14 +168,14 @@ class ConvNet():
 
 class RecurrentNet():
     # Define RNN model
-    def __init__(self, n_input, n_steps, n_hidden, n_classes, batch_size, learning_rate, training_epochs):
+    def __init__(self, n_input, n_steps, n_classes, learning_rate, batch_size, n_hidden, training_epochs):
         self.opt = {}
         self.opt['n_input'] = n_input
         self.opt['n_steps'] = n_steps
-        self.opt['n_hidden'] = n_hidden
         self.opt['n_classes'] = n_classes
-        self.opt['batch_size'] = batch_size
         self.opt['learning_rate'] = learning_rate
+        self.opt['batch_size'] = batch_size
+        self.opt['n_hidden'] = n_hidden
         self.opt['training_epochs'] = training_epochs
         
     def train_layers(self, train_x, train_y, test_x, test_y):
@@ -218,6 +218,7 @@ class RecurrentNet():
         # Evaluate model
         correct_pred = tf.equal(tf.argmax(prediction, 1), tf.argmax(Y, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+        cost_history = np.array([])
 
         # Run a tensorflow session
         with tf.Session() as session:
@@ -230,6 +231,7 @@ class RecurrentNet():
                 batch_y = train_y[offset:(offset + batch_size), :]
                 _, c = session.run(
                     [optimizer, loss_f], feed_dict={ X: batch_x, Y: batch_y })
+                cost_history = np.append(cost_history, c)
 
                 if itr % display_step == 0:
                     # Calculate batch loss, accuracy
@@ -242,3 +244,8 @@ class RecurrentNet():
 
             print('Test accuracy: ', round(session.run(
                 accuracy, feed_dict={ X: test_x, Y: test_y }), 3))
+
+            figure(figsize=(15,10))
+            plt.plot(cost_history)
+            plt.axis([0, training_epochs, 0, np.max(cost_history)])
+            plt.show()
