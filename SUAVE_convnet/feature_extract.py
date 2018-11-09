@@ -38,10 +38,12 @@ class FeatureParser():
         window_size = hop_length * (frames - 1) #Window size = 128
         log_specgrams = []
         labels = []
-        if not isfile('radar_CNNdataset.pickle'):
+
+        print('Extract features from wave files... ')
             for label, sub_dir in enumerate(sub_dirs):
                 for fn in g.glob(os.path.join(parent_dir, sub_dir, file_ext)):
                     path, filename = os.path.split(fn)
+                print('Extracting ', fn)
                     lbl = filename.split('_')[1] # extract label from file name
                     #print('LABEL:', lbl)
 
@@ -131,7 +133,7 @@ class FeatureParser():
         for i in range(1, k + 1):
             tag = 'fold'+str(i)
             if i == idx:
-                print('set')
+                # print('set')
                 ts_features += k_fold_dict[tag][0]
                 ts_labels += k_fold_dict[tag][1]
             else:
