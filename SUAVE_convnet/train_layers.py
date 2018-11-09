@@ -100,6 +100,8 @@ class ConvNet():
         self.opt['num_hidden'] = hidden
         self.opt['depth'] = depth
 
+        self.figure = None
+
     def weight_variable(self, shape):
         initial = tf.truncated_normal(shape, stddev=0.1, dtype=tf.float32)
         return tf.Variable(initial)
@@ -146,6 +148,7 @@ class ConvNet():
         accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
         cost_history = np.empty(shape=[1], dtype=float)
+        print('Training...')
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
 
@@ -161,6 +164,8 @@ class ConvNet():
 
             print('Test accuracy: ', round(sess.run(accuracy, feed_dict={X: test_x, Y: test_y, keep_prob: 1.0}), 3))
             fig = plt.figure(figsize=(15,10))
+            self.figure = fig
+
             plt.plot(cost_history)
             plt.axis([0, training_epochs, 0, np.max(cost_history)])
             plt.show()
