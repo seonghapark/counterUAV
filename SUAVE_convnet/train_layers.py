@@ -121,7 +121,7 @@ class ConvNet():
         return tf.nn.relu(tf.add(self.conv2d(x, weights), biases))
 
     def apply_max_pool(self, x, k_size, stride_size):
-        return tf.nn.max_pool(x, k_size=[1, k_size, k_size, 1], strides=[1, stride_size, stride_size, 1], padding='SAME')
+        return tf.nn.max_pool(x, [1, k_size, k_size, 1], [1, stride_size, stride_size, 1], padding='SAME')
 
     def batch_norm(self, x, training):
         # Perform batch normalization on parameters
@@ -134,13 +134,18 @@ class ConvNet():
         Y = tf.placeholder(tf.float32, shape=[None, self.opt['n_classes']])
         keep_prob = tf.placeholder(tf.float32) # 'p' for dropout probability
 
-        # 1st conv + batch_norm + pool layer
-        conv_layer = self.apply_convolution(X, self.opt['k_size'], self.opt['num_channels'], self.opt['depth'])
-        normalized_layer = self.batch_norm(conv_layer, True) #Perform batch normalization 
-        pool_layer = self.apply_max_pool(normalized_layer, 3, 2)
+        # 1st conv + batch_norm + pool_layer
+        conv_layer1 = self.apply_convolution(X, self.opt['k_size'], self.opt['num_channels'], self.opt['depth'])
+        normalized_layer1 = self.batch_norm(conv_layer1, True) #Perform batch normalization 
+        pool_layer1 = self.apply_max_pool(normalized_layer1, 3, 2)
+
+        # 2nd conv + batch_norm + pool_layer
+        conv_layer2 = self.apply_convolution(pool_layer1, 3, 2 * 20, 30)
+        normalized_layer2 = self.batch_norm(conv_layer2, True)
+        pool_layer2 = self.apply_max_pool(normalized_layer2, 3, 1) 
 
         shape = pool_layer.get_shape().as_list()
-        conv_flat = tf.reshape(pool_layer, [-1, shape[1] * shape[2] * shape[3]])
+        conv_flat = tf.reshape(pool_layer2, [-1, shape[1] * shape[2] * shape[3]])
 
         # print('1, 2 : ', shape[1] , shape[2] , self.opt['depth'], self.opt['num_hidden'])
         f_weights = self.weight_variable([shape[1] * shape[2] * self.opt['depth'], self.opt['num_hidden']])
@@ -167,7 +172,7 @@ class ConvNet():
                 offset = (i * self.opt['batch_size']) % (train_y.shape[0] - self.opt['batch_size'])
                 batch_x = train_x[offset:(offset + self.opt['batch_size']), :, :, :]
                 batch_y = train_y[offset:(offset + self.opt['batch_size']), :]
-                _, loss, acc = sess.run([optimizer, cost, accuracy], feed_dict={X: batch_x, Y: batch_y, keep_prob: 0.5}) #Dropout p=0.5
+                _, loss, acc = sess.run([optimizer, cost, accuracy], feed_dict={X: batch_x, Y: batch_y, keep_prob: 1.0}) #Dropout p=0.5 without batch_norm in action
                 cost_history = np.append(cost_history, loss)
 
                 if (i + 1) % 100 == 0:
