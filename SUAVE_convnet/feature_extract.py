@@ -34,14 +34,16 @@ class FeatureParser():
         return mfcc, chroma, mel, contrast, tonnetz
     '''
     # Extracting and preprocessing features for ConvNet
-    def extract_CNNfeature(self, parent_dir, sub_dirs, file_ext=FILE_EXT, bands = 60, frames = 41):
-        window_size = 512 * (frames - 1) #Window size = 128
+    def extract_CNNfeature(self, parent_dir, sub_dirs, file_ext=FILE_EXT, bands = 60, frames = 41, hop_length=512):
+        window_size = hop_length * (frames - 1) #Window size = 128
         log_specgrams = []
         labels = []
-        if not isfile('radar_CNNdataset.pickle'):
+
+        print('Extract features from wave files... ')
             for label, sub_dir in enumerate(sub_dirs):
                 for fn in g.glob(os.path.join(parent_dir, sub_dir, file_ext)):
                     path, filename = os.path.split(fn)
+                print('Extracting ', fn)
                     lbl = filename.split('_')[1] # extract label from file name
                     #print('LABEL:', lbl)
 
@@ -51,7 +53,7 @@ class FeatureParser():
                         end = int(end)
                         if(len(sound_clip[start:end]) == window_size):
                             signal = sound_clip[start:end]
-                            melspec = librosa.feature.melspectrogram(signal, n_mels = bands)
+                            melspec = librosa.feature.melspectrogram(signal, n_mels = bands, hop_length=hop_length)
                             logspec = librosa.core.amplitude_to_db(melspec)
                             logspec = logspec.T.flatten()[:, np.newaxis].T
                             log_specgrams.append(logspec)
@@ -128,10 +130,10 @@ class FeatureParser():
         ts_features = []
         ts_labels = []
 
-        for i in range(1, k):
+        for i in range(1, k + 1):
             tag = 'fold'+str(i)
             if i == idx:
-                print('set')
+                # print('set')
                 ts_features += k_fold_dict[tag][0]
                 ts_labels += k_fold_dict[tag][1]
             else:

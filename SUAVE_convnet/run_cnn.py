@@ -3,22 +3,32 @@ import os
 from os.path import isfile
 import pickle
 import numpy as np
+from datetime import datetime 
 from feature_extract import FeatureParser
 from train_layers import ConvNet
 
+# experiment setting
 FRAMES = 41
 BANDS = 60
+HOP_LENGTH = 512
 
-FEATURE_SIZE = 2460 # 60 X 41
+FEATURE_SIZE = FRAMES * BANDS # 60 X 41
 NUM_CH = 2
-BATCH_SIZE = 10
-KERNEL_SIZE = 30
-HIDDEN1 = 300
+BATCH_SIZE = 8
+KERNEL_SIZE = 15
+HIDDEN1 = 500
 DEPTH = 20
-
-PICKLE_FILE='audio_CNNdataset_fold.pickle'
-PARENT_DIR='../experiment_data'
+LEARNING_RATE = 1e-6
 NUM_CLASSES = 4
+
+# path setting
+PICKLE_FILE = 'pickle/audio_CNNdataset'\
+    + '_' + str(BANDS) + 'x' + str(FRAMES)\
+    + '_' + str(HOP_LENGTH)\
+    + '_fold.pickle'
+PARENT_DIR = '../raw_data/data'
+PLOT_DIR = './plot'
+
 
 def main():
     tf.reset_default_graph()
@@ -26,43 +36,79 @@ def main():
     parent_dir = PARENT_DIR
     sub_dir = ['fold1', 'fold2', 'fold3']
 
-    print('PATH:', os.path.join(parent_dir, sub_dir[0]))
-
     f = FeatureParser()
     if not isfile(PICKLE_FILE):
+        print('Parent directory:', parent_dir)
+        print('Sub directory:', sub_dir)
+
         print('Parsing audio files...')
         print('Extracting features...')
-        features, labels = f.extract_CNNfeature(parent_dir, sub_dir)
+        features, labels, metadata = f.extract_CNNfeature(
+            parent_dir, sub_dir, bands=BANDS, frames=FRAMES, hop_length=HOP_LENGTH)
 
         # k-folding with k=6  
-        k_fold_dict = f.k_fold(features, labels, k=6, seed=2018)
+        print('K-folding the dataset... ')
 
         data = k_fold_dict
         with open(PICKLE_FILE, 'wb') as handle:
+            # pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
             pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     else:
+        print('Reading audio pickle file...')
         with open(PICKLE_FILE, 'rb') as handle:
+            print('Reading', PICKLE_FILE)        
             data = pickle.load(handle)
 
 #    with tf.Session() as sess:
 #        print('Shape of train_x:{}'.format(sess.run(tf.shape(data['tr_features']))))
 
-    #print('TRAIN_X:{}\nTEST_X:{}'.format(data['tr_features'], data['ts_features']))
+    # tr_features and ts_features in k-fold fashion
+    tr_features, tr_labels, ts_features, ts_labels = f.pick_dataset(data, 6, 6) 
+    title = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')\
+        + '_' + str(BANDS) + 'x' + str(FRAMES)\
+        + '_' + str(HOP_LENGTH)\
+        + '_' + str(TRAINING_EPOCHS)
 
-    tr_features, tr_labels, ts_features, ts_labels = f.pick_dataset(data, 6, 6) #Tr_features and ts_features in k-fold fashion
+    # print parameters
+    print('Title: ',  title)
 
+    print('[ Input Data ]')
     print('tr_features: ', tr_features.shape)
     print('tr_labels: ', tr_labels.shape)
     print('ts_features: ', ts_features.shape)
     print('ts_labels: ', ts_labels.shape)
+    print('')
+
+    print('[ Input Data Parameter ]')
+    print('Bands: ', BANDS)
+    print('Frames: ', FRAMES)
+    print('Channels: ', NUM_CH)
+    print('Feature size: ', FEATURE_SIZE)
+    print('Hop length of windows: ', HOP_LENGTH)
+    print('Classes: ', NUM_CLASSES)
+    print('')
+
+    print('[ Hyper-parameter ]')
+    print('Training Epochs: ', TRAINING_EPOCHS)
+    print('Batch size: ', BATCH_SIZE)
+    print('Kernel size: ', KERNEL_SIZE)
+    print('Hidden layers: ', HIDDEN1)
+    print('Depth: ', DEPTH)
+    print('Learning rate: ', LEARNING_RATE)
+    print('')
 
     tr_labels = f.one_hot_encode(tr_labels)
-    ts_labels = one_hot_encode(ts_labels)
+    ts_labels = f.one_hot_encode(ts_labels)
 
     # Initialize the ConvNet model
     model = ConvNet(tr_features.shape[1], NUM_CLASSES, LEARNING_RATE, FRAMES, BANDS, NUM_CH, BATCH_SIZE, KERNEL_SIZE, HIDDEN1, DEPTH) 
     model.train_layers(tr_features, tr_labels, ts_features, ts_labels)
+
+    if model.figure is None:
+        return
+    else: 
+        model.figure.savefig(os.path.join(PLOT_DIR, title + '.png'))
 
 if __name__ == '__main__':
     main() 

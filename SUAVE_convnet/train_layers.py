@@ -102,6 +102,8 @@ class ConvNet():
         self.opt['num_hidden'] = hidden
         self.opt['depth'] = depth
 
+        self.figure = None
+
     def weight_variable(self, shape):
         initial = tf.truncated_normal(shape, stddev=0.1, dtype=tf.float32)
         return tf.Variable(initial)
@@ -156,6 +158,7 @@ class ConvNet():
         accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
         cost_history = np.empty(shape=[1], dtype=float)
+        print('Training...')
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
 
@@ -163,10 +166,100 @@ class ConvNet():
                 offset = (i * self.opt['batch_size']) % (train_y.shape[0] - self.opt['batch_size'])
                 batch_x = train_x[offset:(offset + self.opt['batch_size']), :, :, :]
                 batch_y = train_y[offset:(offset + self.opt['batch_size']), :]
-                _, loss = sess.run([optimizer, cost], feed_dict={X: batch_x, Y: batch_y, keep_prob=0.5}) #Dropout p=0.5
+                _, loss, acc = sess.run([optimizer, cost, accuracy], feed_dict={X: batch_x, Y: batch_y, keep_prob: 0.5}) #Dropout p=0.5
                 cost_history = np.append(cost_history, loss)
 
-            print('Test accuracy: ', round(sess.run(accuracy, feed_dict={X: test_x, Y: test_y, keep_prob=1.0}), 3))
+                if (i + 1) % 100 == 0:
+                    print('Epoch: {}, Cost: {:.3f}, Accuracy: {:.3f}'.format(i + 1, loss, acc))
+
+            print('Test accuracy: ', round(sess.run(accuracy, feed_dict={X: test_x, Y: test_y, keep_prob: 1.0}), 3))
+            fig = plt.figure(figsize=(15,10))
+            self.figure = fig
+
+            plt.plot(cost_history)
+            plt.axis([0, training_epochs, 0, np.max(cost_history)])
+            plt.show()
+
+
+class RecurrentNet():
+    # Define RNN model
+    def __init__(self, n_input, n_steps, n_classes, learning_rate, batch_size, n_hidden, training_epochs):
+        self.opt = {}
+        self.opt['n_input'] = n_input
+        self.opt['n_steps'] = n_steps
+        self.opt['n_classes'] = n_classes
+        self.opt['learning_rate'] = learning_rate
+        self.opt['batch_size'] = batch_size
+        self.opt['n_hidden'] = n_hidden
+        self.opt['training_epochs'] = training_epochs
+        
+    def train_layers(self, train_x, train_y, test_x, test_y):
+        # setting for hyper-parameter
+        tf.reset_default_graph()
+
+        learning_rate = self.opt['learning_rate']
+        training_epochs = self.opt['training_epochs']
+        batch_size = self.opt['batch_size']
+        display_step = 100
+
+        # Network Parameters
+        n_input = self.opt['n_input']
+        n_steps = self.opt['n_steps']
+        n_hidden = self.opt['n_hidden']
+        n_classes = self.opt['n_classes']
+
+        X = tf.placeholder("float", [None, n_steps, n_input])
+        Y = tf.placeholder("float", [None, n_classes])
+
+        weight = tf.Variable(tf.random_normal([n_hidden, n_classes]))
+        bias = tf.Variable(tf.random_normal([n_classes]))
+
+        cell = []
+        for i in range(2):
+            temp = tf.nn.rnn_cell.LSTMCell(n_hidden, state_is_tuple=True)
+            temp = tf.nn.rnn_cell.DropoutWrapper(temp, output_keep_prob=0.5)
+            cell.append(temp)
+
+        cell = tf.nn.rnn_cell.MultiRNNCell(cell)
+        output, state = tf.nn.dynamic_rnn(cell, X, dtype=tf.float32)
+        output = tf.transpose(output, [1, 0, 2])
+        last = tf.gather(output, int(output.get_shape()[0]) - 1)
+        prediction = tf.nn.softmax(tf.matmul(last, weight) + bias)
+
+        # Define loss and optimizer
+        loss_f = -tf.reduce_sum(Y * tf.log(prediction))
+        optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss_f)
+
+        # Evaluate model
+        correct_pred = tf.equal(tf.argmax(prediction, 1), tf.argmax(Y, 1))
+        accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+        cost_history = np.array([])
+
+        # Run a tensorflow session
+        with tf.Session() as session:
+        # Initializing the variables
+            session.run(tf.global_variables_initializer())
+
+            for itr in range(training_epochs):
+                offset = (itr * batch_size) % (train_y.shape[0] - batch_size)
+                batch_x = train_x[offset:(offset + batch_size), :, :]
+                batch_y = train_y[offset:(offset + batch_size), :]
+                _, c = session.run(
+                    [optimizer, loss_f], feed_dict={ X: batch_x, Y: batch_y })
+                cost_history = np.append(cost_history, c)
+
+                if itr % display_step == 0:
+                    # Calculate batch loss, accuracy
+                    loss, acc = session.run(
+                        [loss_f, accuracy], feed_dict={ X: batch_x, Y: batch_y })
+
+                    print("Iter " + str(itr) + ", Minibatch Loss= " +
+                        "{:.6f}".format(loss) + ", Training Accuracy= " +
+                        "{:.5f}".format(acc))
+
+            print('Test accuracy: ', round(session.run(
+                accuracy, feed_dict={ X: test_x, Y: test_y }), 3))
+
             fig = plt.figure(figsize=(15,10))
             plt.plot(cost_history)
             plt.axis([0, training_epochs, 0, np.max(cost_history)])
