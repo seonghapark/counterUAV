@@ -11,6 +11,7 @@ from train_layers import ConvNet
 FRAMES = 41
 BANDS = 60
 HOP_LENGTH = 512
+TRAINING_EPOCHS = 4000
 
 FEATURE_SIZE = FRAMES * BANDS # 60 X 41
 NUM_CH = 2
