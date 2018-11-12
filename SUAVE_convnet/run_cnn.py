@@ -35,7 +35,7 @@ def main():
     tf.reset_default_graph()
 
     parent_dir = PARENT_DIR
-    sub_dir = ['fold1', 'fold2', 'fold3']
+    sub_dir = ['0', '1', '2', '3', 'raw1', 'raw2', 'raw3']
 
     f = FeatureParser()
     if not isfile(PICKLE_FILE):
