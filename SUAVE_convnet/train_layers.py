@@ -145,8 +145,8 @@ class ConvNet():
         # print('1, 2 : ', shape[1] , shape[2] , self.opt['depth'], self.opt['num_hidden'])
         f_weights = self.weight_variable([shape[1] * shape[2] * self.opt['depth'], self.opt['num_hidden']])
         f_biases = self.bias_variable([self.opt['num_hidden']])
-        print('conv_flat, f_weights : ', pool_flat.shape, f_weights.shape)
-        f = tf.nn.sigmoid(tf.add(tf.matmul(pool_flat, f_weights), f_biases))
+        print('conv_flat, f_weights : ', conv_flat.shape, f_weights.shape)
+        f = tf.nn.sigmoid(tf.add(tf.matmul(conv_flat, f_weights), f_biases))
 
         out_weights = self.weight_variable([self.opt['num_hidden'], self.opt['n_classes']])
         out_biases = self.bias_variable([self.opt['n_classes']])
