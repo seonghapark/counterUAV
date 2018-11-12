@@ -59,11 +59,11 @@ class FeatureParser():
                         log_specgrams.append(logspec)
                         labels.append(lbl)
 
-            log_specgrams = np.asarray(log_specgrams).reshape(len(log_specgrams), bands, frames, 1)
-            features = np.concatenate((log_specgrams, np.zeros(np.shape(log_specgrams))), axis=3)
-            for i in range(len(features)):
-                features[i, :, :, 1] = librosa.feature.delta(features[i, :, :, 0])
-        
+        log_specgrams = np.asarray(log_specgrams).reshape(len(log_specgrams), bands, frames, 1)
+        features = np.concatenate((log_specgrams, np.zeros(np.shape(log_specgrams))), axis=3)
+        for i in range(len(features)):
+            features[i, :, :, 1] = librosa.feature.delta(features[i, :, :, 0])
+    
         return np.array(features), np.array(labels, dtype=np.int)
 
     '''
