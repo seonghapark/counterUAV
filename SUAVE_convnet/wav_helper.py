@@ -12,9 +12,16 @@ from visualize import LoadPlot
 
 class wav_helper():
     def __init__(self, path, file_ext="*.wav"):
+        if os.path.isdir(path):
+            self.path = path
         self.file_ext = file_ext
+            self.file_paths = g.glob(os.path.join(path, file_ext))
+        else:
+            self.path, filename = os.path.split(path)
+            self.file_ext = filename.split('.')[1]
+            self.file_paths = g.glob(path)
+
         self.path = path
-        self.file_paths = g.glob(os.path.join(path, file_ext))
         self.file_names = None  # list of file name
         self.raw_data = None
         self.labels = None  # list of label
