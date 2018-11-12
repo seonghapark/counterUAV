@@ -63,7 +63,7 @@ def main():
 #        print('Shape of train_x:{}'.format(sess.run(tf.shape(data['tr_features']))))
 
     # tr_features and ts_features in k-fold fashion
-    tr_features, tr_labels, ts_features, ts_labels = f.pick_dataset(data, 6, 6) 
+    tr_features, tr_labels, ts_features, ts_labels = f.pick_dataset(data, 3, 3) 
     title = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')\
         + '_' + str(BANDS) + 'x' + str(FRAMES)\
         + '_' + str(HOP_LENGTH)\
