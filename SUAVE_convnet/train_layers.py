@@ -134,8 +134,9 @@ class ConvNet():
         Y = tf.placeholder(tf.float32, shape=[None, self.opt['n_classes']])
         keep_prob = tf.placeholder(tf.float32) # 'p' for dropout probability
 
+        # 1st conv + batch_norm + pool layer
         conv_layer = self.apply_convolution(X, self.opt['k_size'], self.opt['num_channels'], self.opt['depth'])
-        normalized_layer = self.batch_norm(conv_layer, True) 
+        normalized_layer = self.batch_norm(conv_layer, True) #Perform batch normalization 
         pool_layer = self.apply_max_pool(normalized_layer, 3, 2)
 
         shape = pool_layer.get_shape().as_list()
