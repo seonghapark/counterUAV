@@ -40,24 +40,24 @@ class FeatureParser():
         labels = []
 
         print('Extract features from wave files... ')
-            for label, sub_dir in enumerate(sub_dirs):
-                for fn in g.glob(os.path.join(parent_dir, sub_dir, file_ext)):
-                    path, filename = os.path.split(fn)
+        for label, sub_dir in enumerate(sub_dirs):
+            for fn in g.glob(os.path.join(parent_dir, sub_dir, file_ext)):
+                path, filename = os.path.split(fn)
                 print('Extracting ', fn)
-                    lbl = filename.split('_')[1] # extract label from file name
-                    #print('LABEL:', lbl)
+                lbl = filename.split('_')[1] # extract label from file name
+                #print('LABEL:', lbl)
 
-                    sound_clip, sr = librosa.load(fn)
-                    for (start, end) in self.windows(sound_clip, window_size):
-                        start = int(start)
-                        end = int(end)
-                        if(len(sound_clip[start:end]) == window_size):
-                            signal = sound_clip[start:end]
-                            melspec = librosa.feature.melspectrogram(signal, n_mels = bands, hop_length=hop_length)
-                            logspec = librosa.core.amplitude_to_db(melspec)
-                            logspec = logspec.T.flatten()[:, np.newaxis].T
-                            log_specgrams.append(logspec)
-                            labels.append(lbl)
+                sound_clip, sr = librosa.load(fn)
+                for (start, end) in self.windows(sound_clip, window_size):
+                    start = int(start)
+                    end = int(end)
+                    if(len(sound_clip[start:end]) == window_size):
+                        signal = sound_clip[start:end]
+                        melspec = librosa.feature.melspectrogram(signal, n_mels = bands, hop_length=hop_length)
+                        logspec = librosa.core.amplitude_to_db(melspec)
+                        logspec = logspec.T.flatten()[:, np.newaxis].T
+                        log_specgrams.append(logspec)
+                        labels.append(lbl)
 
             log_specgrams = np.asarray(log_specgrams).reshape(len(log_specgrams), bands, frames, 1)
             features = np.concatenate((log_specgrams, np.zeros(np.shape(log_specgrams))), axis=3)
