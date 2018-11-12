@@ -5,6 +5,8 @@ from feature_extract import FeatureParser
 from sklearn.metrics import precision_recall_fscore_support
 
 training_epochs = 2000
+BATCH_NORM_EPSILON = 1e-5
+BATCH_NORM_DECAY = 0.9
 
 class FeedForward():
     def __init__(self, n_dim, n_classes, lr):
@@ -119,21 +121,29 @@ class ConvNet():
     def apply_max_pool(self, x, k_size, stride_size):
         return tf.nn.max_pool(x, k_size=[1, k_size, k_size, 1], strides=[1, stride_size, stride_size, 1], padding='SAME')
 
+    def batch_norm(self, x, training):
+        # Perform batch normalization on parameters
+        b_norm = tf.layers.batch_normalization(inputs=x, axis=1, momentum=BATCH_NORM_DECAY, epsilon=BATCH_NORM_EPSILON, center=True, scale=True, training=training, fused=True)
+
+        return b_norm 
+
     def train_layers(self, train_x, train_y, test_x, test_y):
         X = tf.placeholder(tf.float32, shape=[None, self.opt['bands'], self.opt['frames'], self.opt['num_channels']])
         Y = tf.placeholder(tf.float32, shape=[None, self.opt['n_classes']])
         keep_prob = tf.placeholder(tf.float32) # 'p' for dropout probability
 
         conv_layer = self.apply_convolution(X, self.opt['k_size'], self.opt['num_channels'], self.opt['depth'])
+        normalized_layer = self.batch_norm(conv_layer, True) 
+        pool_layer = self.apply_max_pool(normalized_layer, 3, 2)
 
-        shape = conv_layer.get_shape().as_list()
-        conv_flat = tf.reshape(conv_layer, [-1, shape[1] * shape[2] * shape[3]])
+        shape = pool_layer.get_shape().as_list()
+        conv_flat = tf.reshape(pool_layer, [-1, shape[1] * shape[2] * shape[3]])
 
         # print('1, 2 : ', shape[1] , shape[2] , self.opt['depth'], self.opt['num_hidden'])
         f_weights = self.weight_variable([shape[1] * shape[2] * self.opt['depth'], self.opt['num_hidden']])
         f_biases = self.bias_variable([self.opt['num_hidden']])
-        print('conv_flat, f_weights : ', conv_flat.shape, f_weights.shape)
-        f = tf.nn.sigmoid(tf.add(tf.matmul(conv_flat, f_weights), f_biases))
+        print('conv_flat, f_weights : ', pool_flat.shape, f_weights.shape)
+        f = tf.nn.sigmoid(tf.add(tf.matmul(pool_flat, f_weights), f_biases))
 
         out_weights = self.weight_variable([self.opt['num_hidden'], self.opt['n_classes']])
         out_biases = self.bias_variable([self.opt['n_classes']])
