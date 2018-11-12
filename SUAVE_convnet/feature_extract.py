@@ -34,26 +34,30 @@ class FeatureParser():
         return mfcc, chroma, mel, contrast, tonnetz
     '''
     # Extracting and preprocessing features for ConvNet
-    def extract_CNNfeature(self, parent_dir, sub_dirs, file_ext=FILE_EXT, bands = 60, frames = 41):
-        window_size = 512 * (frames - 1) #Window size = 128
+    def extract_CNNfeature(self, parent_dir, sub_dirs, file_ext=FILE_EXT, bands = 60, frames = 41, hop_length=512):
+        window_size = hop_length * (frames - 1) #Window size = 128
         log_specgrams = []
         labels = []
-        if not isfile('radar_CNNdataset.pickle'):
-            for label, sub_dir in enumerate(sub_dirs):
-                for fn in g.glob(os.path.join(parent_dir, sub_dir, file_ext)):
-                    sound_clip, sr = librosa.load(fn)
-                    lbl = fn.split('/')[4].split('_')[1] # extract label from file name
-                    #print('LABEL:', lbl)
-                    for (start, end) in self.windows(sound_clip, window_size):
-                        start = int(start)
-                        end = int(end)
-                        if(len(sound_clip[start:end]) == window_size):
-                            signal = sound_clip[start:end]
-                            melspec = librosa.feature.melspectrogram(signal, n_mels = bands)
-                            logspec = librosa.core.amplitude_to_db(melspec)
-                            logspec = logspec.T.flatten()[:, np.newaxis].T
-                            log_specgrams.append(logspec)
-                            labels.append(lbl)
+
+        print('Extract features from wave files... ')
+        for label, sub_dir in enumerate(sub_dirs):
+            for fn in g.glob(os.path.join(parent_dir, sub_dir, file_ext)):
+                path, filename = os.path.split(fn)
+                print('Extracting ', fn)
+                lbl = filename.split('_')[1] # extract label from file name
+                #print('LABEL:', lbl)
+
+                sound_clip, sr = librosa.load(fn)
+                for (start, end) in self.windows(sound_clip, window_size):
+                    start = int(start)
+                    end = int(end)
+                    if(len(sound_clip[start:end]) == window_size):
+                        signal = sound_clip[start:end]
+                        melspec = librosa.feature.melspectrogram(signal, n_mels = bands, hop_length=hop_length)
+                        logspec = librosa.core.amplitude_to_db(melspec)
+                        logspec = logspec.T.flatten()[:, np.newaxis].T
+                        log_specgrams.append(logspec)
+                        labels.append(lbl)
 
             log_specgrams = np.asarray(log_specgrams).reshape(len(log_specgrams), bands, frames, 1)
             features = np.concatenate((log_specgrams, np.zeros(np.shape(log_specgrams))), axis=3)
@@ -97,17 +101,18 @@ class FeatureParser():
         print(features.shape, labels.shape)
 
         # make folds
-        for i in range(1, k):
+        for i in range(1, k + 1):
             k_fold_dict['fold' + str(i)] = [[], []]
 
         # counter for each label
-        counter = [0] * (len(np.unique(labels)) + 1)
+        counter = [0] * (len(np.unique(labels)))
         
         # make k_fold_dict
         for feature, label in zip(features, labels):
             n = counter[label] % k + 1
             k_fold_dict['fold' + str(n)][0].append(feature)
             k_fold_dict['fold' + str(n)][1].append(label)
+            counter[label] += 1
 
         return k_fold_dict
 
@@ -117,6 +122,26 @@ class FeatureParser():
         one_hot_encode = np.zeros((n_labels, n_unique_labels))
         one_hot_encode[np.arange(n_labels), labels] = 1
         return one_hot_encode
+
+    # Separating dataset in k-folds for cross validation
+    def pick_dataset(self, k_fold_dict, k, idx):
+        tr_features = []
+        tr_labels = []
+        ts_features = []
+        ts_labels = []
+
+        for i in range(1, k + 1):
+            tag = 'fold'+str(i)
+            if i == idx:
+                # print('set')
+                ts_features += k_fold_dict[tag][0]
+                ts_labels += k_fold_dict[tag][1]
+            else:
+                tr_features += k_fold_dict[tag][0]
+                tr_labels += k_fold_dict[tag][1]
+
+        return np.array(tr_features), np.array(tr_labels), np.array(ts_features), np.array(ts_labels)
+
 
 #def main():
     # Sample code for running methods within the current file

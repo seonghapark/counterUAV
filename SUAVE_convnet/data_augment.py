@@ -104,6 +104,7 @@ def main():
     # Frequency shift and visualize in log-spectrogram
     loader = LoadPlot()
     paths = []
+    PICKLE_FILENAME = '1_radar_dataset.pickle'
 
     file_paths = g.glob(os.path.join(DATA_PATH, FILE_EXT))
     print('File path:', g.glob(os.path.join(DATA_PATH, FILE_EXT)))
@@ -118,24 +119,27 @@ def main():
         
     # Pickling data file to reduce the size and speed up load time of the *.wav files
     try:
-        if not isfile('radar_dataset.pickle'):
-            print('radar_dataset.pickle not found: Pickling...')
+        if not isfile(PICKLE_FILENAME):
+            print(PICKLE_FILENAME, ' not found: Pickling...')
             h_wav = wav_helper(DATA_PATH, file_ext=FILE_EXT)
             h_wav.read_wavs()
 
             loader = LoadPlot()
             raw_data = h_wav.raw_data
 
-            freq_data = {'raw_freq': raw_data,
-                    'labels': lbl}
+            freq_data = {
+                'file_names': file_names,
+                'raw_freq': raw_data,
+                'labels': lbl
+            }
 
-            with open('radar_dataset.pickle', 'wb') as handle:
+            with open(PICKLE_FILENAME, 'wb') as handle:
                 print('Pickling data object...')
                 pickle.dump(freq_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         else:
-            print('Loading data from radar_dataset.pickle')
-            with open('radar_dataset.pickle', 'rb') as handle:
+            print('Loading data from ', PICKLE_FILENAME)
+            with open(PICKLE_FILENAME, 'rb') as handle:
                 freq_data = pickle.load(handle)
 
     except IOError:
