@@ -43,13 +43,12 @@ def main():
 
         print('Parsing audio files...')
         print('Extracting features...')
-        features, labels, metadata = f.extract_CNNfeature(
-            parent_dir, sub_dir, bands=BANDS, frames=FRAMES, hop_length=HOP_LENGTH)
-
+        features, labels = f.extract_CNNfeature(parent_dir, sub_dir, bands=BANDS, frames=FRAMES, hop_length=HOP_LENGTH)
         # k-folding with k=6  
         print('K-folding the dataset... ')
-
+        k_fold_dict = f.k_fold(features, labels)
         data = k_fold_dict
+
         with open(PICKLE_FILE, 'wb') as handle:
             # pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
             pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
