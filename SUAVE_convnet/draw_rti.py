@@ -9,18 +9,21 @@ sys.path.insert(0, './')
 from wav_helper import wav_helper
 from ifft_handler import ifft_handler
 
+
 def main():
+    h_ifft = ifft_handler()
+
     # constants for frame
-    n = int(5512/50)  # Samples per a ramp up-time
-    # zpad = 8 * (n / 2)  # the number of data in 0.08 seconds?
-    zpad = 468
-    lfm = [2260E6, 2590E6]  # Radar frequency sweep range
-    max_detect = 3E8 / (2 * (lfm[1] - lfm[0])) * n / 2 # Max detection distance according to the radar frequency
+    n = h_ifft.n  # Samples per a ramp up-time
+    zpad = h_ifft.zpad
+
+    LFM = [2400E6, 2500E6]  # Radar frequency sweep range
+    MAX_DETECT = 3E8 / (2 * (LFM[1] - LFM[0])) * n / 2 # Max detection distance according to the radar frequency
 
     # parameter for plot
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    y = np.linspace(0, max_detect, int(zpad / 2))
+    y = np.linspace(0, MAX_DETECT, int(zpad / 2))
 
     xlabel = plt.xlabel('Time(s)')
     ylabel = plt.ylabel('Distance(m)')
@@ -30,7 +33,6 @@ def main():
     h_wav = wav_helper(sys.argv[1])
     h_wav.read_wavs(intval=True)
 
-    h_ifft = ifft_handler()
     for name, sync, freq in h_wav.files():
         print('Processing IFFT from the retrieved data...')
         print('sync: ', sync)
@@ -41,7 +43,7 @@ def main():
         len_time = len(r_time)
 
         ## constants to plot animation, initialize animate function
-        ylim = plt.ylim(0, max_detect)
+        ylim = plt.ylim(0, MAX_DETECT)
         
         print('r_time: ', r_time)
         print('r_data shape: ', r_data.shape)
