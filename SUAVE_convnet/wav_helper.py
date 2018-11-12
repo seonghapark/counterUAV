@@ -12,6 +12,7 @@ from visualize import LoadPlot
 
 class wav_helper():
     def __init__(self, path, file_ext="*.wav"):
+        # make clear path is directory or file
         if os.path.isdir(path):
             self.path = path
         self.file_ext = file_ext
