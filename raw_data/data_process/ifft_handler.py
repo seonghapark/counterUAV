@@ -17,8 +17,10 @@ class ifft_handler():
         self.Tp = ramp_time
         # Samples per ramp up-time
         self.n = int(self.Tp * self.fs)
-        # Zero array for further data storage
-        self.fsif = np.zeros([10000, self.n], dtype=np.int16)
+        # Zero array for further data storager
+        self.fsif = np.zeros([50000, self.n], dtype=np.int16)
+        # create the number_of_ifft_entities --> which is the number of values that has to be created from fft calculation
+        self.zpad = int(8 * self.n / 2)
 
     '''
     Calculate Decibel using received signal intensity value
@@ -32,7 +34,6 @@ class ifft_handler():
     def data_process(self, sync, data):
         result_time = []  # time is a list
         # print('n: ', self.n)
-        self.fsif = np.zeros([10000, self.n], dtype=np.int16)
         # print(self.fs)
         # print(data, data.shape, self.n)
         # print(sync, sync.shape)
@@ -76,10 +77,10 @@ class ifft_handler():
         sif = sif - np.tile(sif.mean(0), [sif.shape[0], 1])
 
         # create the number_of_ifft_entities --> which is the number of values that has to be created from fft calculation
-        zpad = int(8 * self.n / 2)
+        # zpad = int(8 * self.n / 2)
 
         # Do fft calculation, and convert results to decibel through dbv function
-        decibel = self.dbv(np.fft.ifft(sif, zpad, 1)) 
+        decibel = self.dbv(np.fft.ifft(sif, self.zpad, 1)) 
         
         real_value = decibel[:, 0:int(decibel.shape[1] / 2)]
         max_real = real_value.max() 
@@ -90,7 +91,7 @@ class ifft_handler():
         last = sif[-1, :]
         sif2 = np.vstack((sif2, last))
         # print(sif2, sif2.shape, sif.shape, zpad)
-        v = np.fft.ifft(sif2, zpad, 1)
+        v = np.fft.ifft(sif2, self.zpad, 1) 
         decibel = self.dbv(v)
         real_value = decibel[:, 0:int(decibel.shape[1] / 2)]
         max_real = real_value.max() 

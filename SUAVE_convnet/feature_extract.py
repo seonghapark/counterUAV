@@ -8,6 +8,15 @@ FILE_EXT='*.wav'
 # Adjust path according to local path settings
 PATH='../raw_data'
 
+
+def shuffle_data(features, labels, seed=2018):
+    print('Shuffling the dataset... ')
+    np.random.seed(seed)
+    idx = np.random.permutation(len(features))
+    features, labels = features[idx], labels[idx]
+
+    return features, labels
+
 class FeatureParser():
     def __init__(self, file_ext=FILE_EXT):
         self.file_ext = file_ext
@@ -94,11 +103,9 @@ class FeatureParser():
         assert len(features) == len(labels)
         
         # shuffling the dataset
-        np.random.seed(seed)
-        idx = np.random.permutation(len(features))
-        features, labels = features[idx], labels[idx]
+        _features, _labels = shuffle_data(features, labels)
 
-        print(features.shape, labels.shape)
+        # print(features.shape, labels.shape)
 
         # make folds
         for i in range(1, k + 1):
@@ -108,7 +115,7 @@ class FeatureParser():
         counter = [0] * (len(np.unique(labels)))
         
         # make k_fold_dict
-        for feature, label in zip(features, labels):
+        for feature, label in zip(_features, _labels):
             n = counter[label] % k + 1
             k_fold_dict['fold' + str(n)][0].append(feature)
             k_fold_dict['fold' + str(n)][1].append(label)

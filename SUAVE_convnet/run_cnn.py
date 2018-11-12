@@ -11,6 +11,7 @@ from train_layers import ConvNet
 FRAMES = 41
 BANDS = 60
 HOP_LENGTH = 512
+TRAINING_EPOCHS = 4000
 
 FEATURE_SIZE = FRAMES * BANDS # 60 X 41
 NUM_CH = 2
@@ -46,21 +47,18 @@ def main():
         features, labels = f.extract_CNNfeature(parent_dir, sub_dir, bands=BANDS, frames=FRAMES, hop_length=HOP_LENGTH)
         # k-folding with k=6  
         print('K-folding the dataset... ')
-        k_fold_dict = f.k_fold(features, labels)
+        k_fold_dict = f.k_fold(features, labels, k=6, seed=2018)
+
         data = k_fold_dict
 
         with open(PICKLE_FILE, 'wb') as handle:
-            # pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
             pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     else:
         print('Reading audio pickle file...')
         with open(PICKLE_FILE, 'rb') as handle:
-            print('Reading', PICKLE_FILE)        
+            print('Read:', PICKLE_FILE)        
             data = pickle.load(handle)
-
-#    with tf.Session() as sess:
-#        print('Shape of train_x:{}'.format(sess.run(tf.shape(data['tr_features']))))
 
     # tr_features and ts_features in k-fold fashion
     tr_features, tr_labels, ts_features, ts_labels = f.pick_dataset(data, 3, 3) 
@@ -101,7 +99,7 @@ def main():
     ts_labels = f.one_hot_encode(ts_labels)
 
     # Initialize the ConvNet model
-    model = ConvNet(tr_features.shape[1], NUM_CLASSES, LEARNING_RATE, FRAMES, BANDS, NUM_CH, BATCH_SIZE, KERNEL_SIZE, HIDDEN1, DEPTH) 
+    model = ConvNet(tr_features.shape[1], NUM_CLASSES, LEARNING_RATE, FRAMES, BANDS, NUM_CH, BATCH_SIZE, KERNEL_SIZE, HIDDEN1, DEPTH, TRAINING_EPOCHS) 
     model.train_layers(tr_features, tr_labels, ts_features, ts_labels)
 
     if model.figure is None:
