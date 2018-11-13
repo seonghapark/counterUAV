@@ -113,7 +113,7 @@ class ConvNet():
         return tf.Variable(initial)
 
     def conv2d(self, x, W):
-        return tf.nn.conv2d(x, W, strides=[1,2,2,1], padding='SAME')
+        return tf.nn.conv2d(x, W, strides=[1,1,1,1], padding='SAME')
 
     def apply_convolution(self, x, k_size, num_ch, depth):
         weights = self.weight_variable([k_size, k_size, num_ch, depth])
@@ -127,7 +127,11 @@ class ConvNet():
         # Perform batch normalization on parameters
         b_norm = tf.layers.batch_normalization(inputs=x, axis=1, momentum=BATCH_NORM_DECAY, epsilon=BATCH_NORM_EPSILON, center=True, scale=True, training=training, fused=True)
 
-        return b_norm 
+        return b_norm
+
+    def linear_proj(self, x):
+        # Linearly projecting input X via a linear mapping function H(X)
+        return tf.nn.conv2d(x, [1, 1, 2, 30], strides=[1,1,1,1], padding='SAME'
 
     def train_layers(self, train_x, train_y, test_x, test_y):
         X = tf.placeholder(tf.float32, shape=[None, self.opt['bands'], self.opt['frames'], self.opt['num_channels']])
@@ -137,21 +141,27 @@ class ConvNet():
         # 1st conv + batch_norm + pool_layer
         conv_layer1 = self.apply_convolution(X, self.opt['k_size'], self.opt['num_channels'], self.opt['depth'])
         normalized_layer1 = self.batch_norm(conv_layer1, True) #Perform batch normalization 
-        pool_layer1 = self.apply_max_pool(normalized_layer1, 3, 2)
+        pool_layer1 = self.apply_max_pool(normalized_layer1, 3, 1)
 
         # 2nd conv + batch_norm + pool_layer
-        conv_layer2 = self.apply_convolution(pool_layer1, 3, 2 * 20, 30)
+        conv_layer2 = self.apply_convolution(pool_layer1, 3, 20, 30)
         normalized_layer2 = self.batch_norm(conv_layer2, True)
-        pool_layer2 = self.apply_max_pool(normalized_layer2, 3, 1) 
+        pool_layer2 = self.apply_max_pool(normalized_layer2, 3, 1)
 
-        shape = pool_layer.get_shape().as_list()
-        conv_flat = tf.reshape(pool_layer2, [-1, shape[1] * shape[2] * shape[3]])
+        # Skip connection from input(X) to pool_layer2
+        conv_out = pool_layer2 + self.linear_proj(X)
+
+        shape = conv_out.get_shape().as_list()
+        print('Shape of the last layer\'s output:', shape)
+        conv_flat = tf.reshape(conv_out, [-1, shape[1] * shape[2] * shape[3]]) 
 
         # print('1, 2 : ', shape[1] , shape[2] , self.opt['depth'], self.opt['num_hidden'])
         f_weights = self.weight_variable([shape[1] * shape[2] * self.opt['depth'], self.opt['num_hidden']])
         f_biases = self.bias_variable([self.opt['num_hidden']])
         print('conv_flat, f_weights : ', conv_flat.shape, f_weights.shape)
         f = tf.nn.sigmoid(tf.add(tf.matmul(conv_flat, f_weights), f_biases))
+
+        # Skip connection from input layer X 
 
         out_weights = self.weight_variable([self.opt['num_hidden'], self.opt['n_classes']])
         out_biases = self.bias_variable([self.opt['n_classes']])
