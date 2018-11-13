@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 from feature_extract import FeatureParser
 from sklearn.metrics import precision_recall_fscore_support
 
-training_epochs = 2000
 BATCH_NORM_EPSILON = 1e-5
 BATCH_NORM_DECAY = 0.9
 
@@ -88,7 +87,7 @@ class FeedForward():
 
 #Convolutional Neural Network for urban sound classification given the UrbanSound8K dataset
 class ConvNet():
-    def __init__(self, n_dim, n_classes, lr, frames, bands, num_ch, batch_size, k_size, hidden, depth):
+    def __init__(self, n_dim, n_classes, lr, frames, bands, num_ch, batch_size, k_size, hidden, depth, epoch):
         self.opt = {}
         self.opt['n_dim'] = n_dim
         self.opt['n_classes'] = n_classes
@@ -101,6 +100,7 @@ class ConvNet():
         self.opt['k_size'] = k_size
         self.opt['num_hidden'] = hidden
         self.opt['depth'] = depth
+        self.opt['epoch'] = epoch
 
         self.figure = None
 
@@ -125,13 +125,15 @@ class ConvNet():
 
     def batch_norm(self, x, training):
         # Perform batch normalization on parameters
-        b_norm = tf.layers.batch_normalization(inputs=x, axis=1, momentum=BATCH_NORM_DECAY, epsilon=BATCH_NORM_EPSILON, center=True, scale=True, training=training, fused=True)
+        b_norm = tf.layers.batch_normalization(inputs=x, axis=1, momentum=BATCH_NORM_DECAY, epsilon=BATCH_NORM_EPSILON, center=True, scale=True, training=training, fused=False)
 
         return b_norm
 
     def linear_proj(self, x):
         # Linearly projecting input X via a linear mapping function H(X)
-        return tf.nn.conv2d(x, [1, 1, 2, 30], strides=[1,1,1,1], padding='SAME'
+        weights = self.weight_variable([1, 1, 2, 30])
+        shortcut = tf.nn.conv2d(x, weights, strides=[1,1,1,1], padding='SAME')
+        return shortcut
 
     def train_layers(self, train_x, train_y, test_x, test_y):
         X = tf.placeholder(tf.float32, shape=[None, self.opt['bands'], self.opt['frames'], self.opt['num_channels']])
@@ -149,14 +151,16 @@ class ConvNet():
         pool_layer2 = self.apply_max_pool(normalized_layer2, 3, 1)
 
         # Skip connection from input(X) to pool_layer2
-        conv_out = pool_layer2 + self.linear_proj(X)
+        shortcut = self.linear_proj(X)
+        conv_out = tf.add(pool_layer2, shortcut)
+        print('conv_out before flattening:', conv_out.get_shape())
 
         shape = conv_out.get_shape().as_list()
         print('Shape of the last layer\'s output:', shape)
         conv_flat = tf.reshape(conv_out, [-1, shape[1] * shape[2] * shape[3]]) 
 
         # print('1, 2 : ', shape[1] , shape[2] , self.opt['depth'], self.opt['num_hidden'])
-        f_weights = self.weight_variable([shape[1] * shape[2] * self.opt['depth'], self.opt['num_hidden']])
+        f_weights = self.weight_variable([shape[1] * shape[2] * 30, self.opt['num_hidden']])
         f_biases = self.bias_variable([self.opt['num_hidden']])
         print('conv_flat, f_weights : ', conv_flat.shape, f_weights.shape)
         f = tf.nn.sigmoid(tf.add(tf.matmul(conv_flat, f_weights), f_biases))
@@ -178,7 +182,7 @@ class ConvNet():
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
 
-            for i in range(training_epochs):
+            for i in range(self.opt['epoch']):
                 offset = (i * self.opt['batch_size']) % (train_y.shape[0] - self.opt['batch_size'])
                 batch_x = train_x[offset:(offset + self.opt['batch_size']), :, :, :]
                 batch_y = train_y[offset:(offset + self.opt['batch_size']), :]
@@ -193,7 +197,7 @@ class ConvNet():
             self.figure = fig
 
             plt.plot(cost_history)
-            plt.axis([0, training_epochs, 0, np.max(cost_history)])
+            plt.axis([0, self.opt['epoch'], 0, np.max(cost_history)])
             plt.show()
 
 
