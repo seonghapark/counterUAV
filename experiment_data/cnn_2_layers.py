@@ -18,19 +18,19 @@ num_channels = 2
 num_labels = 4
 
 batch_size = 16 
-kernel_size = 15 #filter size
+kernel_size = 3 #filter size
 num_hidden = 200 #fully connected node 개수
 depth = 20 #filter 개수
 
 PARENT_DIR='../experiment_data'
 learning_rate = 1e-6
-total_iterations = 2000 #batch 하나를 돌림
+total_epoch = 2000 #training set 전체를 한번 돌림
 
-tr_sub_dirs= ['fold1','fold3']
+tr_sub_dirs= ['fold1','fold2']
 tr_features, tr_labels = ls.extract_log_spec(PARENT_DIR, tr_sub_dirs, file_ext=FILE_EXT, bands=60, frames=41)
 tr_labels = ls.one_hot_encode(tr_labels)
 
-ts_sub_dirs= ['fold2']
+ts_sub_dirs= ['fold3']
 ts_features, ts_labels = ls.extract_log_spec(PARENT_DIR,ts_sub_dirs, file_ext=FILE_EXT, bands=60, frames=41)
 ts_labels = ls.one_hot_encode(ts_labels)
 
@@ -43,7 +43,7 @@ def bias_variable(shape): #bias 만들기
     return tf.Variable(initial)
 
 def conv2d(x, W):
-    return tf.nn.conv2d(x,W,strides=[1,2,2,1], padding='SAME')
+    return tf.nn.conv2d(x,W,strides=[1,1,1,1], padding='SAME')
 
 def apply_convolution(x,kernel_size,num_channels,depth):
     weights = weight_variable([kernel_size, kernel_size, num_channels, depth])
@@ -58,16 +58,28 @@ def apply_max_pool(x,kernel_size,stride_size):
 X = tf.placeholder(tf.float32, shape=[None,bands,frames,num_channels])
 Y = tf.placeholder(tf.float32, shape=[None,num_labels])
 
-cov1 = apply_convolution(X,kernel_size,num_channels,depth) #initialize weight variable(filters)
-pool1 = apply_max_pool(cov1, kernel_size, 1)
+shape = X.get_shape().as_list()
+print(shape)
 
+cov1 = apply_convolution(X,kernel_size,num_channels,depth) #initialize weight variable(filters)
+shape = cov1.get_shape().as_list()
+print(shape)
+pool1 = apply_max_pool(cov1, kernel_size, 1)
 shape = pool1.get_shape().as_list()
 print(shape)
-pool1_flat = tf.reshape(pool1, [-1, shape[1] * shape[2] * shape[3]]) #fully_connected에 넣기 위해.
+
+cov2 = apply_convolution(pool1,kernel_size,20,depth) #initialize weight variable(filters)
+shape = cov2.get_shape().as_list()
+print(shape)
+pool2 = apply_max_pool(cov2, kernel_size, 1)
+shape = pool2.get_shape().as_list()
+print(shape)
+
+pool2_flat = tf.reshape(pool2, [-1, shape[1] * shape[2] * shape[3]]) #fully_connected에 넣기 위해.
 
 f_weights = weight_variable([shape[1] * shape[2] * depth, num_hidden]) #fully_connected weight
 f_biases = bias_variable([num_hidden]) #fully_connected bias
-f = tf.nn.sigmoid(tf.add(tf.matmul(pool_flat, f_weights),f_biases))
+f = tf.nn.sigmoid(tf.add(tf.matmul(pool2_flat, f_weights),f_biases))
 
 out_weights = weight_variable([num_hidden, num_labels]) #full_output 사이의 weight
 out_biases = bias_variable([num_labels])
@@ -82,8 +94,8 @@ cost_history = np.empty(shape=[1],dtype=float)
 with tf.Session() as session:
     tf.global_variables_initializer().run()
 
-    for itr in range(total_iterations):    
-        offset = (itr * batch_size) % (tr_labels.shape[0] - batch_size)
+    for i in range(total_epoch):    
+        offset = (i * batch_size) % (tr_labels.shape[0] - batch_size)
         batch_x = tr_features[offset:(offset + batch_size), :, :, :]
         batch_y = tr_labels[offset:(offset + batch_size), :]
         
@@ -93,7 +105,7 @@ with tf.Session() as session:
     print('Test accuracy: ',round(session.run(accuracy, feed_dict={X: ts_features, Y: ts_labels}) , 3))
     fig = plt.figure(figsize=(15,10))
     plt.plot(cost_history)
-    plt.axis([0,total_iterations,0,np.max(cost_history)])
+    plt.axis([0,total_epoch,0,np.max(cost_history)])
     plt.show()
 
 print("--- %s seconds ---" % (time.time() - start_time))
