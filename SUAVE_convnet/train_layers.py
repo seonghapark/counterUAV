@@ -192,7 +192,20 @@ class ConvNet():
                 if (i + 1) % 100 == 0:
                     print('Epoch: {}, Cost: {:.3f}, Accuracy: {:.3f}'.format(i + 1, loss, acc))
 
-            print('Test accuracy: ', round(sess.run(accuracy, feed_dict={X: test_x, Y: test_y, keep_prob: 1.0}), 3))
+            # Calculate test batch accuracy
+            sum_acc = .0
+            total = 0
+
+            for i in range(0, test_x.shape[0], self.opt['batch_size']):
+                offset = (int(i/self.opt['batch_size']) * 1) % (test_x.shape[0] - self.opt['batch_size'])
+                batch_x = test_x[offset:(offset + self.opt['batch_size']), :, :, :]
+                batch_y = test_y[offset:(offset + self.opt['batch_size']), :]
+
+                sum_acc += sess.run(accuracy, feed_dict={X: batch_x, Y: batch_y, keep_prob: 1.0})
+                total += 1
+
+            print('Test accuracy: ', round(float(sum_acc / total), 3))
+            
             fig = plt.figure(figsize=(15,10))
             self.figure = fig
 
