@@ -213,6 +213,8 @@ class ConvNet():
             plt.axis([0, self.opt['epoch'], 0, np.max(cost_history)])
             plt.show()
 
+            sess.close()
+
 
 class RecurrentNet():
     # Define RNN model
