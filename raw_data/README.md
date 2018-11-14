@@ -1,7 +1,7 @@
 ## Binary file description
 
 20181009_100023_binary.txt: w/ a person (15\~28, 28\~36, 151\~162, 164\~174, 237\~253, 257\~270)<br>
-20181009_101055_binary.txt: w/ a person *(38\~70, 95\~110)*<br>
+20181009_101055_binary.txt: w/ a person *(38\~70, 84\~110)*<br>
 20181009_101420_binary.txt: w/ a person *(18\~36, 53\~69)*<br>
 20181009_101635_binary.txt: w/ a person, w/ an iron plate *(20\~52, 62\~83)*<br>
 20181009_102248_binary.txt: w/ a car *(42~58)*<br>
@@ -12,7 +12,7 @@
 20181009_104446_binary.txt: w/ a person, w/ an iron plate (first), w/o the iron plate (second) *(10\~31, 41\~57, 59\~76, 85\~98)*<br>
 20181009_105554_binary.txt: w/ a person *(21\~26, 26\~30, 38\~65, 65\~92)*<br>
 20181009_110458_binary.txt: w/ a drone (DJI Phantom), w/o reflection tape *(1\~9, 36\~47, 62\~87, 106\~115)*<br>
-20181009_110901_binary.txt: w/ a drone (DJI Phantom), w/o reflection tape *(5\~16, 36\~43, 42\~50, 68\~76)*<br>
+20181009_110901_binary.txt: w/ a drone (DJI Phantom), w/o reflection tape *(5\~16, 36\~43, 46\~49, 68\~76)*<br>
 20181009_111450_binary.txt: w/ a drone (DJI Phantom), w/ reflection tape *(15\~22, 44\~49)*<br>
 20181009_111734_binary.txt: w/ a drone (DJI Phantom), w/ reflection tape *(27\~37, 42\~50, 71\~80, 100\~110)*<br>
 20181016_134334_binary.txt: background noise, a person at 5 sec *(36~41)*<br>
