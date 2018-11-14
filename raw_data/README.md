@@ -1,6 +1,6 @@
 ## Binary file description
 
-20181009_100023_binary.txt: w/ a person (15\~28, 28\~36, 151\~162, 164\~174, 236\~253, 257\~270)<br>
+20181009_100023_binary.txt: w/ a person (15\~28, 28\~36, 151\~162, 164\~174, 237\~253, 257\~270)<br>
 20181009_101055_binary.txt: w/ a person *(38\~70, 95\~110)*<br>
 20181009_101420_binary.txt: w/ a person *(18\~36, 53\~69)*<br>
 20181009_101635_binary.txt: w/ a person, w/ an iron plate *(20\~52, 62\~83)*<br>
