@@ -10,8 +10,8 @@ import numpy as np
 
 SAMPLE_RATE=5682
 FILE_EXT='*.wav'
-DATA_PATH='../raw_data/'  # path of raw file
-AUG_PATH='../raw_data/augment_data'
+DATA_PATH='../raw_data/data/'  # path of raw file
+AUG_PATH='../raw_data/data/0'
 PATH='../raw_data/data_process'  # path for visualize.py
 sys.path.insert(0, PATH)
 sys.path.insert(0, './')
@@ -104,6 +104,10 @@ def main():
     # Frequency shift and visualize in log-spectrogram
     loader = LoadPlot()
     paths = []
+<<<<<<< Updated upstream
+=======
+    #PICKLE_FILENAME = '1_radar_dataset.pickle'
+>>>>>>> Stashed changes
 
     file_paths = g.glob(os.path.join(DATA_PATH, FILE_EXT))
     print('File path:', g.glob(os.path.join(DATA_PATH, FILE_EXT)))
@@ -115,8 +119,16 @@ def main():
         freq_labels = filename.split('_')[1] # extract labels from the file name
         lbl.append(freq_labels)
         file_names.append(filename)
+<<<<<<< Updated upstream
         
     print('Read:', DATA_PATH)        
+=======
+    """    
+    # Pickling data file to reduce the size and speed up load time of the *.wav files
+    try:
+        if not isfile(PICKLE_FILENAME):
+            print(PICKLE_FILENAME, ' not found: Pickling...')
+>>>>>>> Stashed changes
             h_wav = wav_helper(DATA_PATH, file_ext=FILE_EXT)
             h_wav.read_wavs()
 
@@ -129,19 +141,48 @@ def main():
                 'labels': lbl
             }
 
+<<<<<<< Updated upstream
+=======
+            with open(PICKLE_FILENAME, 'wb') as handle:
+                print('Pickling data object...')
+                pickle.dump(freq_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+        else:
+            print('Loading data from ', PICKLE_FILENAME)
+            with open(PICKLE_FILENAME, 'rb') as handle:
+                freq_data = pickle.load(handle)
+
+    except IOError:
+        print('IOError: Could not find file path')
+    """
+    print('Read:', DATA_PATH)        
+    h_wav = wav_helper(DATA_PATH, file_ext=FILE_EXT)
+    h_wav.read_wavs()
+
+    loader = LoadPlot()
+    raw_data = h_wav.raw_data
+
+    freq_data = {
+        'file_names': file_names,
+        'raw_freq': raw_data,
+        'labels': lbl
+    }
+>>>>>>> Stashed changes
 
     wavhelp = wav_helper(path=AUG_PATH)
     da = DataAugmentor()
-    #freq_data['ps_freq'], sr = da.freq_shifting(freq_data['raw_freq'])
-    #freq_data['ns_freq'], sr = da.add_noise(freq_data['raw_freq'])
-    freq_data['ts_freq'], sr = da.time_stretching(freq_data['raw_freq'])
+    #freq_data['ps_freq'], sr = da.freq_shifting(freq_data['raw_freq'], num_steps=4)
+    #freq_data['ns_freq'], sr = da.add_noise(freq_data['raw_freq'], scale=0.05)
+    freq_data['ts_freq'], sr = da.time_stretching(freq_data['raw_freq'],rate=0.5)
 
     # Write the augmented signals in a .wav file format
     # The tag is in a form of [augmentation method + n_steps]
     # (i.e. ps32 - pitch shifting by 32 half-steps)
     print('Writing augmented data as .wav files...')
     print('FILE NAMES:', file_names)
-    wavhelp.write_wavs(freq_data['ts_freq'], filenames=file_names, tag='ts')
+    #wavhelp.write_wavs(freq_data['ps_freq'], filenames=file_names, tag='ps4')
+    #wavhelp.write_wavs(freq_data['ns_freq'], filenames=file_names, tag='ns05')
+    wavhelp.write_wavs(freq_data['ts_freq'], filenames=file_names, tag='ts05')
 
     #d = np.asarray(freq_data['raw_freq'])
     #print('Value of original frequency:', freq_data['raw_freq'], '\nShape of original frequency:', d.shape)

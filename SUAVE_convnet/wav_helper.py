@@ -15,7 +15,7 @@ class wav_helper():
         # make clear path is directory or file
         if os.path.isdir(path):
             self.path = path
-        self.file_ext = file_ext
+            self.file_ext = file_ext
             self.file_paths = g.glob(os.path.join(path, file_ext))
         else:
             self.path, filename = os.path.split(path)
