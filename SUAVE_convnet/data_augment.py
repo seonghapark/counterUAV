@@ -104,7 +104,6 @@ def main():
     # Frequency shift and visualize in log-spectrogram
     loader = LoadPlot()
     paths = []
-    PICKLE_FILENAME = '1_radar_dataset.pickle'
 
     file_paths = g.glob(os.path.join(DATA_PATH, FILE_EXT))
     print('File path:', g.glob(os.path.join(DATA_PATH, FILE_EXT)))
@@ -117,10 +116,7 @@ def main():
         lbl.append(freq_labels)
         file_names.append(filename)
         
-    # Pickling data file to reduce the size and speed up load time of the *.wav files
-    try:
-        if not isfile(PICKLE_FILENAME):
-            print(PICKLE_FILENAME, ' not found: Pickling...')
+    print('Read:', DATA_PATH)        
             h_wav = wav_helper(DATA_PATH, file_ext=FILE_EXT)
             h_wav.read_wavs()
 
@@ -133,17 +129,6 @@ def main():
                 'labels': lbl
             }
 
-            with open(PICKLE_FILENAME, 'wb') as handle:
-                print('Pickling data object...')
-                pickle.dump(freq_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-        else:
-            print('Loading data from ', PICKLE_FILENAME)
-            with open(PICKLE_FILENAME, 'rb') as handle:
-                freq_data = pickle.load(handle)
-
-    except IOError:
-        print('IOError: Could not find file path')
 
     wavhelp = wav_helper(path=AUG_PATH)
     da = DataAugmentor()
