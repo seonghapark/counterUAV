@@ -177,6 +177,9 @@ class ConvNet():
         correct_pred = tf.equal(tf.argmax(out, 1), tf.argmax(Y, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
+        pred_per_classes = tf.nn.in_top_k(out, tf.argmax(Y, 1), 1)
+
+
         cost_history = np.empty(shape=[1], dtype=float)
         print('Training...')
         with tf.Session() as sess:
@@ -194,17 +197,38 @@ class ConvNet():
 
             # Calculate test batch accuracy
             sum_acc = .0
+            count_total = np.array([.0] * self.opt['n_classes'])
+            count_answer = np.array([.0] * self.opt['n_classes'])
             total = 0
-
             for i in range(0, test_x.shape[0], self.opt['batch_size']):
+
                 offset = (int(i/self.opt['batch_size']) * 1) % (test_x.shape[0] - self.opt['batch_size'])
                 batch_x = test_x[offset:(offset + self.opt['batch_size']), :, :, :]
                 batch_y = test_y[offset:(offset + self.opt['batch_size']), :]
 
-                sum_acc += sess.run(accuracy, feed_dict={X: batch_x, Y: batch_y, keep_prob: 1.0})
+                acc, pred = sess.run([accuracy, pred_per_classes], feed_dict={X: batch_x, Y: batch_y, keep_prob: 1.0})
+                sum_acc += acc
+                
+                correct_label = np.array([-1] * self.opt['batch_size'])
+
+                for i in range(self.opt['batch_size']):
+                    correct_label[i] = np.argmax(batch_y, 1)[i] if pred[i] == True else -1
+                
+                print('pred: ', pred, 'label: ', np.argmax(batch_y, 1))
+                # print('pred: ', pred, 'label: ', np.argmax(batch_y, 1), 'correct: ', correct_label)
+                # print('correct_label: ', correct_label)
+                
+                for e in np.argmax(batch_y, 1):
+                    count_total[e] += 1
+
+                for e in correct_label:
+                    if e != -1:
+                        count_answer[e] += 1
                 total += 1
 
             print('Test accuracy: ', round(float(sum_acc / total), 3))
+            print('# of answer: ', count_answer, '# of label: ', count_total)
+            print('Other accuracy: ', count_answer / count_total)
             
             fig = plt.figure(figsize=(15,10))
             self.figure = fig
