@@ -104,10 +104,8 @@ def main():
     # Frequency shift and visualize in log-spectrogram
     loader = LoadPlot()
     paths = []
-<<<<<<< Updated upstream
-=======
     #PICKLE_FILENAME = '1_radar_dataset.pickle'
->>>>>>> Stashed changes
+
 
     file_paths = g.glob(os.path.join(DATA_PATH, FILE_EXT))
     print('File path:', g.glob(os.path.join(DATA_PATH, FILE_EXT)))
@@ -119,16 +117,15 @@ def main():
         freq_labels = filename.split('_')[1] # extract labels from the file name
         lbl.append(freq_labels)
         file_names.append(filename)
-<<<<<<< Updated upstream
         
     print('Read:', DATA_PATH)        
-=======
+
     """    
     # Pickling data file to reduce the size and speed up load time of the *.wav files
     try:
         if not isfile(PICKLE_FILENAME):
             print(PICKLE_FILENAME, ' not found: Pickling...')
->>>>>>> Stashed changes
+
             h_wav = wav_helper(DATA_PATH, file_ext=FILE_EXT)
             h_wav.read_wavs()
 
@@ -141,8 +138,6 @@ def main():
                 'labels': lbl
             }
 
-<<<<<<< Updated upstream
-=======
             with open(PICKLE_FILENAME, 'wb') as handle:
                 print('Pickling data object...')
                 pickle.dump(freq_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -167,7 +162,7 @@ def main():
         'raw_freq': raw_data,
         'labels': lbl
     }
->>>>>>> Stashed changes
+
 
     wavhelp = wav_helper(path=AUG_PATH)
     da = DataAugmentor()
