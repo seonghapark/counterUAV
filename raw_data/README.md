@@ -21,6 +21,17 @@
 20181016_142025_binary.txt: from 35 second, w/ a drone (DJI Phantom), w/ reflection tape *(11\~16, 16\~21, 39\~52, 68\~74, 78\~84)*<br>
 20181016_142531_binary.txt: w/ a drone (DJI Phantom), w/o reflection tape *(22\~27, 80\~84)*<br>
 
+
+20181114_135427_binary.txt: w/ a person ~30m
+20181114_140400_binary.txt: w/ a car ~40m ~5mi/h
+20181114_141258_binary.txt: w/ a car ~40m ~10mi/h
+20181114_142450_binary.txt: w/ a drone ~30m
+
+20181114_175502_binary.txt: w/ a person ~30m
+20181114_180324_binary.txt: w/ a car ~40m
+20181114_181316_binary.txt: w/ a drone ~15m
+
+
 ## To read the files
 
 Use read_data.py
