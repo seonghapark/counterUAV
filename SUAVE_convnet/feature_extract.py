@@ -2,6 +2,11 @@ import librosa
 import os
 import numpy as np
 import glob as g
+import sys
+sys.path.insert(0, '../raw_data/data_process')
+sys.path.insert(0, './')
+from wav_helper import wav_helper
+from ifft_handler import ifft_handler
 from os.path import isfile, isdir
 
 FILE_EXT='*.wav'
