@@ -75,6 +75,36 @@ class FeatureParser():
     
         return np.array(features), np.array(labels, dtype=np.int)
 
+    def extract_rti_features(self, parent_dir, sub_dirs, file_ext=FILE_EXT, x_time=50, y_range=82):
+        h_ifft = ifft_handler()
+
+        # constants for frame
+        n = h_ifft.n  # Samples per a ramp up-time
+        zpad = h_ifft.zpad
+
+        LFM = [2400E6, 2500E6]  # Radar frequency sweep range
+        MAX_DETECT = 3E8 / (2 * (LFM[1] - LFM[0])) * n / 2 # Max detection distance according to the radar frequency
+        
+        labels = np.array([])
+        features = np.array([])
+        for label, sub_dir in enumerate(sub_dirs):
+            for fn in g.glob(os.path.join(parent_dir, sub_dir)):
+                h_wav = wav_helper(fn)
+                h_wav.read_wavs(intval=True)
+                for name, sync, freq in h_wav.files():
+                    print('Processing IFFT from the retrieved data: ', name)
+                    print('sync: ', sync, 'freq: ', freq)
+                    
+                    _, r_data = h_ifft.data_process(sync.astype(np.bool), freq.astype(np.int16))
+
+                    label = name.split('_')[1]
+                    for i in range(0, r_data.shape[0] - x_time, 10):
+                        features = np.append(features, r_data[i:i+x_time, :y_range])
+                        labels = np.append(labels, label)
+            # print('freq: ', freq.astype(np.int16))
+            
+        return features.reshape((-1, x_time, y_range)), np.array(labels, dtype=np.int16)
+
     '''
     def parse_audio_files(self, parent_dir, sub_dirs, file_ext=FILE_EXT):
         features, labels = np.empty((2, 5862)), np.empty(0)
