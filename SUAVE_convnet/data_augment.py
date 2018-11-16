@@ -47,7 +47,8 @@ class DataAugmentor():
         for fr in raw_freq: 
             # Shift up by a major third (four half-steps)
             # Shifting both the data and sync channels
-            Ysync_shifted = librosa.effects.pitch_shift(fr[0], sr, num_steps)
+            # Ysync_shifted = librosa.effects.pitch_shift(fr[0], sr, num_steps)
+            Ysync_shifted = fr[0]
             Ydata_shifted = librosa.effects.pitch_shift(fr[1], sr, num_steps)
             Y_ps = np.vstack((Ysync_shifted, Ydata_shifted))
             Y.append(Y_ps)
