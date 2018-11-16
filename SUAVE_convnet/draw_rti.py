@@ -37,6 +37,9 @@ def main():
         print('Processing IFFT from the retrieved data...')
         print('sync: ', sync)
         print('freq: ', freq)
+        if freq.dtype == np.float:
+            freq = freq * np.iinfo(np.int16).max
+            
         r_time, r_data = h_ifft.data_process(sync.astype(np.bool), freq.astype(np.int16))
         # print('freq: ', freq.astype(np.int16))
 
