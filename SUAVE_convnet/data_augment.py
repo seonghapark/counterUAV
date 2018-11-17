@@ -10,8 +10,8 @@ import numpy as np
 
 SAMPLE_RATE=5682
 FILE_EXT='*.wav'
-DATA_PATH='../raw_data/data/'  # path of raw file
-AUG_PATH='../raw_data/data/0'
+DATA_PATH='../raw_data/data/raw_1'  # path of raw file
+AUG_PATH='../raw_data/data/1'
 PATH='../raw_data/data_process'  # path for visualize.py
 sys.path.insert(0, PATH)
 sys.path.insert(0, './')
@@ -71,13 +71,13 @@ class DataAugmentor():
                 max_len_idx = i
 
         #print('Max_length_idx:', max_len_idx)
-        noise = np.random.uniform(low=2, high=5, size=1) # Generate a random number within a range [low, high] with the length of the longest subarray
+        noise = np.random.random(max_len) # Generate a random number within a range [low, high] with the length of the longest subarray
         print('Noise value:', noise)
         noise_val = np.full(max_len, noise)
         print('Length of noise list:', len(noise_val))
         for e in raw_freq:
             Ysync = e[0] # Not adding noise to sync channel
-            Ydata = e[1] + (noise_val[:len(e[1])] * scale)
+            Ydata = e[1] + (noise[:len(e[1])] * scale)
             Y = np.vstack((Ysync, Ydata))
             Yn.append(Y)
 
@@ -105,8 +105,6 @@ def main():
     # Frequency shift and visualize in log-spectrogram
     loader = LoadPlot()
     paths = []
-    #PICKLE_FILENAME = '1_radar_dataset.pickle'
-
 
     file_paths = g.glob(os.path.join(DATA_PATH, FILE_EXT))
     print('File path:', g.glob(os.path.join(DATA_PATH, FILE_EXT)))
@@ -119,38 +117,6 @@ def main():
         lbl.append(freq_labels)
         file_names.append(filename)
         
-    print('Read:', DATA_PATH)        
-
-    """    
-    # Pickling data file to reduce the size and speed up load time of the *.wav files
-    try:
-        if not isfile(PICKLE_FILENAME):
-            print(PICKLE_FILENAME, ' not found: Pickling...')
-
-            h_wav = wav_helper(DATA_PATH, file_ext=FILE_EXT)
-            h_wav.read_wavs()
-
-            loader = LoadPlot()
-            raw_data = h_wav.raw_data
-
-            freq_data = {
-                'file_names': file_names,
-                'raw_freq': raw_data,
-                'labels': lbl
-            }
-
-            with open(PICKLE_FILENAME, 'wb') as handle:
-                print('Pickling data object...')
-                pickle.dump(freq_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-        else:
-            print('Loading data from ', PICKLE_FILENAME)
-            with open(PICKLE_FILENAME, 'rb') as handle:
-                freq_data = pickle.load(handle)
-
-    except IOError:
-        print('IOError: Could not find file path')
-    """
     print('Read:', DATA_PATH)        
     h_wav = wav_helper(DATA_PATH, file_ext=FILE_EXT)
     h_wav.read_wavs()
@@ -167,18 +133,18 @@ def main():
 
     wavhelp = wav_helper(path=AUG_PATH)
     da = DataAugmentor()
-    #freq_data['ps_freq'], sr = da.freq_shifting(freq_data['raw_freq'], num_steps=4)
-    #freq_data['ns_freq'], sr = da.add_noise(freq_data['raw_freq'], scale=0.05)
-    freq_data['ts_freq'], sr = da.time_stretching(freq_data['raw_freq'],rate=0.5)
+    freq_data['ps_freq'], sr = da.freq_shifting(freq_data['raw_freq'], num_steps=4)
+    #freq_data['ns_freq'], sr = da.add_noise(freq_data['raw_freq'])
+    #freq_data['ts_freq'], sr = da.time_stretching(freq_data['raw_freq'])
 
     # Write the augmented signals in a .wav file format
     # The tag is in a form of [augmentation method + n_steps]
     # (i.e. ps32 - pitch shifting by 32 half-steps)
     print('Writing augmented data as .wav files...')
     print('FILE NAMES:', file_names)
-    #wavhelp.write_wavs(freq_data['ps_freq'], filenames=file_names, tag='ps4')
-    #wavhelp.write_wavs(freq_data['ns_freq'], filenames=file_names, tag='ns05')
-    wavhelp.write_wavs(freq_data['ts_freq'], filenames=file_names, tag='ts05')
+    wavhelp.write_wavs(freq_data['ps_freq'], filenames=file_names, tag='ps4')
+    #wavhelp.write_wavs(freq_data['ns_freq'], filenames=file_names, tag='ns')
+    #wavhelp.write_wavs(freq_data['ts_freq'], filenames=file_names, tag='ts')
 
     #d = np.asarray(freq_data['raw_freq'])
     #print('Value of original frequency:', freq_data['raw_freq'], '\nShape of original frequency:', d.shape)
