@@ -4,6 +4,7 @@ from os.path import isfile
 import sys
 import pickle
 import numpy as np
+import argparse
 from datetime import datetime 
 from feature_extract import FeatureParser
 from train_layers import ConvNet
@@ -21,7 +22,6 @@ HIDDEN1 = 400
 DEPTH = 20
 LEARNING_RATE = 1e-6
 NUM_CLASSES = 4
-NUM_FOLD = int(sys.argv[2])
 
 # path setting
 PICKLE_FILE = 'pickle/audio_CNNdataset_rti'\
@@ -37,6 +37,17 @@ def main():
     parent_dir = PARENT_DIR
     sub_dir = ['0', 'raw_1', 'raw_2', 'raw_3']
 
+    parser = argparse.ArgumentParser(description='Set num. of layers and residual connection.')
+    parser.add_argument('-l', '--nlayers', default='1', type=str, help='Integer for number of convolutional layers')
+    parser.add_argument('-r', '--res_flag', default=False, type=bool, help='Flag for residual connection')
+    parser.add_argument('-f', '--nfolds', default=5, type=int, help='Number of k in k-folds cross validation')
+    args = parser.parse_args()
+
+    print('Arguments:--------------',
+            '\nNUM_LAYERS:', args.nlayers,
+            '\nRES_FLAG:', args.res_flag, 
+            '\nNFOLDS:', args.nfolds,
+            '\n------------------------')
     f = FeatureParser()
     if not isfile(PICKLE_FILE):
         print('Parent directory:', parent_dir)
@@ -63,7 +74,7 @@ def main():
 
 
     # tr_features and ts_features in k-fold fashion
-    tr_features, tr_labels, ts_features, ts_labels = f.pick_dataset(data, 5, NUM_FOLD) 
+    tr_features, tr_labels, ts_features, ts_labels = f.pick_dataset(data, 5, args.nfolds) 
     title = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')\
         + '_' + str(BANDS) + 'x' + str(FRAMES)\
         + '_' + str(TRAINING_EPOCHS)
@@ -80,7 +91,7 @@ def main():
     print('Title: ',  title)
 
     print('[ Input Data ]')
-    print('Fold #: ', NUM_FOLD)
+    print('Fold #: ', args.nfolds)
     print('tr_features: ', tr_features.shape)
     print('tr_labels: ', tr_labels.shape)
     print('ts_features: ', ts_features.shape)
@@ -108,18 +119,20 @@ def main():
     ts_labels = f.one_hot_encode(ts_labels)
 
     # Initialize the ConvNet model
-    model = ConvNet(BANDS, NUM_CLASSES, LEARNING_RATE, FRAMES, BANDS, NUM_CH, BATCH_SIZE, KERNEL_SIZE, HIDDEN1, DEPTH, TRAINING_EPOCHS) 
+    model = ConvNet(BANDS, NUM_CLASSES, LEARNING_RATE, FRAMES, BANDS, NUM_CH, BATCH_SIZE, KERNEL_SIZE, HIDDEN1, DEPTH, TRAINING_EPOCHS)
+    # Dynamically determine number of layers and residual connection 
+    model.train_layers(tr_features, tr_labels, ts_features, ts_labels, args.nlayers, resFlag=args.res_flag)
 
-    arg = sys.argv[1]
-    if arg == '-2l':
-        model.train_two_layers(tr_features, tr_labels, ts_features, ts_labels)
-    elif arg == '-1l':
-        model.train_one_layers(tr_features, tr_labels, ts_features, ts_labels)
-    elif arg == '-2ls':
+    '''
+    if args.nlayers == '1':
         model.train_layers(tr_features, tr_labels, ts_features, ts_labels)
+    elif args.nlayers == '2':
+        model.train_two_layers(tr_features, tr_labels, ts_features, ts_labels)
+    elif args.nlayers == '3':
+        model.train_three_layers(tr_features, tr_labels, ts_features, ts_labels)
     else:
         model.train_layers(tr_features, tr_labels, ts_features, ts_labels)
-
+    '''
     if model.figure is None:
         return
     else: 
