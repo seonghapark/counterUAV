@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+from collections import OrderedDict
 import matplotlib.pyplot as plt
 from feature_extract import FeatureParser
 from sklearn.metrics import precision_recall_fscore_support
@@ -135,37 +136,45 @@ class ConvNet():
         shortcut = tf.nn.conv2d(x, weights, strides=[1,1,1,1], padding='SAME')
         return shortcut
 
-    def train_layers(self, train_x, train_y, test_x, test_y):
+    def train_layers(self, train_x, train_y, test_x, test_y, nlayers, resFlag=False):
         X = tf.placeholder(tf.float32, shape=[None, self.opt['bands'], self.opt['frames'], self.opt['num_channels']])
         Y = tf.placeholder(tf.float32, shape=[None, self.opt['n_classes']])
         keep_prob = tf.placeholder(tf.float32) # 'p' for dropout probability
+        k_list = [self.opt['k_size'], 3, 3]
+        ch_list = [self.opt['num_channels'], 20, 30]
+        s_list = [1, 1, 1]
 
+        layers = OrderedDict()
         # 1st conv + batch_norm + pool_layer
-        conv_layer1 = self.apply_convolution(X, self.opt['k_size'], self.opt['num_channels'], self.opt['depth'])
-        normalized_layer1 = self.batch_norm(conv_layer1, True) #Perform batch normalization 
-        pool_layer1 = self.apply_max_pool(normalized_layer1, 3, 1)
+        layers['conv1'] = self.apply_convolution(X, k_list[0], ch_list[0], ch_list[1])
+        layers['pool1'] = self.apply_max_pool(layers['conv1'], 3, 1)
+        layers['norm1'] = self.batch_norm(layers['pool1'], True)
 
-        # 2nd conv + batch_norm + pool_layer
-        conv_layer2 = self.apply_convolution(pool_layer1, 3, 20, 30)
-        normalized_layer2 = self.batch_norm(conv_layer2, True)
-        pool_layer2 = self.apply_max_pool(normalized_layer2, 3, 1)
+        if nlayers >= 2:
+            for idx in range(2, nlayers+1):
+                layers['conv' + str(idx)] = self.apply_convolution(layers['norm' + str(idx-1)], k_list[idx-1], ch_list[idx-1], ch_list[idx])
+                layers['pool' + str(idx)] = self.apply_max_pool(layers['conv' + str(idx)], k_list[idx-1], s_list[idx - 1])
+                layers['norm' + str(idx)] = self.batch_norm(layers['pool' + str(idx)], True)
+        print('Layer dict:', layers.keys())
+        if resFlag:
+            # Skip connection from input(X) to pool_layer2
+            shortcut = self.linear_proj(X)
+            layers['conv_out'] = tf.add(layers[list(layers.keys())[-1]], shortcut)
+        else:
+            layers['conv_out'] = layers[list(layers.keys())[-1]]
 
-        # Skip connection from input(X) to pool_layer2
-        shortcut = self.linear_proj(X)
-        conv_out = tf.add(pool_layer2, shortcut)
-        print('conv_out before flattening:', conv_out.get_shape())
+        layers['conv_out'] = tf.nn.relu(layers['conv_out']) # A ReLU activation coming after element-wise addition
+        print('conv_out before flattening:', layers['conv_out'].get_shape())
 
-        shape = conv_out.get_shape().as_list()
+        shape = layers['conv_out'].get_shape().as_list()
         print('Shape of the last layer\'s output:', shape)
-        conv_flat = tf.reshape(conv_out, [-1, shape[1] * shape[2] * shape[3]]) 
+        conv_flat = tf.reshape(layers['conv_out'], [-1, shape[1] * shape[2] * shape[3]]) 
 
         # print('1, 2 : ', shape[1] , shape[2] , self.opt['depth'], self.opt['num_hidden'])
         f_weights = self.weight_variable([shape[1] * shape[2] * 30, self.opt['num_hidden']])
         f_biases = self.bias_variable([self.opt['num_hidden']])
         print('conv_flat, f_weights : ', conv_flat.shape, f_weights.shape)
         f = tf.nn.sigmoid(tf.add(tf.matmul(conv_flat, f_weights), f_biases))
-
-        # Skip connection from input layer X 
 
         out_weights = self.weight_variable([self.opt['num_hidden'], self.opt['n_classes']])
         out_biases = self.bias_variable([self.opt['n_classes']])
@@ -178,7 +187,6 @@ class ConvNet():
         accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
         pred_per_classes = tf.nn.in_top_k(out, tf.argmax(Y, 1), 1)
-
 
         cost_history = np.empty(shape=[1], dtype=float)
         print('Training...')
