@@ -140,6 +140,7 @@ class ConvNet():
         X = tf.placeholder(tf.float32, shape=[None, self.opt['bands'], self.opt['frames'], self.opt['num_channels']])
         Y = tf.placeholder(tf.float32, shape=[None, self.opt['n_classes']])
         keep_prob = tf.placeholder(tf.float32) # 'p' for dropout probability
+        #TODO:k_list, ch_list and s_list length and value should be dynamically adjusted
         k_list = [self.opt['k_size'], 3, 3]
         ch_list = [self.opt['num_channels'], 20, 30]
         s_list = [1, 1, 1]
