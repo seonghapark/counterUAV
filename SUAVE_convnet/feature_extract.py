@@ -98,9 +98,13 @@ class FeatureParser():
                 h_wav.read_wavs(intval=True)
                 for name, sync, freq in h_wav.files():
                     print('Processing IFFT from the retrieved data: ', name)
-                    print('sync: ', sync, 'freq: ', freq)
                     
+                    if freq.dtype == np.float:
+                        freq = freq * np.iinfo(np.int16).max
+                    print('sync: ', sync, 'freq: ', freq)
                     _, r_data = h_ifft.data_process(sync.astype(np.bool), freq.astype(np.int16))
+                    
+                    assert not np.isnan(r_data).any()
 
                     label = name.split('_')[1]
                     for i in range(0, r_data.shape[0] - x_time, 10):
