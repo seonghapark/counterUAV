@@ -182,6 +182,7 @@ class ConvNet():
         drop_layer = tf.nn.dropout(tf.matmul(f, out_weights) + out_biases, keep_prob)
         out = tf.nn.softmax(drop_layer)
 
+        # TODO: Need to fix batch norm to calculate moving avg and variance
         cost = tf.reduce_mean(-tf.reduce_sum(Y * tf.log(out), reduction_indices=[1]))
         optimizer = tf.train.AdamOptimizer(learning_rate=self.opt['learning_rate']).minimize(cost)
         correct_pred = tf.equal(tf.argmax(out, 1), tf.argmax(Y, 1))
