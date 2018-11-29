@@ -8,7 +8,7 @@ from sklearn.metrics import precision_recall_fscore_support
 BATCH_NORM_EPSILON = 1e-5
 BATCH_NORM_DECAY = 0.9
 
-training_epochs = 2000
+training_epochs = 3000
 
 class FeedForward():
     def __init__(self, n_dim, n_classes, lr):
