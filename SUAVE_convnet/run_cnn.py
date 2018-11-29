@@ -41,7 +41,7 @@ def main():
     parser = argparse.ArgumentParser(description='Set num. of layers and residual connection.')
     parser.add_argument('-l', '--nlayers', default=2, type=str, help='Integer for number of convolutional layers')
     parser.add_argument('-r', '--res_flag', default=False, type=bool, help='Flag for residual connection')
-    parser.add_argument('-f', '--nfolds', default=5, type=int, help='Number of k in k-folds cross validation')
+    parser.add_argument('-f', '--nfolds', default=10, type=int, help='Number of k in k-folds cross validation')
     args = parser.parse_args()
 
     print('Arguments:--------------',
