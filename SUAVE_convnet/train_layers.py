@@ -186,7 +186,12 @@ class ConvNet():
 
         # TODO: Need to fix batch norm to calculate moving avg and variance
         cost = tf.reduce_mean(-tf.reduce_sum(Y * tf.log(out), reduction_indices=[1]))
-        optimizer = tf.train.AdamOptimizer(learning_rate=self.opt['learning_rate']).minimize(cost)
+        optimizer = tf.train.AdamOptimizer(learning_rate=self.opt['learning_rate'])
+        # Adding additional ops node (batch norm) to the computational graph
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        with tf.control_dependencies(update_ops):
+            # Update moving avg and variance
+            train_ops = optimizer.minimize(cost)
         correct_pred = tf.equal(tf.argmax(out, 1), tf.argmax(Y, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
@@ -201,7 +206,7 @@ class ConvNet():
                 offset = (i * self.opt['batch_size']) % (train_y.shape[0] - self.opt['batch_size'])
                 batch_x = train_x[offset:(offset + self.opt['batch_size']), :, :, :]
                 batch_y = train_y[offset:(offset + self.opt['batch_size']), :]
-                _, loss, acc = sess.run([optimizer, cost, accuracy], feed_dict={X: batch_x, Y: batch_y, keep_prob: 1.0}) #Dropout p=0.5 without batch_norm in action
+                _, loss, acc = sess.run([train_ops, cost, accuracy], feed_dict={X: batch_x, Y: batch_y, keep_prob: 1.0}) #Dropout p=0.5 without batch_norm in action
                 cost_history = np.append(cost_history, loss)
 
                 if (i + 1) % 100 == 0:
