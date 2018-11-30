@@ -31,7 +31,6 @@ PICKLE_FILE = 'pickle/audio_CNNdataset'\
 PARENT_DIR = '../raw_data/data'
 PLOT_DIR = './plot'
 
-
 def main():
     tf.reset_default_graph()
 
@@ -60,7 +59,7 @@ def main():
         features, labels = f.extract_CNNfeature(parent_dir, sub_dir, bands=BANDS, frames=FRAMES, hop_length=HOP_LENGTH)
         # k-folding with k=5 
         print('K-folding the dataset... ')
-        k_fold_dict = f.k_fold(features, labels, k=arg.nfolds, seed=2018)
+        k_fold_dict = f.k_fold(features, labels, k=args.nfolds, seed=2018)
 
         data = k_fold_dict
 
