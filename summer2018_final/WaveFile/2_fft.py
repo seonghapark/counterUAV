@@ -16,7 +16,9 @@ class rmq_commumication():
         # self.sync = np.array([])
         # self.data = np.array([])
         # self.sign = 0
+        print("Establishing connection...")
         self.connection = self.get_connection()
+        print("Connection established.")
         self.in_queue = self.subscribe(self.connection)
 
     def get_connection(self, url='amqp://localhost'):
@@ -140,11 +142,11 @@ if __name__ == '__main__':
     while(True):
         sync, data = rabbitmq.get()
         if sync is None:
-            # print('no incomming data', data)
+            print('no incomming data', data)
             time.sleep(0.2)
             continue
-        # else:
-        #     print('sync: ', sync, ' data: ', data)
+        else:
+             print('sync: ', sync, ' data: ', data)
 
         st = time.time()*1000
         result_time, result_data = ifft.data_process(sync, data)  # It takes approximately 500 ms

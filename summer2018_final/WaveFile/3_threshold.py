@@ -87,7 +87,8 @@ if __name__ == '__main__':
                 continue
 
             st = time.time() * 1000
-            # print(result_time)
+            print("Result time:{}".format(result_time))
+            print("Reulst data:{}".format(result_data))
 
             # extract data based on threshold
             for i in range(len(result_data)):       # 50

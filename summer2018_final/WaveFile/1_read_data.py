@@ -120,7 +120,7 @@ if __name__ == "__main__":
         while(True):
             raw = inwav.get_chunk()
             if raw is None:
-                # print('no data to read')
+                print('no data to read')
                 break
             # data = rabbitmq.data_assembler(raw)
             rabbitmq.publish(raw)

@@ -173,7 +173,7 @@ if __name__ == '__main__':
     print('Connect RMQ') 
     plot = colorgraph_handler()
     rabbitmq = rmq_commumication(plot)
-    # print(rabbitmq.max_detect)
+    print(plot.max_detect)
 
     rabbitmq.start()
 
