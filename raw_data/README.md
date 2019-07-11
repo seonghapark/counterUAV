@@ -9,6 +9,7 @@ each first 3 bits: character bits to show first byte and sync
 A: sync
 BBBBB: first 5 bits of a sample
 CCCCC: last 5 bits of a sample
+
     0b00ABBBBB      0b110CCCCC
   [ First byte ]  [ Second byte ]
 ```
