@@ -3,6 +3,12 @@
 The receiver module uses 10-bit Analog-to-Digital (ADC) circuit to sample received radio signal from RF module and SYNC signal from  modulator. Both analog signals are expected to be bound between 0 and 5 V. The module transmits sampled signals through Serial with 115200 baudrate. A sample is formatted by following,
 
 ```
+binary form of data:
+each last 5 bits: half of a sample
+each first 3 bits: character bits to show first byte and sync
+A: sync
+BBBBB: first 5 bits of a sample
+CCCCC: last 5 bits of a sample
     0b00ABBBBB      0b110CCCCC
   [ First byte ]  [ Second byte ]
 ```
