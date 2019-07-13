@@ -1,1 +1,3 @@
-Daily_log
+#Daily_log
+
+각자의 
