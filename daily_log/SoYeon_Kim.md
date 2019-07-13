@@ -8,3 +8,4 @@
 
 1. Git 기초사용법 학습
 2. Ubuntu 및 ROS 설치
+3. ROS 환경설정
