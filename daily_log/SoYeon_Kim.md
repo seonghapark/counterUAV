@@ -12,3 +12,4 @@
 
 ### 2019-07-14(일) 과제
 1. https://www.youtube.com/playlist?list=PLRG6WP3c31_VIFtFAxSke2NG_DumVZPgw 7강까지 학습
+> 1 ~ 6강 수강. 7강 수강 못함. 내일 마저 수강
