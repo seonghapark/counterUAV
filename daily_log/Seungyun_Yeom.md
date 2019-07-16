@@ -13,4 +13,8 @@ RNN 담당
 1. 원하는 raw_data를 추출하는 코드에 버그가 발견되어 수정
 2. 생각한 2가지 RNN 모델(레이블 별로 파일 1개만 선택하여 60초짜리 트레이닝 데이터로 학습) 중 정확도가 높은 모델로 여러개 파일로 만든 60초짜리 데이터로 트레이닝 할 예정 
 
+### 2019-07-15(월)
+1. [모두를 위한 머신러닝](https://www.youtube.com/playlist?list=PLlMkM4tgfjnLSOjrEJN31gZATbcj_MpUm) RNN 부분 다시 공부
+2. [realtime/2_analyzer.py](https://github.com/seonghapark/counterUAV/blob/sum2019/realtime/2_analyzer.py) 코드 분석
+
 * * *
