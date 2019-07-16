@@ -22,5 +22,5 @@ Jaehun Jeong
 
 수행 결과 :
 1. ROS 모델 초안 완성
-2. ROS 강의 Chapter 7강 수강 완료
+2. ROS 강의 Chapter 7강 수강 및 실습 완료
 
