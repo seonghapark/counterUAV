@@ -19,6 +19,7 @@ Jaehun Jeong
 수행 목표 :
 1. ROS 강의 Chapter 7강 수강 완료
 2. ROS 모델 토의 후 완성
+
 수행 결과 :
 1. ROS 모델 초안 완성
 2. ROS 강의 Chapter 7강 수강 완료
