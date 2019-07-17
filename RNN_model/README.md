@@ -1,7 +1,7 @@
 # RNN_model
 
 rnn model
-## model mk1
+## yeom's model mk1
 many to one<br>
 ![model_mk1](./model_mk1.JPG)<br>
 input_dim = 2931 //10bits per 1 count => 5862/2<br>
