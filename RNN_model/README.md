@@ -2,8 +2,8 @@
 
 rnn model
 ## model mk1
-many to one
-![model_mk1](./model_mk1.jpg)
+many to one<br>
+![model_mk1](./model_mk1.JPG)
   
   
 ## model mk2
