@@ -17,4 +17,8 @@ RNN 담당
 1. 정확한 RNN 모듈을 만들기 위한 [모두를 위한 머신러닝](https://www.youtube.com/playlist?list=PLlMkM4tgfjnLSOjrEJN31gZATbcj_MpUm) RNN 부분 다시 공부
 2. [realtime/2_analyzer.py](https://github.com/seonghapark/counterUAV/blob/sum2019/realtime/2_analyzer.py) 코드 분석
 
+### 2019-07-16(화)
+1. RNN 첫번째 모듈 완성
+2. Visualizing 파일 분석
+
 * * *
