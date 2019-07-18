@@ -1,6 +1,6 @@
 # SoYeon Kim
 
-김소연 팀원의 일지입니다.
+김소연 팀원(ROS팀)의 일지입니다.
 
 ## 2019-07-13~2019-07-19
 
@@ -29,3 +29,17 @@
 >- 웹 연결 부분에서 재사용할 수 있는 노드로 web_video_server라는 노드를 찾음. web_video_server는 HTTP를 통해 이미지, 비디오 토픽을 클라이언트에게 전달해주는 역할을 하는 노드. 웹에서 보여지는 데이터가 이미지인지, 비디오인지 정확히 설정해야 함.
 
 > fake data sender node와 data receiver node 구현 시에 실제 안테나가 데이터를 송신할 때의 통신방법에 관한 학습 필요성 절감
+
+### 2019-07-17 (수)
+1. 회의 준비 및 진행
+> 회의 준비를 하며 RNN팀과 진행상황을 공유하고, 회의 때 발표할 내용과 질문할 사항을 정리함.
+
+2. ROS_MODEL 노드 구체화 순서 설정
+> 1) fake data sender node 만들기
+> 2) data reciever node 만들기
+> 3) 웹 통신 예제 해보기
+> 4) 리얼타임 코드 노드화
+>-ROS_system/requirements.md 참조.
+
+3. 바이너리 데이터를 전달하는 Publisher 코드 작성
+> 과제로 바이너리 데이터를 전달하는 Publisher/Subscriber 구현 중에서 먼저 Publisher를 구현하고 있다. 나에게 더 익숙한 C++로 작성하고 있으며, 일단 raw_data에 있는 파일 하나를 읽어서 메세지에 담는 
