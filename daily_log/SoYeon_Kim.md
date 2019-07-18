@@ -42,4 +42,4 @@
 >-ROS_system/requirements.md 참조.
 
 3. 바이너리 데이터를 전달하는 Publisher 코드 작성
-> 과제로 바이너리 데이터를 전달하는 Publisher/Subscriber 구현 중에서 먼저 Publisher를 구현하고 있다. 나에게 더 익숙한 C++로 작성하고 있으며, 일단 raw_data에 있는 파일 하나를 읽어서 메세지에 담는 
+> 과제로 바이너리 데이터를 전달하는 Publisher/Subscriber 구현 중에서 먼저 Publisher를 구현하고 있다. 나에게 더 익숙한 C++로 작성하고 있으며, 일단 raw_data에 있는 파일 하나를 읽어서 메세지에 담는 코드를 작성 중.
