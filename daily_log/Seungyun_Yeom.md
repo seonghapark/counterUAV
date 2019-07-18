@@ -21,4 +21,8 @@ RNN 담당
 1. RNN 첫번째 모듈 완성
 2. 푸리에 변환 학습
 
+### 2019-07-17(수)
+1. wav파일 중 유효한 데이터가 있는 구간만 잘라서 따로 wav파일로 저장하는 프로그램 완성
+  결과는 after_data 와 after_data_normalize(amplitude normalization 함)
+
 * * *
