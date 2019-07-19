@@ -1,0 +1,16 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/opt/ros/melodic/include",
+        "/home/jhjeong/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/include",
+        "/usr/include"
+      ],
+      "name": "Linux"
+    }
+  ]
+}
