@@ -33,7 +33,7 @@ struct fakedata_
 
 
 
-   typedef int64_t _num_type;
+   typedef int8_t _num_type;
   _num_type num;
 
 
@@ -114,12 +114,12 @@ struct MD5Sum< ::ros_counteruav::fakedata_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "57d3c40ec3ac3754af76a83e6e73127a";
+    return "a42f91c6165312a676067eda99ad61b7";
   }
 
   static const char* value(const ::ros_counteruav::fakedata_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0x57d3c40ec3ac3754ULL;
-  static const uint64_t static_value2 = 0xaf76a83e6e73127aULL;
+  static const uint64_t static_value1 = 0xa42f91c6165312a6ULL;
+  static const uint64_t static_value2 = 0x76067eda99ad61b7ULL;
 };
 
 template<class ContainerAllocator>
@@ -138,7 +138,7 @@ struct Definition< ::ros_counteruav::fakedata_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "int64 num\n"
+    return "byte num\n"
 ;
   }
 
@@ -177,7 +177,7 @@ struct Printer< ::ros_counteruav::fakedata_<ContainerAllocator> >
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::ros_counteruav::fakedata_<ContainerAllocator>& v)
   {
     s << indent << "num: ";
-    Printer<int64_t>::stream(s, indent + "  ", v.num);
+    Printer<int8_t>::stream(s, indent + "  ", v.num);
   }
 };
 

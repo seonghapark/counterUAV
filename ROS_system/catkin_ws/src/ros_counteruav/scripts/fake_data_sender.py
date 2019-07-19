@@ -35,19 +35,53 @@
 
 ## Simple talker demo that published std_msgs/Strings messages
 ## to the 'chatter' topic
-
+import sys
+import os
+import pika
+import time
 import rospy
 from std_msgs.msg import String
+
+
 
 def talker():
     pub = rospy.Publisher('chatter', String, queue_size=10)
     rospy.init_node('talker', anonymous=True)
     rate = rospy.Rate(10) # 10hz
-    while not rospy.is_shutdown():
-        hello_str = "hello world %s" % rospy.get_time()
-        rospy.loginfo(hello_str)
-        pub.publish(hello_str)
-        rate.sleep()
+    # read file
+    pwd = os.getcwd() # current working folder
+    #file_name = pwd+ '/' +sys.argv[1]
+    file_name = pwd+ '/src/ros_counteruav/20181009_100023_binary.txt'
+    
+    file = open(file_name, "rb")
+    
+    read_line = file.readline()
+
+    #data = bytearray()
+    i = 0
+    try:
+        # divide input
+        while not rospy.is_shutdown():
+            max = int(len(read_line)//11025)
+            if i < max : 
+                i = i+1 
+            else :
+                break
+            raw = read_line[i*11025:(i+1)*11025]
+            #rabbitmq.publish(raw)
+            
+            rospy.loginfo(raw)
+            pub.publish(raw)
+            rate.sleep()
+
+    except (KeyboardInterrupt, Exception) as ex:
+        print(ex)
+    finally:
+        print('Close all')
+        #rabbitmq.connection.close()
+        file.close()
+
+
 
 if __name__ == '__main__':
     try:

@@ -1,1 +1,1 @@
-int64 num
+byte num

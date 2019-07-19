@@ -7,7 +7,5 @@
 # new environment variables
 
 # modified environment variables
-export PATH="/home/jhjeong/project/counterUAV/ROS_system/catkin_ws/devel/bin:$PATH"
 export PWD="/home/jhjeong/project/counterUAV/ROS_system/catkin_ws/build"
-export PYTHONPATH="/home/jhjeong/project/counterUAV/ROS_system/catkin_ws/devel/lib/python2.7/dist-packages:$PYTHONPATH"
 export ROS_PACKAGE_PATH="/home/jhjeong/project/counterUAV/ROS_system/catkin_ws/src:/opt/ros/melodic/share"

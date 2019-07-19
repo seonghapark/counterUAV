@@ -7,12 +7,12 @@ import struct
 
 
 class fakedata(genpy.Message):
-  _md5sum = "57d3c40ec3ac3754af76a83e6e73127a"
+  _md5sum = "a42f91c6165312a676067eda99ad61b7"
   _type = "ros_counteruav/fakedata"
   _has_header = False #flag to mark the presence of a Header object
-  _full_text = """int64 num"""
+  _full_text = """byte num"""
   __slots__ = ['num']
-  _slot_types = ['int64']
+  _slot_types = ['byte']
 
   def __init__(self, *args, **kwds):
     """
@@ -48,7 +48,7 @@ class fakedata(genpy.Message):
     :param buff: buffer, ``StringIO``
     """
     try:
-      buff.write(_get_struct_q().pack(self.num))
+      buff.write(_get_struct_b().pack(self.num))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -60,8 +60,8 @@ class fakedata(genpy.Message):
     try:
       end = 0
       start = end
-      end += 8
-      (self.num,) = _get_struct_q().unpack(str[start:end])
+      end += 1
+      (self.num,) = _get_struct_b().unpack(str[start:end])
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e) #most likely buffer underfill
@@ -74,7 +74,7 @@ class fakedata(genpy.Message):
     :param numpy: numpy python module
     """
     try:
-      buff.write(_get_struct_q().pack(self.num))
+      buff.write(_get_struct_b().pack(self.num))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -87,8 +87,8 @@ class fakedata(genpy.Message):
     try:
       end = 0
       start = end
-      end += 8
-      (self.num,) = _get_struct_q().unpack(str[start:end])
+      end += 1
+      (self.num,) = _get_struct_b().unpack(str[start:end])
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e) #most likely buffer underfill
@@ -97,9 +97,9 @@ _struct_I = genpy.struct_I
 def _get_struct_I():
     global _struct_I
     return _struct_I
-_struct_q = None
-def _get_struct_q():
-    global _struct_q
-    if _struct_q is None:
-        _struct_q = struct.Struct("<q")
-    return _struct_q
+_struct_b = None
+def _get_struct_b():
+    global _struct_b
+    if _struct_b is None:
+        _struct_b = struct.Struct("<b")
+    return _struct_b

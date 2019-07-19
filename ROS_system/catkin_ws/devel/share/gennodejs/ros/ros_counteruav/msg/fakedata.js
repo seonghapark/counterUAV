@@ -33,7 +33,7 @@ class fakedata {
   static serialize(obj, buffer, bufferOffset) {
     // Serializes a message object of type fakedata
     // Serialize message field [num]
-    bufferOffset = _serializer.int64(obj.num, buffer, bufferOffset);
+    bufferOffset = _serializer.byte(obj.num, buffer, bufferOffset);
     return bufferOffset;
   }
 
@@ -42,12 +42,12 @@ class fakedata {
     let len;
     let data = new fakedata(null);
     // Deserialize message field [num]
-    data.num = _deserializer.int64(buffer, bufferOffset);
+    data.num = _deserializer.byte(buffer, bufferOffset);
     return data;
   }
 
   static getMessageSize(object) {
-    return 8;
+    return 1;
   }
 
   static datatype() {
@@ -57,13 +57,13 @@ class fakedata {
 
   static md5sum() {
     //Returns md5sum for a message object
-    return '57d3c40ec3ac3754af76a83e6e73127a';
+    return 'a42f91c6165312a676067eda99ad61b7';
   }
 
   static messageDefinition() {
     // Returns full string definition for message
     return `
-    int64 num
+    byte num
     `;
   }
 

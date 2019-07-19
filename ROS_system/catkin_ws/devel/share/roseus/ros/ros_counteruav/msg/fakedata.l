@@ -30,53 +30,34 @@
   (:serialization-length
    ()
    (+
-    ;; int64 _num
-    8
+    ;; byte _num
+    1
     ))
   (:serialize
    (&optional strm)
    (let ((s (if strm strm
               (make-string-output-stream (send self :serialization-length)))))
-     ;; int64 _num
-#+(or :alpha :irix6 :x86_64)
-       (progn (sys::poke _num (send s :buffer) (send s :count) :long) (incf (stream-count s) 8))
-#-(or :alpha :irix6 :x86_64)
-       (cond ((and (class _num) (= (length (_num . bv)) 2)) ;; bignum
-              (write-long (ash (elt (_num . bv) 0) 0) s)
-              (write-long (ash (elt (_num . bv) 1) -1) s))
-             ((and (class _num) (= (length (_num . bv)) 1)) ;; big1
-              (write-long (elt (_num . bv) 0) s)
-              (write-long (if (>= _num 0) 0 #xffffffff) s))
-             (t                                         ;; integer
-              (write-long _num s)(write-long (if (>= _num 0) 0 #xffffffff) s)))
+     ;; byte _num
+       (write-byte _num s)
      ;;
      (if (null strm) (get-output-stream-string s))))
   (:deserialize
    (buf &optional (ptr- 0))
-   ;; int64 _num
-#+(or :alpha :irix6 :x86_64)
-      (setf _num (prog1 (sys::peek buf ptr- :long) (incf ptr- 8)))
-#-(or :alpha :irix6 :x86_64)
-      (setf _num (let ((b0 (prog1 (sys::peek buf ptr- :integer) (incf ptr- 4)))
-                  (b1 (prog1 (sys::peek buf ptr- :integer) (incf ptr- 4))))
-              (cond ((= b1 -1) b0)
-                     ((and (= b1  0)
-                           (<= lisp::most-negative-fixnum b0 lisp::most-positive-fixnum))
-                      b0)
-                    ((= b1  0) (make-instance bignum :size 1 :bv (integer-vector b0)))
-                    (t (make-instance bignum :size 2 :bv (integer-vector b0 (ash b1 1)))))))
+   ;; byte _num
+     (setq _num (sys::peek buf ptr- :char)) (incf ptr- 1)
+     (if (> _num 127) (setq _num (- _num 256)))
    ;;
    self)
   )
 
-(setf (get ros_counteruav::fakedata :md5sum-) "57d3c40ec3ac3754af76a83e6e73127a")
+(setf (get ros_counteruav::fakedata :md5sum-) "a42f91c6165312a676067eda99ad61b7")
 (setf (get ros_counteruav::fakedata :datatype-) "ros_counteruav/fakedata")
 (setf (get ros_counteruav::fakedata :definition-)
-      "int64 num
+      "byte num
 ")
 
 
 
-(provide :ros_counteruav/fakedata "57d3c40ec3ac3754af76a83e6e73127a")
+(provide :ros_counteruav/fakedata "a42f91c6165312a676067eda99ad61b7")
 
 
