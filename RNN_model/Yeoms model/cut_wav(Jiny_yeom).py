@@ -90,8 +90,8 @@ def plot_specgram_1(file, i):#i번째 file
     file = file.split('//')[-1]
     file = file.split('\\')[-1]
     file = file.split('.')[0]
-    librosa.output.write_wav('.//after_data//'+file+'_'+label_list[i]+".wav", Y1, samplingrate, norm=False)#saved mono
-    librosa.output.write_wav('.//after_data_normalize//'+file+'_'+label_list[i]+".wav", Y1, samplingrate, norm=1)
+    librosa.output.write_wav('.//after_wav_data//'+file+'_'+label_list[i]+".wav", Y1, samplingrate, norm=False)#saved mono
+    librosa.output.write_wav('.//after_wav_data_normalize//'+file+'_'+label_list[i]+".wav", Y1, samplingrate, norm=1)
     
     return Y1
 
