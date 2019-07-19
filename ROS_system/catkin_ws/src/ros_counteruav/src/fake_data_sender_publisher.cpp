@@ -1,5 +1,5 @@
 #include "ros/ros.h"
-#include "fake_data_sender/FakeData.h"
+#include "ros_counteruav/fakedata.h"
 #include "ros/package.h"
 #include <fstream>
 #include <iostream>
@@ -12,27 +12,27 @@ int main(int argc, char **argv)
 	int line, i=0, j=0, sz;
 	char tstr[4021332];	//raw_data의 최대 파일 크기 입력
 
-	ros::init(argc, argv, "fake_data_sender_publisher");
+	ros::init(argc, argv, "ros_counteruav_publisher");
 	ros::NodeHandle nh;
 
-	ros::Publisher sender =   nh.advertise<fake_data_sender::FakeData>("Data", 1000);
+	ros::Publisher sender =   nh.advertise<ros_counteruav::fakedata>("Data", 1000);
 	
 	ros::Rate loop_rate(1000);
 
-	fake_data_sender::FakeData msg;
+	ros_counteruav::fakedata msg;
 
 	std::ifstream in;
 
 	//c++ binary를 이용한 파일 입출력(참고자료) : https://m.blog.naver.com/PostView.nhn?blogId=infoefficien&logNo=220437327307&proxyReferer=https%3A%2F%2Fwww.google.com%2F
 	
-	in.open("/home/yeon/catkin_ws/src/fake_data_sender/src/20181009_100023_binary.txt", std::ios::binary);	//절대경로로 경로 읽기(binary 파일 열기)
+	in.open("/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/src/20181009_100023_binary.txt", std::ios::binary);	//절대경로로 경로 읽기(binary 파일 열기)
 
 	/*/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////ros::package::getPath() 이용한 파일 읽기//////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	std::string s = "/src/20181009_100023_binary.txt";	//getPath 사용할 경우 이용
-	in.open((ros::package::getPath("fake_data_sender")+s), std::ios::binary);	//getPath로 경로 읽기(binary 파일 열기)
-	ROS_INFO("%s%s",ros::package::getPath("fake_data_sender").c_str(),s.c_str());	//getPath 경로 확인
+	in.open((ros::package::getPath("ros_counteruav")+s), std::ios::binary);	//getPath로 경로 읽기(binary 파일 열기)
+	ROS_INFO("%s%s",ros::package::getPath("ros_counteruav").c_str(),s.c_str());	//getPath 경로 확인
 	*/
 	
 	ROS_INFO("Publisher START");

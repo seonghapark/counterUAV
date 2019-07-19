@@ -3,6 +3,6 @@ prefix=/home/project/counterUAV/ROS_system/catkin_ws/devel
 Name: ros_counteruav
 Description: Description of ros_counteruav
 Version: 0.1.0
-Cflags: 
-Libs: -L/home/project/counterUAV/ROS_system/catkin_ws/devel/lib 
-Requires: 
+Cflags: -I/home/project/counterUAV/ROS_system/catkin_ws/devel/include
+Libs: -L/home/project/counterUAV/ROS_system/catkin_ws/devel/lib -lros_counteruav
+Requires: roscpp rospy std_msgs roslib

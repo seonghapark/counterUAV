@@ -1,7 +1,7 @@
 #include "ros/ros.h"
-#include "fake_data_sender/FakeData.h"
+#include "ros_counteruav/fakedata.h"
 
-void msgCallback(const fake_data_sender::FakeData::ConstPtr& msg){
+void msgCallback(const ros_counteruav::fakedata::ConstPtr& msg){
 	ROS_INFO("recieve msg : %c", msg->data);
 }
 
