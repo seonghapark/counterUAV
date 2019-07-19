@@ -7,5 +7,6 @@
 # new environment variables
 
 # modified environment variables
-export PWD="/home/jhjeong/project/counterUAV/ROS_system/catkin_ws/build"
-export ROS_PACKAGE_PATH="/home/jhjeong/project/counterUAV/ROS_system/catkin_ws/src:/opt/ros/melodic/share"
+export PKG_CONFIG_PATH="/home/project/counterUAV/ROS_system/catkin_ws/devel/lib/pkgconfig:$PKG_CONFIG_PATH"
+export PWD="/home/project/counterUAV/ROS_system/catkin_ws/build"
+export ROS_PACKAGE_PATH="/home/project/counterUAV/ROS_system/catkin_ws/src:/opt/ros/melodic/share"

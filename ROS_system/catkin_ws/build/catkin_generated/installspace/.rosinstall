@@ -1,2 +1,2 @@
 - setup-file:
-    local-name: /home/jhjeong/project/counterUAV/ROS_system/catkin_ws/install/setup.sh
+    local-name: /home/project/counterUAV/ROS_system/catkin_ws/install/setup.sh

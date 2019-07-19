@@ -107,8 +107,8 @@ catkin_package(CATKIN_DEPENDS message_runtime)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES ros_counteruav
-#  CATKIN_DEPENDS roscpp rospy std_msgs
+  LIBRARIES ros_counteruav
+  CATKIN_DEPENDS roscpp rospy std_msgs message_generation roslib
 #  DEPENDS system_lib
 )
 

@@ -51,7 +51,7 @@ def talker():
     # read file
     pwd = os.getcwd() # current working folder
     #file_name = pwd+ '/' +sys.argv[1]
-    file_name = pwd+ '/src/ros_counteruav/20181009_100023_binary.txt'
+    file_name = '/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/20181009_100023_binary.txt'
     
     file = open(file_name, "rb")
     

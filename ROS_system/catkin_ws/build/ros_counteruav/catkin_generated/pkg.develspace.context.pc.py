@@ -1,8 +1,8 @@
 # generated from catkin/cmake/template/pkg.context.pc.in
 CATKIN_PACKAGE_PREFIX = ""
-PROJECT_PKG_CONFIG_INCLUDE_DIRS = "/home/jhjeong/project/counterUAV/ROS_system/catkin_ws/devel/include".split(';') if "/home/jhjeong/project/counterUAV/ROS_system/catkin_ws/devel/include" != "" else []
+PROJECT_PKG_CONFIG_INCLUDE_DIRS = "".split(';') if "" != "" else []
 PROJECT_CATKIN_DEPENDS = "".replace(';', ' ')
 PKG_CONFIG_LIBRARIES_WITH_PREFIX = "".split(';') if "" != "" else []
 PROJECT_NAME = "ros_counteruav"
-PROJECT_SPACE_DIR = "/home/jhjeong/project/counterUAV/ROS_system/catkin_ws/devel"
+PROJECT_SPACE_DIR = "/home/project/counterUAV/ROS_system/catkin_ws/devel"
 PROJECT_VERSION = "0.1.0"

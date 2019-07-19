@@ -1,24 +1,24 @@
 Determining if the pthread_create exist failed with the following output:
-Change Dir: /home/jhjeong/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles/CMakeTmp
+Change Dir: /home/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/make" "cmTC_7ab14/fast"
-/usr/bin/make -f CMakeFiles/cmTC_7ab14.dir/build.make CMakeFiles/cmTC_7ab14.dir/build
-make[1]: Entering directory '/home/jhjeong/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_7ab14.dir/CheckSymbolExists.c.o
-/usr/bin/cc    -o CMakeFiles/cmTC_7ab14.dir/CheckSymbolExists.c.o   -c /home/jhjeong/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
-Linking C executable cmTC_7ab14
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_7ab14.dir/link.txt --verbose=1
-/usr/bin/cc      -rdynamic CMakeFiles/cmTC_7ab14.dir/CheckSymbolExists.c.o  -o cmTC_7ab14 
-CMakeFiles/cmTC_7ab14.dir/CheckSymbolExists.c.o: In function `main':
+Run Build Command:"/usr/bin/make" "cmTC_86fc1/fast"
+/usr/bin/make -f CMakeFiles/cmTC_86fc1.dir/build.make CMakeFiles/cmTC_86fc1.dir/build
+make[1]: Entering directory '/home/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_86fc1.dir/CheckSymbolExists.c.o
+/usr/bin/cc    -o CMakeFiles/cmTC_86fc1.dir/CheckSymbolExists.c.o   -c /home/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_86fc1
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_86fc1.dir/link.txt --verbose=1
+/usr/bin/cc      -rdynamic CMakeFiles/cmTC_86fc1.dir/CheckSymbolExists.c.o  -o cmTC_86fc1 
+CMakeFiles/cmTC_86fc1.dir/CheckSymbolExists.c.o: In function `main':
 CheckSymbolExists.c:(.text+0x1b): undefined reference to `pthread_create'
 collect2: error: ld returned 1 exit status
-CMakeFiles/cmTC_7ab14.dir/build.make:97: recipe for target 'cmTC_7ab14' failed
-make[1]: *** [cmTC_7ab14] Error 1
-make[1]: Leaving directory '/home/jhjeong/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles/CMakeTmp'
-Makefile:126: recipe for target 'cmTC_7ab14/fast' failed
-make: *** [cmTC_7ab14/fast] Error 2
+CMakeFiles/cmTC_86fc1.dir/build.make:97: recipe for target 'cmTC_86fc1' failed
+make[1]: *** [cmTC_86fc1] Error 1
+make[1]: Leaving directory '/home/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_86fc1/fast' failed
+make: *** [cmTC_86fc1/fast] Error 2
 
-File /home/jhjeong/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+File /home/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
 /* */
 #include <pthread.h>
 
@@ -34,22 +34,22 @@ int main(int argc, char** argv)
 }
 
 Determining if the function pthread_create exists in the pthreads failed with the following output:
-Change Dir: /home/jhjeong/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles/CMakeTmp
+Change Dir: /home/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/make" "cmTC_76a94/fast"
-/usr/bin/make -f CMakeFiles/cmTC_76a94.dir/build.make CMakeFiles/cmTC_76a94.dir/build
-make[1]: Entering directory '/home/jhjeong/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_76a94.dir/CheckFunctionExists.c.o
-/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_76a94.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.10/Modules/CheckFunctionExists.c
-Linking C executable cmTC_76a94
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_76a94.dir/link.txt --verbose=1
-/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=pthread_create    -rdynamic CMakeFiles/cmTC_76a94.dir/CheckFunctionExists.c.o  -o cmTC_76a94 -lpthreads 
+Run Build Command:"/usr/bin/make" "cmTC_6aec6/fast"
+/usr/bin/make -f CMakeFiles/cmTC_6aec6.dir/build.make CMakeFiles/cmTC_6aec6.dir/build
+make[1]: Entering directory '/home/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_6aec6.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_6aec6.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.10/Modules/CheckFunctionExists.c
+Linking C executable cmTC_6aec6
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_6aec6.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=pthread_create    -rdynamic CMakeFiles/cmTC_6aec6.dir/CheckFunctionExists.c.o  -o cmTC_6aec6 -lpthreads 
 /usr/bin/ld: cannot find -lpthreads
 collect2: error: ld returned 1 exit status
-CMakeFiles/cmTC_76a94.dir/build.make:97: recipe for target 'cmTC_76a94' failed
-make[1]: *** [cmTC_76a94] Error 1
-make[1]: Leaving directory '/home/jhjeong/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles/CMakeTmp'
-Makefile:126: recipe for target 'cmTC_76a94/fast' failed
-make: *** [cmTC_76a94/fast] Error 2
+CMakeFiles/cmTC_6aec6.dir/build.make:97: recipe for target 'cmTC_6aec6' failed
+make[1]: *** [cmTC_6aec6] Error 1
+make[1]: Leaving directory '/home/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_6aec6/fast' failed
+make: *** [cmTC_6aec6/fast] Error 2
 
 
