@@ -3,7 +3,10 @@ ROS_system
 ## counter UAV ROS system 입니다
 
 ### 반드시 우분투 기준 
+> sudo mkdir -p /home/project <br>
+> sudo chmod 777 /home/project <br>
 > cd /home/project/ <br>
+
 > git clone https://github.com/seonghapark/counterUAV.git<br>
 > git checkout sum2019<br>
 
