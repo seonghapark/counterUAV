@@ -25,4 +25,10 @@ RNN 담당
 1. wav파일 중 유효한 데이터가 있는 구간만 잘라서 따로 wav파일로 저장하는 프로그램 완성
   결과는 after_data 와 after_data_normalize(amplitude normalization 함)
 
+### 2019-07-18(목)
+1. [Urban Sound](http://aqibsaeed.github.io/2016-09-03-urban-sound-classification-part-1/) 예제를 통해 새로운 모델 만들기 착수
+
+### 2019-07-19(금)
+1. 트레이닝 데이터를 각 라벨별 5초씩 잘라서 wav 파일에 저장하여 생성
+2. [Urban Sound](http://aqibsaeed.github.io/2016-09-03-urban-sound-classification-part-1/)를 이용해 wav 파일 분석 코드를 만들어 트레이닝 
 * * *
