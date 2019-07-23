@@ -31,4 +31,7 @@ RNN 담당
 ### 2019-07-19(금)
 1. 트레이닝 데이터를 각 라벨별 5초씩 잘라서 wav 파일에 저장하여 생성
 2. [Urban Sound](http://aqibsaeed.github.io/2016-09-03-urban-sound-classification-part-1/)를 이용해 wav 파일 분석 코드를 만들어 트레이닝 
+
+### 2019-07-23(화)
+1. RNN 모듈을 ROS 노드에 연결하기 위한 사전 작업 
 * * *
