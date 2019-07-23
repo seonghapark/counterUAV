@@ -40,7 +40,7 @@ import os
 import pika
 import time
 import rospy
-from std_msgs.msg import String
+from std_msgs.msg import Byte
 
 
 
