@@ -16,7 +16,7 @@ import sys
 import pika
 import time
 import queue    
-
+from flask import Flask
 import argparse
 
 EXCHANGE_NAME = 'radar'
@@ -170,15 +170,21 @@ class colorgraph_handler():
         ani = animation.FuncAnimation(self.fig, self.animate, interval=1000, blit=False)
         plt.show()
 
+app = Flask(__name__)
+@app.route("/")
+def hello():                           
+    return "<h1>Hello World!</h1>"
+
 
 if __name__ == '__main__':
+
     print('Connect RMQ')
     plot = colorgraph_handler()
     rabbitmq = rmq_commumication(plot)
     # print(rabbitmq.max_detect)
 
     rabbitmq.start()
-
+    app.run(host="127.0.0.1",port="8080")
     try:
         while(True):
             # print('main while(True)')

@@ -1,4 +1,4 @@
-#! /usr/lib/python3
+#!/usr/bin/env python3
 #/usr/bin/env python
 # Software License Agreement (BSD License)
 #
@@ -41,7 +41,7 @@ import os
 import pika
 import time
 import rospy
-from std_msgs.msg import Byte
+from std_msgs.msg import String
 
 
 
