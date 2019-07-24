@@ -14,7 +14,7 @@ import random
 
 path_dir = 'C://Users//승윤//Desktop//purdue//연구자료//counterUAV//raw_data//data_process//data' 
 file_list = os.listdir(path_dir)
-'''
+
 # 20181016_135027_binary.txt 삭제 (no data)
 
 
@@ -80,12 +80,12 @@ for i in range(len(file_list) - 1):
 
 # In[7]:
 
-
+'''
 for index in range(len(file_list) - 1):
     print(index+1, 'True count:', sync_list[index].count(True))
     print(index+1, 'False count:', sync_list[index].count(False))
     print("")
-
+'''
 
 # In[8]:
 
@@ -136,7 +136,7 @@ data = []
 # In[11]:
 
 
-label_path_dir = path_dir + '/' + 'rnn_label.txt'
+label_path_dir ='C://Users//승윤//Desktop//purdue//연구자료//counterUAV//wav_data//rnn_label.txt'
 label_file = open(label_path_dir, 'r')
 
 # In[12]:
@@ -145,46 +145,38 @@ label_file = open(label_path_dir, 'r')
 label_lines = label_file.readlines()
 
 
-# In[13]:
-
-
-#len(label_lines)
-
-
-# In[14]:
-
-
-#print(label_lines)
-
-
 # In[15]:
 label_list = []
 time_list = []
 time = []
+num_num=[]
 step = 0
 p = 0
 for line in label_lines: #파일 제일 마지막에 엔터 키 필요
-    #print(line, end='')
     label_list.append(line.split(" a ")[1].split(" ")[0].replace(",", "")) # person, car ,drone 분류 코드
     if line.count('(') == 0:
         #print('전구간')
-        time_list.append(['0',str(len(data_list_seconds[p]))])
+        time_list.append([0,len(data_list_seconds[p])])
     else:
         time_range = line.split("(")[line.count('(')].split(")")[0].split(", ") # 시간 부분만 추출
         for i in range(len(time_range)):
-            time.append(time_range[i].split('~'))
+              num = time_range[i].split('~')
+              num_num.append(int(num[0]))
+              num_num.append(int(num[1]))
+              time.append(num_num)
+              num_num = []
         time_list.append(time)
         time = []
     p += 1
     step += 1
-    #print("")
     
 for step in range(len(label_list)):
     print(step+1,"번째 파일 종류 ", label_list[step])
     print(time_list[step])
-'''  
-# In[16]:
-
+c=np.array(label_list)
+np.save('label_list',c)
+b=np.array(time_list)
+np.save('time_list',b)
 
 
 

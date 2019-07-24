@@ -1,0 +1,8 @@
+prefix=/home/project/counterUAV/ROS_system/catkin_ws/install
+
+Name: ros_counteruav
+Description: Description of ros_counteruav
+Version: 0.1.0
+Cflags: -I/home/project/counterUAV/ROS_system/catkin_ws/install/include
+Libs: -L/home/project/counterUAV/ROS_system/catkin_ws/install/lib -lros_counteruav
+Requires: roscpp rospy std_msgs roslib

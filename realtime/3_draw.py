@@ -31,10 +31,10 @@ class rmq_commumication(Thread):
         self.in_queue = self.subscribe(self.channel)
 
 
-    def get_connection(self, url='amqp://localhost'):
+    def get_connection(self, url='localhost'):
     # def get_connection(self, url='amqp:192.168.2.177'):
-        parameters = pika.URLParameters(url)
-
+        #parameters = pika.URLParameters(url)
+        parameters = pika.URLParameters('amqp://rabbitmq:password@localhost:5672/')
         parameters.connection_attempts = 5
         parameters.retry_delay = 5.0
         parameters.socket_timeout = 2.0
@@ -51,7 +51,8 @@ class rmq_commumication(Thread):
 
 
     def subscribe(self, channel):
-        result = channel.queue_declare(exclusive=True)
+
+        result = channel.queue_declare(exclusive=True,queue='q2')
         in_queue = result.method.queue
         channel.queue_bind(
             queue=in_queue,
@@ -63,7 +64,7 @@ class rmq_commumication(Thread):
 
     def run(self):
         print('run')
-        self.channel.basic_consume(self._callback, queue=self.in_queue, no_ack=True)
+        self.channel.basic_consume(queue=self.in_queue,on_message_callback=self._callback,auto_ack=False)
         try:
             self.channel.start_consuming()
         except:

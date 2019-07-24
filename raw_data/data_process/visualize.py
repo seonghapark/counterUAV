@@ -8,7 +8,7 @@ import scipy.io.wavfile as wavfile
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import specgram
 
-PAR_DIR='~/Desktop/counterUAV/raw_data'
+PAR_DIR='~/projects/counterUAV/raw_data'
 labels = ['Others', 'Person', 'Car', 'UAV']
 
 class LoadPlot():
