@@ -22,3 +22,9 @@ export ROS_PACKAGE_PATH=/home/project/counterUAV/ROS_system/catkin_ws/src/:/opt/
 export ROS_MASTER_URI=http://localhost:11311<br>
 export ROS_HOSTNAME=localhost<br>
 
+### python3 적용(불완전)
+>sudo apt-get install python3-pip python3-yaml<br>
+>pip3 install rospkg catkin_pkg<br>
+>sudo apt-get install python-catkin-tools python3-dev python3-numpy<br>
+>catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3 -DPYTHON_INCLUDE_DIR=/usr/include/python3.6m -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.6m.so
+>catkin config --install
