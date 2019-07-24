@@ -33,6 +33,6 @@ RNN 담당
 2. [Urban Sound](http://aqibsaeed.github.io/2016-09-03-urban-sound-classification-part-1/)를 이용해 wav 파일 분석 코드를 만들어 트레이닝 
 
 ### 2019-07-23(화)
-1. RNN 모듈을 ROS 노드에 연결하기 위한 사전 작업 
+1. RNN 모듈을 ROS 노드에 연결하기 위한 사전 작업 (python 2에서 byte를 str로 인식하는 바람에 wav파일 생성에 필요한 bytearray를 못쓰고 있음)
 2. RNN-Model_wav에 accuracy 계산 오류 수정(방금 트레이닝한 데이터로 정확도를 계산함 당연히 높게 나올 수 밖에 )
 * * *
