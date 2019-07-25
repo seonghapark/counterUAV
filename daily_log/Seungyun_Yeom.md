@@ -35,4 +35,7 @@ RNN 담당
 ### 2019-07-23(화)
 1. RNN 모듈을 ROS 노드에 연결하기 위한 사전 작업 (python 2에서 byte를 str로 인식하는 바람에 wav파일 생성에 필요한 bytearray를 못쓰고 있음)
 2. RNN-Model_wav에 accuracy 계산 오류 수정(방금 트레이닝한 데이터로 정확도를 계산함 당연히 높게 나올 수 밖에 )
+
+### 2019-07-24(수)
+1. RNN 모듈을 ROS 노드에 연결하기 위한 사전 작업 완료(python 3버전 업데이트 이후 bytes를 str이 아닌 bytes로 
 * * *
