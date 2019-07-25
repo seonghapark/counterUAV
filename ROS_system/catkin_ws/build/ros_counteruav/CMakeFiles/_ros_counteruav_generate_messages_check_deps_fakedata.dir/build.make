@@ -54,7 +54,7 @@ CMAKE_BINARY_DIR = /home/project/counterUAV/ROS_system/catkin_ws/build
 include ros_counteruav/CMakeFiles/_ros_counteruav_generate_messages_check_deps_fakedata.dir/progress.make
 
 ros_counteruav/CMakeFiles/_ros_counteruav_generate_messages_check_deps_fakedata:
-	cd /home/project/counterUAV/ROS_system/catkin_ws/build/ros_counteruav && ../catkin_generated/env_cached.sh /usr/bin/python2 /opt/ros/melodic/share/genmsg/cmake/../../../lib/genmsg/genmsg_check_deps.py ros_counteruav /home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/fakedata.msg 
+	cd /home/project/counterUAV/ROS_system/catkin_ws/build/ros_counteruav && ../catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/melodic/share/genmsg/cmake/../../../lib/genmsg/genmsg_check_deps.py ros_counteruav /home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/fakedata.msg 
 
 _ros_counteruav_generate_messages_check_deps_fakedata: ros_counteruav/CMakeFiles/_ros_counteruav_generate_messages_check_deps_fakedata
 _ros_counteruav_generate_messages_check_deps_fakedata: ros_counteruav/CMakeFiles/_ros_counteruav_generate_messages_check_deps_fakedata.dir/build.make

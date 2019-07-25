@@ -17,15 +17,15 @@ echo_and_run() { echo "+ $@" ; "$@" ; }
 echo_and_run cd "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav"
 
 # ensure that Python install destination exists
-echo_and_run mkdir -p "$DESTDIR/home/project/counterUAV/ROS_system/catkin_ws/install/lib/python2.7/dist-packages"
+echo_and_run mkdir -p "$DESTDIR/home/project/counterUAV/ROS_system/catkin_ws/install/lib/python3/dist-packages"
 
 # Note that PYTHONPATH is pulled from the environment to support installing
 # into one location when some dependencies were installed in another
 # location, #123.
 echo_and_run /usr/bin/env \
-    PYTHONPATH="/home/project/counterUAV/ROS_system/catkin_ws/install/lib/python2.7/dist-packages:/home/project/counterUAV/ROS_system/catkin_ws/build/lib/python2.7/dist-packages:$PYTHONPATH" \
+    PYTHONPATH="/home/project/counterUAV/ROS_system/catkin_ws/install/lib/python3/dist-packages:/home/project/counterUAV/ROS_system/catkin_ws/build/lib/python3/dist-packages:$PYTHONPATH" \
     CATKIN_BINARY_DIR="/home/project/counterUAV/ROS_system/catkin_ws/build" \
-    "/usr/bin/python2" \
+    "/usr/bin/python3" \
     "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/setup.py" \
     build --build-base "/home/project/counterUAV/ROS_system/catkin_ws/build/ros_counteruav" \
     install \
