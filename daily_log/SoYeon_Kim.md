@@ -50,3 +50,15 @@
 ### 2019-07-22 (월)
 1. analyzer 코드 + ROS 
 > git에 올라와있는 real_time/analyzer.py를 이용하여 ROS와 결합하는 과정을 진행함. 기존에 만들어두었던 reciever 노드에서 다시 analyzer로 데이터를 보내는 것과 reciever가 보낸 데이터를 analyzer 코드 안에서 가공하는 노드를 생각했는데, 결합하는 과정에서 여러 오류가 발생함. 현재 오류들을 잡는 과정에 있으며, 수요일 회의 전까지 analyzer 코드를 완성하는 게 목표임.
+
+### 2019-7-23 (화)
+1. analyzer 코드 작성
+> data_receiver가 보낸 데이터를 analzyer가 받는 것까지는 성공했으나, ctrl+C를 눌러야 callback 함수를 벗어나는 오류와 노드를 완전히 종료하려면 ctrl+z를 눌러야 하는 오류가 있음. 
+
+### 2019-7-24 (수)
+1. 회의
+> 화요일까지의 analyzer 코드 진행 상황 보고.
+
+2. try_data_analyzer 코드 생성
+> 어제까지 진행한 코드를 변경한 [try_data_analyzer](https://github.com/seonghapark/counterUAV/blob/sum2019/ROS_system/try/try_data_analyzer.py) 코드를 만듦. ctrl+C를 눌러야 callback 함수를 벗어나는 오류를 고치기 위해 자료조사하던 중 rospy.Subscriber.unregister() 함수를 찾아서 여러 위치에 넣어봤으나 callback 함수를 벗어나지 못했음. 다른 방법을 더 생각해보아야 할 것 같음.
+> try_data_analyzer에서는 callback 함수에 get() 코드를 포함시켜 넘어오는 데이터마다 비트연산을 하도록 수정했음. 코드 수정 중 ifft_handler()에 대한 처리 순서를 고민했었음. get()에서 받아온 데이터에 대한 처리를 한 것을 모두 합쳐서 푸리에 변환을 해야한다고 생각했는데, 원래 코드(2_analyzer.py)를 다시 보니 데이터를 받아올 때마다 푸리에 변환을 하는 것으로 파악하여 ifft_handler()도 get()과 마찬가지로 callback()
