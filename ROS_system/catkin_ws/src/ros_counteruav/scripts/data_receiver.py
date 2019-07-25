@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#! /usr/bin/env python3
+# /usr/bin/env python
 # Software License Agreement (BSD License)
 #
 # Copyright (c) 2008, Willow Garage, Inc.
@@ -37,10 +38,20 @@
 ## to the 'chatter' topic
 
 import rospy
+#from ros_counteruav.msg import fakedata
 from std_msgs.msg import String
 
 def callback(data):
     rospy.loginfo(rospy.get_caller_id() + 'I heard %s', data.data)
+    #print(format(msg.some_int))
+    
+    #Re_send
+    repub = rospy.Publisher('msg_for_analyzer', String, queue_size=1000)
+    #rospy.init_node('re-sender', anonymous=True)
+    re_rate = rospy.Rate(10)
+    repub.publish(data.data)
+    rospy.loginfo('RE-SEND : ' + data.data)
+    re_rate.sleep()
 
 def listener():
 
@@ -49,7 +60,7 @@ def listener():
     # anonymous=True flag means that rospy will choose a unique
     # name for our 'listener' node so that multiple listeners can
     # run simultaneously.
-    rospy.init_node('listener', anonymous=True)
+    rospy.init_node('data_receiver', anonymous=True)
 
     rospy.Subscriber('chatter', String, callback)
 

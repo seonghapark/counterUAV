@@ -1,4 +1,4 @@
-#! /usr/lib/python3
+#! /usr/bin/enc python
 
 from threading import Thread
 
@@ -18,6 +18,8 @@ import time
 import queue
 
 import argparse
+
+from std_msgs.msg import String
 
 EXCHANGE_NAME = 'radar'
 

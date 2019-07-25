@@ -38,7 +38,7 @@ class rmq_commumication():
 
 
     def subscribe(self, channel):
-        result = channel.queue_declare(exclusive=True)
+        result = channel.queue_declare(exclusive=True,queue='q1')
         in_queue = result.method.queue
         channel.queue_bind(
             queue=in_queue,
@@ -53,7 +53,7 @@ class rmq_commumication():
         headers = {'result_time': len(result_time.tostring()), 'result': len(result_data.tostring())}
         pika_properties = pika.BasicProperties(headers=headers)
         # pika_properties = pika.BasicProperties(content_type='application/json', headers=headers)
-        self.connection.publish(
+        self.connection.basic_publish(
             exchange=EXCHANGE_NAME,
             properties=pika_properties,
             routing_key='ifft',
@@ -61,7 +61,7 @@ class rmq_commumication():
 
 
     def get(self):
-        method, properties, body = self.connection.basic_get(queue=self.in_queue, no_ack=True)
+        method, properties, body = self.connection.basic_get(queue=self.in_queue, auto_ack=False)
 
         if method is None:
             return None, None

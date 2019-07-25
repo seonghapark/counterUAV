@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+#/usr/bin/env python
 # Software License Agreement (BSD License)
 #
 # Copyright (c) 2008, Willow Garage, Inc.
@@ -41,12 +42,15 @@ import pika
 import time
 import rospy
 from std_msgs.msg import String
+#from ros_counteruav.msg import fakedata
+
 
 
 
 def talker():
+    #pub = rospy.Publisher('chatter', String, queue_size=10)
     pub = rospy.Publisher('chatter', String, queue_size=10)
-    rospy.init_node('talker', anonymous=True)
+    rospy.init_node('fake_data_sender', anonymous=True)
     rate = rospy.Rate(10) # 10hz
     # read file
     pwd = os.getcwd() # current working folder
@@ -69,9 +73,8 @@ def talker():
                 break
             raw = read_line[i*11025:(i+1)*11025]
             #rabbitmq.publish(raw)
-            
             rospy.loginfo(raw)
-            pub.publish(raw)
+            pub.publish(str(raw))
             rate.sleep()
 
     except (KeyboardInterrupt, Exception) as ex:

@@ -1,4 +1,9 @@
-#! /usr/lib/python3
+<<<<<<< HEAD
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+=======
+#! /usr/bin/env python3
+>>>>>>> sum2019
 
 import numpy as np
 import sys
@@ -8,95 +13,127 @@ import os
 import pika
 
 import time
+import rospy
+from std_msgs.msg import String
 
-EXCHANGE_NAME = 'radar'
+body = ''
 
-class rmq_commumication():
+class data_analyzer():
     def __init__(self):
-        # self.sync = np.array([])
-        # self.data = np.array([])
-        # self.sign = 0
-        self.connection = self.get_connection()
-        self.in_queue = self.subscribe(self.connection)
+        self.sync = 0
+        self.real_data=0
+                #  self.sync = np.array([])
+                #  self.data = np.array([])
+                #  self.sign = 0
+                #  self.connection = self.get_connection()
+                #  self.in_queue = self.subscribe(self.connection)
 
-    def get_connection(self, url='amqp://localhost'):
-        parameters = pika.URLParameters(url)
+            #def get_connection(self):
+                # parameters.connection_attempts = 5
+                # parameters.retry_delay = 5.0
+                # parameters.socket_timeout = 2.0
+                # connection = pika.BlockingConnection(parameters)
 
-        parameters.connection_attempts = 5
-        parameters.retry_delay = 5.0
-        parameters.socket_timeout = 2.0
-        connection = pika.BlockingConnection(parameters)
+                # channel = connection.channel()
 
-        channel = connection.channel()
-
-        channel.exchange_declare(
-            EXCHANGE_NAME,
-            exchange_type='direct',
-            durable=True
-        )
-        return channel
-
-
-    def subscribe(self, channel):
-        result = channel.queue_declare(exclusive=True)
-        in_queue = result.method.queue
-        channel.queue_bind(
-            queue=in_queue,
-            exchange=EXCHANGE_NAME,
-            routing_key='raw'
-        )
-        return in_queue
-
+                # channel.exchange_declare(
+                #     EXCHANGE_NAME,
+                #     exchange_type='direct',
+                #     durable=True
+                # )
+                # return channel
+            
+        
+    def listener(self):
+        print('listener func START')
+        rospy.init_node('analyzer_reciever', anonymous=True)
+        rospy.Subscriber('msg_for_analyzer', String, self.callback)
+        #rospy.spin()
+        #print(body) 
+        rospy.spin()
+                # result = channel.queue_declare(exclusive=True)
+                # in_queue = result.method.queue
+                # channel.queue_bind(
+                #     queue=in_queue,
+                #     exchange=EXCHANGE_NAME,
+                #     routing_key='raw'
+                # )
+                # return in_queue
+    
+    def callback(self, data):
+        global body
+        body = body + data.data
+        print(body)
 
     def publish(self, result_time, result_data):
+        print('publish START')
         data = result_time.tostring() + result_data.tostring()
-        headers = {'result_time': len(result_time.tostring()), 'result': len(result_data.tostring())}
-        pika_properties = pika.BasicProperties(headers=headers)
-        # pika_properties = pika.BasicProperties(content_type='application/json', headers=headers)
-        self.connection.publish(
-            exchange=EXCHANGE_NAME,
-            properties=pika_properties,
-            routing_key='ifft',
-            body=data)
-
+                # headers = {'result_time': len(result_time.tostring()), 'result': len(result_data.tostring())}
+                # pika_properties = pika.BasicProperties(headers=headers)
+                # # pika_properties = pika.BasicProperties(content_type='application/json', headers=headers)
+                # self.connection.publish(
+                #     exchange=EXCHANGE_NAME,
+                #     properties=pika_properties,
+                #     routing_key='ifft',
+                #     body=data)
+        analyze_pub = rospy.Publisher('analyzed_data', String, queue_size=10)
+        Re_rate = rospy.Rate(10)
+            
+        try:
+            while not rospy.is_shutdown():
+                #rospy.loginfo(data)
+                analyze_pub.publish(data.data)
+                Re_rate.sleep()
+        except(KeyboardInterrupt, Exception) as ex:
+            print(ex)
+        finally:
+            print('Analyzer Publisher Finish')
 
     def get(self):
-        method, properties, body = self.connection.basic_get(queue=self.in_queue, no_ack=True)
+            # method, properties, body = self.connection.basic_get(queue=self.in_queue, no_ack=True)
 
-        if method is None:
+                #if method is None:
+                #    return None, None
+        #global body
+        real_data = bytearray(body)
+        print('Data length:', len(real_data))
+
+        if len(real_data) < 2:
             return None, None
-
-        data = bytearray(body)
-        print('Data length:', len(data))
-
-        if len(data) < 2:
-            return None, None
-        if (data[0] >> 6) > 0:
-            del data[:1]
-        if len(data) % 2 == 1:
-            del data[-1:]
+        if (real_data[0] >> 6) > 0:
+            del real_data[:1]
+        if len(real_data) % 2 == 1:
+            del real_data[-1:]
 
         values = []
         sync = []
-        for index in range(0, len(data), 2):
-            high = data[index] & 0x1F
-            low = data[index + 1] & 0x1F
-            values.append(high << 5 | low)  
-            sync.append(True if (data[index] >> 5) == 1 else False)
+        for index in range(0, len(real_data), 2):
+            high = int(real_data[index]) & 0x1F
+            low = int(real_data[index + 1]) & 0x1F
+            values.append(high << 5 | low)
+            sync.append(True if (real_data[index] >> 5) == 1 else False)
 
         self.sync = np.array(sync)
-        self.data = np.array(values)
+        self.real_data = np.array(values)
 
-        # print(self.sync, self.data, len(self.sync), len(self.data))
+                # print(self.sync, self.data, len(self.sync), len(self.data))
 
-        # print(self.sync.shape, self.sync, self.data)
-        return self.sync, self.data
+                # print(self.sync.shape, self.sync, self.data)
+        return self.sync, self.real_data
+
+
+
+# def callback(data):
+#     global body
+#     body = []
+#     body.append(data.data)
+#     print('CALLBACK')
 
 
 class ifft_handler():
     def __init__(self):
         self.opp = 0
-        #self.fs = 44100  # Sampling rate
+                #self.fs = 44100  # Sampling rate
         self.fs = 11724
         self.Tp = 0.020   # Radar ramp up-time
         self.n = int(self.Tp*self.fs)   # Samples per ramp up-time
@@ -118,24 +155,24 @@ class ifft_handler():
     def data_process(self, sync, data):
         count = 0
         result_time = [] # time is a list
-        # self.fs = len(sync)
+                # self.fs = len(sync)
         self.n = int(self.Tp*self.fs)
-        self.fsif = np.zeros([10000,self.n], dtype=np.int16) 
-        # print(self.fs)
+        self.fsif = np.zeros([10000,self.n], dtype=np.int16)
+                # print(self.fs)
 
-        # print(data, data.shape, self.n)
-        # print(sync, sync.shape)
+                # print(data, data.shape, self.n)
+                # print(sync, sync.shape)
 
         spliter = 10 # to search rising edge
         val = 2
         for ii in range(val, int((sync.shape[0] - self.n)), spliter):  # improved searching loop
-            # if sync[ii - 11 - spliter:ii - spliter] == []:
-            #     continue
+                    # if sync[ii - 11 - spliter:ii - spliter] == []:
+                    #     continue
             if (ii - spliter > 0) & (sync[ii] == True) & (sync[ii - val - spliter:ii - spliter].max() == False):  # if start[ii] is true and the mean of from start[ii-11] to start[ii-1] is zero (All False)
                 for jj in range(ii - spliter, ii):
                     if (sync[jj] == True) & (sync[jj - val:jj - 1].mean() == 0.0):
-                        # print(data[jj:jj + self.n], jj)
-                        # print(self.n)
+                                # print(data[jj:jj + self.n], jj)
+                                # print(self.n)
                         self.fsif[count, :] = data[jj:jj + self.n]  # then copy rightarray from ii to ii+n and paste them to sif[count] --> sif[count] is a list
                         result_time.append((jj + int(sync.shape[0]) * self.opp) * 1. / self.fs)  # append time, the time is ii/fs --> few micro seconds (0.0001 sec or so)
                         count = count + 1
@@ -152,67 +189,74 @@ class ifft_handler():
         sif = sif - np.tile(sif.mean(0), [sif.shape[0], 1])
         zpad = int(8 * self.n / 2)  # create the number_of_ifft_entities --> which is the number of vales that has to be created from fft calculation
         decibel = self.dbv(np.fft.ifft(sif, zpad, 1)) # Do fft calculation, and convert results to decibel through dbv function
-        real_value = decibel[:,0:int(decibel.shape[1] / 2)] 
-        max_real = real_value.max() 
+        #print('first decibel : ' + str(decibel))
+        real_value = decibel[:,0:int(decibel.shape[1] / 2)]
+        max_real = real_value.max()
         result_data = real_value - max_real
 
-        #### 2 pulse cancelor RTI plot
+                #### 2 pulse cancelor RTI plot
         sif2 = sif[1:sif.shape[0],:] - sif[:sif.shape[0]-1,:]
         last = sif[-1,:]
         sif2 = np.vstack((sif2, last))
-        # print(sif2, sif2.shape, sif.shape, zpad)
+                # print(sif2, sif2.shape, sif.shape, zpad)
         v = np.fft.ifft(sif2, zpad, 1)
         decibel = self.dbv(v)
+        #print('second decibel : ' + str(decibel))
         real_value = decibel[:,0:int(decibel.shape[1] / 2)]
-        max_real = real_value.max() 
+        max_real = real_value.max()
         result_data = real_value - max_real
 
         result_time = result_time[:50]
         result_data = result_data[:50]
-        
-        # print(result_time.dtype, result_data.dtype)
+
+                # print(result_time.dtype, result_data.dtype)
         return result_time, result_data
 
 
-if __name__ == '__main__':  
-    print('Connect RMQ') 
-    rabbitmq = rmq_commumication()
+if __name__ == '__main__':
+    print('Analyzer start')
+    analyzer = data_analyzer()
     ifft = ifft_handler()
+    print('init done')
+            # out_t = open('fft_result_time.txt','w+')   # Create a file
+            # out_sm = open('fft_result_data.txt','w+')   # Create a file
 
-    # out_t = open('fft_result_time.txt','w+')   # Create a file
-    # out_sm = open('fft_result_data.txt','w+')   # Create a file
+            # try:
 
-    # try:
+    
+    
     while(True):
-        sync, data = rabbitmq.get()
+        analyzer.listener()
+        sync, data = analyzer.get()
         if sync is None:
-            # print('no incomming data', data)
+                    # print('no incomming data', data)
             time.sleep(0.2)
             continue
-        # else:
-        #     print('sync: ', sync, ' data: ', data)
+                # else:
+                #     print('sync: ', sync, ' data: ', data)
 
         st = time.time()*1000
         result_time, result_data = ifft.data_process(sync, data)  # It takes approximately 500 ms
         et = time.time()*1000
-        # print('FFT elapsed in %2.f' % (et-st), result_time.shape, result_data.shape)
+                # print('FFT elapsed in %2.f' % (et-st), result_time.shape, result_data.shape)
 
-        rabbitmq.publish(result_time, result_data)
-        # print(result_data)
+        print(body)
+        analyzer.publish(result_time, result_data)
+                # print(result_data)
 
-        # for k in range(0,len(result_time)):
-        #     out_t.write(str(result_time[k])+', ')
-        #     out_t.write("\n")
-        #     out_t.flush()
-        # for k in range(0,len(result_data)):
-        #     out_sm.write(str(result_data[k])+', ')
-        #     out_sm.write("\n")
-        #     out_sm.flush()
+                # for k in range(0,len(result_time)):
+                #     out_t.write(str(result_time[k])+', ')
+                #     out_t.write("\n")
+                #     out_t.flush()
+                # for k in range(0,len(result_data)):
+                #     out_sm.write(str(result_data[k])+', ')
+                #     out_sm.write("\n")
+                #     out_sm.flush()
 
-    # except(KeyboardInterrupt, Exception) as ex:
-    #     print(ex)
-    # finally:
-    #     print('Close all')
-    #     rabbitmq.connection.close()
+            # except(KeyboardInterrupt, Exception) as ex:
+            #     print(ex)
+            # finally:
+            #     print('Close all')
+            #     analyzer.connection.close()
 
 

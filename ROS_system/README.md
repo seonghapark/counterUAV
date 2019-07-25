@@ -22,3 +22,22 @@ export ROS_PACKAGE_PATH=/home/project/counterUAV/ROS_system/catkin_ws/src/:/opt/
 export ROS_MASTER_URI=http://localhost:11311<br>
 export ROS_HOSTNAME=localhost<br>
 
+### python3 적용(불완전)
+>sudo apt-get install python3-pip python3-yaml<br>
+>pip3 install rospkg catkin_pkg<br>
+>sudo apt-get install python-catkin-tools python3-dev python3-numpy<br>
+>catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3 -DPYTHON_INCLUDE_DIR=/usr/include/python3.6m -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.6m.so <br>
+>catkin config --install
+
+#### .py 파일 첫줄에 
+> #!/usr/bin/env python3 입력
+
+### 
+byte array를 쓰고 싶어요<br>
+1. #!/usr/bin/env python3<br>
+2. testdata.msg 생성 후 uint8[] some_int // 파이썬3에서는 uint8이 byte고 uint8[]이 bytes이다.
+3. from ros_counteruav.msg import testdata  // <br> [ros msg형태](http://wiki.ros.org/msg), [ros array 사용하기](https://answers.ros.org/question/9471/how-to-recieve-an-array-over-publisher-and-subscriber-python/)<br>
+4. radar_send = rospy.Publisher('radar_send', testdata, queue_size=1) // 퍼블리셔<br>
+5. message.some_int = read_line // 메시지에 데이터 저장 testdata.msg 안에 uint8[] <변수명> 요거 적어주면 된다.<br>
+6. rospy.Subscriber('radar_send', testdata, callback) // subscriber <br>
+링크를 클릭해 보심 더 빠릅니다.
