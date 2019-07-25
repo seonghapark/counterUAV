@@ -61,4 +61,5 @@
 
 2. try_data_analyzer 코드 생성
 > 어제까지 진행한 코드를 변경한 [try_data_analyzer](https://github.com/seonghapark/counterUAV/blob/sum2019/ROS_system/try/try_data_analyzer.py) 코드를 만듦. ctrl+C를 눌러야 callback 함수를 벗어나는 오류를 고치기 위해 자료조사하던 중 rospy.Subscriber.unregister() 함수를 찾아서 여러 위치에 넣어봤으나 callback 함수를 벗어나지 못했음. 다른 방법을 더 생각해보아야 할 것 같음.
+
 > try_data_analyzer에서는 callback 함수에 get() 코드를 포함시켜 넘어오는 데이터마다 비트연산을 하도록 수정했음. 코드 수정 중 ifft_handler()에 대한 처리 순서를 고민했었음. get()에서 받아온 데이터에 대한 처리를 한 것을 모두 합쳐서 푸리에 변환을 해야한다고 생각했는데, 원래 코드(2_analyzer.py)를 다시 보니 데이터를 받아올 때마다 푸리에 변환을 하는 것으로 파악하여 ifft_handler()도 get()과 마찬가지로 callback()
