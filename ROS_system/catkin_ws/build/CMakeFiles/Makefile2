@@ -409,8 +409,6 @@ clean: gtest/googlemock/gtest/CMakeFiles/gtest.dir/clean
 
 # Convenience name for "all" pass in the directory.
 ros_counteruav/all: ros_counteruav/CMakeFiles/ros_counteruav_generate_messages.dir/all
-ros_counteruav/all: ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/all
-ros_counteruav/all: ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all
 
 .PHONY : ros_counteruav/all
 
@@ -427,7 +425,6 @@ ros_counteruav/clean: ros_counteruav/CMakeFiles/ros_counteruav_generate_messages
 ros_counteruav/clean: ros_counteruav/CMakeFiles/roscpp_generate_messages_py.dir/clean
 ros_counteruav/clean: ros_counteruav/CMakeFiles/ros_counteruav_generate_messages.dir/clean
 ros_counteruav/clean: ros_counteruav/CMakeFiles/roscpp_generate_messages_eus.dir/clean
-ros_counteruav/clean: ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/clean
 ros_counteruav/clean: ros_counteruav/CMakeFiles/roscpp_generate_messages_lisp.dir/clean
 ros_counteruav/clean: ros_counteruav/CMakeFiles/ros_counteruav_generate_messages_py.dir/clean
 ros_counteruav/clean: ros_counteruav/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/clean
@@ -436,7 +433,6 @@ ros_counteruav/clean: ros_counteruav/CMakeFiles/std_msgs_generate_messages_lisp.
 ros_counteruav/clean: ros_counteruav/CMakeFiles/roscpp_generate_messages_cpp.dir/clean
 ros_counteruav/clean: ros_counteruav/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/clean
 ros_counteruav/clean: ros_counteruav/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/clean
-ros_counteruav/clean: ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/clean
 ros_counteruav/clean: ros_counteruav/CMakeFiles/std_msgs_generate_messages_cpp.dir/clean
 ros_counteruav/clean: ros_counteruav/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/clean
 ros_counteruav/clean: ros_counteruav/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/clean
@@ -850,47 +846,6 @@ clean: ros_counteruav/CMakeFiles/roscpp_generate_messages_eus.dir/clean
 .PHONY : clean
 
 #=============================================================================
-# Target rules for target ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir
-
-# All Build rule for target.
-ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/all: ros_counteruav/CMakeFiles/ros_counteruav_generate_messages_nodejs.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/all: ros_counteruav/CMakeFiles/ros_counteruav_generate_messages_lisp.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/all: ros_counteruav/CMakeFiles/ros_counteruav_generate_messages_eus.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/all: ros_counteruav/CMakeFiles/ros_counteruav_generate_messages_cpp.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/all: ros_counteruav/CMakeFiles/ros_counteruav_generate_messages_py.dir/all
-	$(MAKE) -f ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/build.make ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/depend
-	$(MAKE) -f ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/build.make ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles --progress-num=21,22 "Built target ros_counteruav_subscriber"
-.PHONY : ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/all
-
-# Include target in all.
-all: ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/all
-
-.PHONY : all
-
-# Build rule for subdir invocation for target.
-ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles 9
-	$(MAKE) -f CMakeFiles/Makefile2 ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles 0
-.PHONY : ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/rule
-
-# Convenience name for target.
-ros_counteruav_subscriber: ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/rule
-
-.PHONY : ros_counteruav_subscriber
-
-# clean rule for target.
-ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/clean:
-	$(MAKE) -f ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/build.make ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/clean
-.PHONY : ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/clean
-
-# clean rule for target.
-clean: ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/clean
-
-.PHONY : clean
-
-#=============================================================================
 # Target rules for target ros_counteruav/CMakeFiles/roscpp_generate_messages_lisp.dir
 
 # All Build rule for target.
@@ -1144,62 +1099,6 @@ ros_counteruav/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/clean:
 
 # clean rule for target.
 clean: ros_counteruav/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/clean
-
-.PHONY : clean
-
-#=============================================================================
-# Target rules for target ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir
-
-# All Build rule for target.
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all: ros_counteruav/CMakeFiles/ros_counteruav_generate_messages_nodejs.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all: ros_counteruav/CMakeFiles/ros_counteruav_generate_messages_lisp.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all: ros_counteruav/CMakeFiles/ros_counteruav_generate_messages_eus.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all: ros_counteruav/CMakeFiles/ros_counteruav_generate_messages_cpp.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all: ros_counteruav/CMakeFiles/roscpp_generate_messages_py.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all: ros_counteruav/CMakeFiles/roscpp_generate_messages_eus.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all: ros_counteruav/CMakeFiles/roscpp_generate_messages_lisp.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all: ros_counteruav/CMakeFiles/ros_counteruav_generate_messages_py.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all: ros_counteruav/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all: ros_counteruav/CMakeFiles/std_msgs_generate_messages_lisp.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all: ros_counteruav/CMakeFiles/roscpp_generate_messages_cpp.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all: ros_counteruav/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all: ros_counteruav/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all: ros_counteruav/CMakeFiles/std_msgs_generate_messages_cpp.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all: ros_counteruav/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all: ros_counteruav/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all: ros_counteruav/CMakeFiles/std_msgs_generate_messages_eus.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all: ros_counteruav/CMakeFiles/std_msgs_generate_messages_nodejs.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all: ros_counteruav/CMakeFiles/roscpp_generate_messages_nodejs.dir/all
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all: ros_counteruav/CMakeFiles/std_msgs_generate_messages_py.dir/all
-	$(MAKE) -f ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/build.make ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/depend
-	$(MAKE) -f ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/build.make ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles --progress-num=19,20 "Built target ros_counteruav_publisher"
-.PHONY : ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all
-
-# Include target in all.
-all: ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all
-
-.PHONY : all
-
-# Build rule for subdir invocation for target.
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles 9
-	$(MAKE) -f CMakeFiles/Makefile2 ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/project/counterUAV/ROS_system/catkin_ws/build/CMakeFiles 0
-.PHONY : ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/rule
-
-# Convenience name for target.
-ros_counteruav_publisher: ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/rule
-
-.PHONY : ros_counteruav_publisher
-
-# clean rule for target.
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/clean:
-	$(MAKE) -f ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/build.make ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/clean
-.PHONY : ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/clean
-
-# clean rule for target.
-clean: ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/clean
 
 .PHONY : clean
 

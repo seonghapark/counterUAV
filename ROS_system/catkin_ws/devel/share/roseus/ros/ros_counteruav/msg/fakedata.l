@@ -19,10 +19,10 @@
 (defmethod ros_counteruav::fakedata
   (:init
    (&key
-    ((:data __data) 0)
+    ((:data __data) (make-array 0 :initial-element 0 :element-type :char))
     )
    (send-super :init)
-   (setq _data (round __data))
+   (setq _data __data)
    self)
   (:data
    (&optional __data)
@@ -30,34 +30,36 @@
   (:serialization-length
    ()
    (+
-    ;; byte _data
-    1
+    ;; uint8[] _data
+    (* 1    (length _data)) 4
     ))
   (:serialize
    (&optional strm)
    (let ((s (if strm strm
               (make-string-output-stream (send self :serialization-length)))))
-     ;; byte _data
-       (write-byte _data s)
+     ;; uint8[] _data
+     (write-long (length _data) s)
+     (princ _data s)
      ;;
      (if (null strm) (get-output-stream-string s))))
   (:deserialize
    (buf &optional (ptr- 0))
-   ;; byte _data
-     (setq _data (sys::peek buf ptr- :char)) (incf ptr- 1)
-     (if (> _data 127) (setq _data (- _data 256)))
+   ;; uint8[] _data
+   (let ((n (sys::peek buf ptr- :integer))) (incf ptr- 4)
+     (setq _data (make-array n :element-type :char))
+     (replace _data buf :start2 ptr-) (incf ptr- n))
    ;;
    self)
   )
 
-(setf (get ros_counteruav::fakedata :md5sum-) "ad736a2e8818154c487bb80fe42ce43b")
+(setf (get ros_counteruav::fakedata :md5sum-) "f43a8e1b362b75baa741461b46adc7e0")
 (setf (get ros_counteruav::fakedata :datatype-) "ros_counteruav/fakedata")
 (setf (get ros_counteruav::fakedata :definition-)
-      "byte data
+      "uint8[] data
 ")
 
 
 
-(provide :ros_counteruav/fakedata "ad736a2e8818154c487bb80fe42ce43b")
+(provide :ros_counteruav/fakedata "f43a8e1b362b75baa741461b46adc7e0")
 
 

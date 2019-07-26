@@ -348,21 +348,6 @@ roscpp_generate_messages_eus/fast:
 .PHONY : roscpp_generate_messages_eus/fast
 
 # Convenience name for target.
-ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/rule:
-	cd /home/project/counterUAV/ROS_system/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/rule
-.PHONY : ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/rule
-
-# Convenience name for target.
-ros_counteruav_subscriber: ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/rule
-
-.PHONY : ros_counteruav_subscriber
-
-# fast build rule for target.
-ros_counteruav_subscriber/fast:
-	cd /home/project/counterUAV/ROS_system/catkin_ws/build && $(MAKE) -f ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/build.make ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/build
-.PHONY : ros_counteruav_subscriber/fast
-
-# Convenience name for target.
 ros_counteruav/CMakeFiles/roscpp_generate_messages_lisp.dir/rule:
 	cd /home/project/counterUAV/ROS_system/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 ros_counteruav/CMakeFiles/roscpp_generate_messages_lisp.dir/rule
 .PHONY : ros_counteruav/CMakeFiles/roscpp_generate_messages_lisp.dir/rule
@@ -483,21 +468,6 @@ rosgraph_msgs_generate_messages_lisp/fast:
 .PHONY : rosgraph_msgs_generate_messages_lisp/fast
 
 # Convenience name for target.
-ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/rule:
-	cd /home/project/counterUAV/ROS_system/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/rule
-.PHONY : ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/rule
-
-# Convenience name for target.
-ros_counteruav_publisher: ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/rule
-
-.PHONY : ros_counteruav_publisher
-
-# fast build rule for target.
-ros_counteruav_publisher/fast:
-	cd /home/project/counterUAV/ROS_system/catkin_ws/build && $(MAKE) -f ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/build.make ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/build
-.PHONY : ros_counteruav_publisher/fast
-
-# Convenience name for target.
 ros_counteruav/CMakeFiles/std_msgs_generate_messages_cpp.dir/rule:
 	cd /home/project/counterUAV/ROS_system/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 ros_counteruav/CMakeFiles/std_msgs_generate_messages_cpp.dir/rule
 .PHONY : ros_counteruav/CMakeFiles/std_msgs_generate_messages_cpp.dir/rule
@@ -602,60 +572,6 @@ std_msgs_generate_messages_py/fast:
 	cd /home/project/counterUAV/ROS_system/catkin_ws/build && $(MAKE) -f ros_counteruav/CMakeFiles/std_msgs_generate_messages_py.dir/build.make ros_counteruav/CMakeFiles/std_msgs_generate_messages_py.dir/build
 .PHONY : std_msgs_generate_messages_py/fast
 
-src/fake_data_sender_publisher.o: src/fake_data_sender_publisher.cpp.o
-
-.PHONY : src/fake_data_sender_publisher.o
-
-# target to build an object file
-src/fake_data_sender_publisher.cpp.o:
-	cd /home/project/counterUAV/ROS_system/catkin_ws/build && $(MAKE) -f ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/build.make ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/src/fake_data_sender_publisher.cpp.o
-.PHONY : src/fake_data_sender_publisher.cpp.o
-
-src/fake_data_sender_publisher.i: src/fake_data_sender_publisher.cpp.i
-
-.PHONY : src/fake_data_sender_publisher.i
-
-# target to preprocess a source file
-src/fake_data_sender_publisher.cpp.i:
-	cd /home/project/counterUAV/ROS_system/catkin_ws/build && $(MAKE) -f ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/build.make ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/src/fake_data_sender_publisher.cpp.i
-.PHONY : src/fake_data_sender_publisher.cpp.i
-
-src/fake_data_sender_publisher.s: src/fake_data_sender_publisher.cpp.s
-
-.PHONY : src/fake_data_sender_publisher.s
-
-# target to generate assembly for a file
-src/fake_data_sender_publisher.cpp.s:
-	cd /home/project/counterUAV/ROS_system/catkin_ws/build && $(MAKE) -f ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/build.make ros_counteruav/CMakeFiles/ros_counteruav_publisher.dir/src/fake_data_sender_publisher.cpp.s
-.PHONY : src/fake_data_sender_publisher.cpp.s
-
-src/fake_data_sender_subscriber.o: src/fake_data_sender_subscriber.cpp.o
-
-.PHONY : src/fake_data_sender_subscriber.o
-
-# target to build an object file
-src/fake_data_sender_subscriber.cpp.o:
-	cd /home/project/counterUAV/ROS_system/catkin_ws/build && $(MAKE) -f ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/build.make ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/src/fake_data_sender_subscriber.cpp.o
-.PHONY : src/fake_data_sender_subscriber.cpp.o
-
-src/fake_data_sender_subscriber.i: src/fake_data_sender_subscriber.cpp.i
-
-.PHONY : src/fake_data_sender_subscriber.i
-
-# target to preprocess a source file
-src/fake_data_sender_subscriber.cpp.i:
-	cd /home/project/counterUAV/ROS_system/catkin_ws/build && $(MAKE) -f ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/build.make ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/src/fake_data_sender_subscriber.cpp.i
-.PHONY : src/fake_data_sender_subscriber.cpp.i
-
-src/fake_data_sender_subscriber.s: src/fake_data_sender_subscriber.cpp.s
-
-.PHONY : src/fake_data_sender_subscriber.s
-
-# target to generate assembly for a file
-src/fake_data_sender_subscriber.cpp.s:
-	cd /home/project/counterUAV/ROS_system/catkin_ws/build && $(MAKE) -f ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/build.make ros_counteruav/CMakeFiles/ros_counteruav_subscriber.dir/src/fake_data_sender_subscriber.cpp.s
-.PHONY : src/fake_data_sender_subscriber.cpp.s
-
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -680,7 +596,6 @@ help:
 	@echo "... ros_counteruav_generate_messages"
 	@echo "... roscpp_generate_messages_eus"
 	@echo "... edit_cache"
-	@echo "... ros_counteruav_subscriber"
 	@echo "... roscpp_generate_messages_lisp"
 	@echo "... ros_counteruav_generate_messages_py"
 	@echo "... rosgraph_msgs_generate_messages_cpp"
@@ -690,7 +605,6 @@ help:
 	@echo "... install"
 	@echo "... rosgraph_msgs_generate_messages_eus"
 	@echo "... rosgraph_msgs_generate_messages_lisp"
-	@echo "... ros_counteruav_publisher"
 	@echo "... std_msgs_generate_messages_cpp"
 	@echo "... rosgraph_msgs_generate_messages_nodejs"
 	@echo "... rosgraph_msgs_generate_messages_py"
@@ -698,12 +612,6 @@ help:
 	@echo "... std_msgs_generate_messages_nodejs"
 	@echo "... roscpp_generate_messages_nodejs"
 	@echo "... std_msgs_generate_messages_py"
-	@echo "... src/fake_data_sender_publisher.o"
-	@echo "... src/fake_data_sender_publisher.i"
-	@echo "... src/fake_data_sender_publisher.s"
-	@echo "... src/fake_data_sender_subscriber.o"
-	@echo "... src/fake_data_sender_subscriber.i"
-	@echo "... src/fake_data_sender_subscriber.s"
 .PHONY : help
 
 

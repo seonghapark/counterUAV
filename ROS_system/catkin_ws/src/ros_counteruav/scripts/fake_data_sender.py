@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 #/usr/bin/env python
 # Software License Agreement (BSD License)
 #
@@ -41,40 +42,40 @@ import os
 import pika
 import time
 import rospy
-from std_msgs.msg import String
-#from ros_counteruav.msg import fakedata
+#from std_msgs.msg import String
+from ros_counteruav.msg import fakedata
 
 
 
 
 def talker():
     #pub = rospy.Publisher('chatter', String, queue_size=10)
-    pub = rospy.Publisher('chatter', String, queue_size=10)
+    pub = rospy.Publisher('chatter', fakedata, queue_size=10)
     rospy.init_node('fake_data_sender', anonymous=True)
     rate = rospy.Rate(10) # 10hz
     # read file
     pwd = os.getcwd() # current working folder
     #file_name = pwd+ '/' +sys.argv[1]
     file_name = '/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/20181009_100023_binary.txt'
-    
+    message = fakedata()
     file = open(file_name, "rb")
     
-    read_line = file.readline()
-
+    #read_line = file.readline()
+    message.data = file.readline()
     #data = bytearray()
     i = 0
     try:
         # divide input
         while not rospy.is_shutdown():
-            max = int(len(read_line)//11025)
+            max = int(len(message.data)//11025)
             if i < max : 
                 i = i+1 
             else :
                 break
-            raw = read_line[i*11025:(i+1)*11025]
+            raw = message.data[i*11025:(i+1)*11025]
             #rabbitmq.publish(raw)
             rospy.loginfo(raw)
-            pub.publish(str(raw))
+            pub.publish(raw)
             rate.sleep()
 
     except (KeyboardInterrupt, Exception) as ex:

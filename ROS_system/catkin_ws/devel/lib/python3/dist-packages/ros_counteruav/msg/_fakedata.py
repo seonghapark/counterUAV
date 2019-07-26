@@ -7,12 +7,12 @@ import struct
 
 
 class fakedata(genpy.Message):
-  _md5sum = "ad736a2e8818154c487bb80fe42ce43b"
+  _md5sum = "f43a8e1b362b75baa741461b46adc7e0"
   _type = "ros_counteruav/fakedata"
   _has_header = False #flag to mark the presence of a Header object
-  _full_text = """byte data"""
+  _full_text = """uint8[] data"""
   __slots__ = ['data']
-  _slot_types = ['byte']
+  _slot_types = ['uint8[]']
 
   def __init__(self, *args, **kwds):
     """
@@ -32,9 +32,9 @@ class fakedata(genpy.Message):
       super(fakedata, self).__init__(*args, **kwds)
       #message fields cannot be None, assign default values for those that are
       if self.data is None:
-        self.data = 0
+        self.data = b''
     else:
-      self.data = 0
+      self.data = b''
 
   def _get_types(self):
     """
@@ -48,7 +48,13 @@ class fakedata(genpy.Message):
     :param buff: buffer, ``StringIO``
     """
     try:
-      buff.write(_get_struct_b().pack(self.data))
+      _x = self.data
+      length = len(_x)
+      # - if encoded as a list instead, serialize as bytes instead of string
+      if type(_x) in [list, tuple]:
+        buff.write(struct.pack('<I%sB'%length, length, *_x))
+      else:
+        buff.write(struct.pack('<I%ss'%length, length, _x))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -60,8 +66,11 @@ class fakedata(genpy.Message):
     try:
       end = 0
       start = end
-      end += 1
-      (self.data,) = _get_struct_b().unpack(str[start:end])
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      start = end
+      end += length
+      self.data = str[start:end]
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e) #most likely buffer underfill
@@ -74,7 +83,13 @@ class fakedata(genpy.Message):
     :param numpy: numpy python module
     """
     try:
-      buff.write(_get_struct_b().pack(self.data))
+      _x = self.data
+      length = len(_x)
+      # - if encoded as a list instead, serialize as bytes instead of string
+      if type(_x) in [list, tuple]:
+        buff.write(struct.pack('<I%sB'%length, length, *_x))
+      else:
+        buff.write(struct.pack('<I%ss'%length, length, _x))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -87,8 +102,11 @@ class fakedata(genpy.Message):
     try:
       end = 0
       start = end
-      end += 1
-      (self.data,) = _get_struct_b().unpack(str[start:end])
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      start = end
+      end += length
+      self.data = str[start:end]
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e) #most likely buffer underfill
@@ -97,9 +115,3 @@ _struct_I = genpy.struct_I
 def _get_struct_I():
     global _struct_I
     return _struct_I
-_struct_b = None
-def _get_struct_b():
-    global _struct_b
-    if _struct_b is None:
-        _struct_b = struct.Struct("<b")
-    return _struct_b

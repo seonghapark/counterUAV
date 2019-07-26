@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+
 # /usr/bin/env python
 # Software License Agreement (BSD License)
 #
@@ -38,19 +39,19 @@
 ## to the 'chatter' topic
 
 import rospy
-#from ros_counteruav.msg import fakedata
-from std_msgs.msg import String
+from ros_counteruav.msg import fakedata
+#from std_msgs.msg import String
 
 def callback(data):
-    rospy.loginfo(rospy.get_caller_id() + 'I heard %s', data.data)
-    #print(format(msg.some_int))
+    print('{}'.format(data.data))
     
     #Re_send
-    repub = rospy.Publisher('msg_for_analyzer', String, queue_size=1000)
-    #rospy.init_node('re-sender', anonymous=True)
+    repub = rospy.Publisher('msg_for_analyzer', fakedata, queue_size=1000)
     re_rate = rospy.Rate(10)
-    repub.publish(data.data)
-    rospy.loginfo('RE-SEND : ' + data.data)
+    msg = fakedata()
+    msg.data = data.data
+    repub.publish(msg)
+    rospy.loginfo('RE-SEND : ' + str(msg.data))
     re_rate.sleep()
 
 def listener():
@@ -62,7 +63,7 @@ def listener():
     # run simultaneously.
     rospy.init_node('data_receiver', anonymous=True)
 
-    rospy.Subscriber('chatter', String, callback)
+    rospy.Subscriber('chatter', fakedata, callback)
 
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()

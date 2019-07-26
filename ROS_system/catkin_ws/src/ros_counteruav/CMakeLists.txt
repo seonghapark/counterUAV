@@ -139,7 +139,7 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/ros_counteruav_node.cpp)
-add_executable(${PROJECT_NAME}_publisher src/fake_data_sender_publisher.cpp)
+# add_executable(${PROJECT_NAME}_publisher src/fake_data_sender_publisher.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -150,22 +150,22 @@ add_executable(${PROJECT_NAME}_publisher src/fake_data_sender_publisher.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(${PROJECT_NAME}_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(${PROJECT_NAME}_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(${PROJECT_NAME}_publisher
-   ${catkin_LIBRARIES}
-)
-add_executable(${PROJECT_NAME}_subscriber src/fake_data_sender_subscriber.cpp)
+# target_link_libraries(${PROJECT_NAME}_publisher
+#    ${catkin_LIBRARIES}
+# )
+# add_executable(${PROJECT_NAME}_subscriber src/fake_data_sender_subscriber.cpp)
 
-add_dependencies(${PROJECT_NAME}_subscriber ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TAGETS})
+# add_dependencies(${PROJECT_NAME}_subscriber ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TAGETS})
 
-target_link_libraries(${PROJECT_NAME}_subscriber 
-  ${catkin_LIBRARIES}
-)
+# target_link_libraries(${PROJECT_NAME}_subscriber 
+#   ${catkin_LIBRARIES}
+# )
 
 #############
 ## Install ##

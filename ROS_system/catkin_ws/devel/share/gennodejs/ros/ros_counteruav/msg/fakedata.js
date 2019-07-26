@@ -25,7 +25,7 @@ class fakedata {
         this.data = initObj.data
       }
       else {
-        this.data = 0;
+        this.data = [];
       }
     }
   }
@@ -33,7 +33,7 @@ class fakedata {
   static serialize(obj, buffer, bufferOffset) {
     // Serializes a message object of type fakedata
     // Serialize message field [data]
-    bufferOffset = _serializer.byte(obj.data, buffer, bufferOffset);
+    bufferOffset = _arraySerializer.uint8(obj.data, buffer, bufferOffset, null);
     return bufferOffset;
   }
 
@@ -42,12 +42,14 @@ class fakedata {
     let len;
     let data = new fakedata(null);
     // Deserialize message field [data]
-    data.data = _deserializer.byte(buffer, bufferOffset);
+    data.data = _arrayDeserializer.uint8(buffer, bufferOffset, null)
     return data;
   }
 
   static getMessageSize(object) {
-    return 1;
+    let length = 0;
+    length += object.data.length;
+    return length + 4;
   }
 
   static datatype() {
@@ -57,13 +59,13 @@ class fakedata {
 
   static md5sum() {
     //Returns md5sum for a message object
-    return 'ad736a2e8818154c487bb80fe42ce43b';
+    return 'f43a8e1b362b75baa741461b46adc7e0';
   }
 
   static messageDefinition() {
     // Returns full string definition for message
     return `
-    byte data
+    uint8[] data
     `;
   }
 
@@ -77,7 +79,7 @@ class fakedata {
       resolved.data = msg.data;
     }
     else {
-      resolved.data = 0
+      resolved.data = []
     }
 
     return resolved;

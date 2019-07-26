@@ -1,1 +1,1 @@
-byte data
+uint8[] data

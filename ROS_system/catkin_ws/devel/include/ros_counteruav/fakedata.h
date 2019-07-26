@@ -24,16 +24,16 @@ struct fakedata_
   typedef fakedata_<ContainerAllocator> Type;
 
   fakedata_()
-    : data(0)  {
+    : data()  {
     }
   fakedata_(const ContainerAllocator& _alloc)
-    : data(0)  {
+    : data(_alloc)  {
   (void)_alloc;
     }
 
 
 
-   typedef int8_t _data_type;
+   typedef std::vector<uint8_t, typename ContainerAllocator::template rebind<uint8_t>::other >  _data_type;
   _data_type data;
 
 
@@ -70,7 +70,7 @@ namespace message_traits
 
 
 
-// BOOLTRAITS {'IsMessage': True, 'IsFixedSize': True, 'HasHeader': False}
+// BOOLTRAITS {'IsMessage': True, 'IsFixedSize': False, 'HasHeader': False}
 // {'ros_counteruav': ['/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg'], 'std_msgs': ['/opt/ros/melodic/share/std_msgs/cmake/../msg']}
 
 // !!!!!!!!!!! ['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_parsed_fields', 'constants', 'fields', 'full_name', 'has_header', 'header_present', 'names', 'package', 'parsed_fields', 'short_name', 'text', 'types']
@@ -90,12 +90,12 @@ struct IsMessage< ::ros_counteruav::fakedata_<ContainerAllocator> const>
 
 template <class ContainerAllocator>
 struct IsFixedSize< ::ros_counteruav::fakedata_<ContainerAllocator> >
-  : TrueType
+  : FalseType
   { };
 
 template <class ContainerAllocator>
 struct IsFixedSize< ::ros_counteruav::fakedata_<ContainerAllocator> const>
-  : TrueType
+  : FalseType
   { };
 
 template <class ContainerAllocator>
@@ -114,12 +114,12 @@ struct MD5Sum< ::ros_counteruav::fakedata_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "ad736a2e8818154c487bb80fe42ce43b";
+    return "f43a8e1b362b75baa741461b46adc7e0";
   }
 
   static const char* value(const ::ros_counteruav::fakedata_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0xad736a2e8818154cULL;
-  static const uint64_t static_value2 = 0x487bb80fe42ce43bULL;
+  static const uint64_t static_value1 = 0xf43a8e1b362b75baULL;
+  static const uint64_t static_value2 = 0xa741461b46adc7e0ULL;
 };
 
 template<class ContainerAllocator>
@@ -138,7 +138,7 @@ struct Definition< ::ros_counteruav::fakedata_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "byte data\n"
+    return "uint8[] data\n"
 ;
   }
 
@@ -176,8 +176,12 @@ struct Printer< ::ros_counteruav::fakedata_<ContainerAllocator> >
 {
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::ros_counteruav::fakedata_<ContainerAllocator>& v)
   {
-    s << indent << "data: ";
-    Printer<int8_t>::stream(s, indent + "  ", v.data);
+    s << indent << "data[]" << std::endl;
+    for (size_t i = 0; i < v.data.size(); ++i)
+    {
+      s << indent << "  data[" << i << "]: ";
+      Printer<uint8_t>::stream(s, indent + "  ", v.data[i]);
+    }
   }
 };
 

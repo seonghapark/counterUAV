@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import numpy as np
@@ -10,8 +10,8 @@ import pika
 
 import time
 import rospy
-from std_msgs.msg import String
-#from ros_counteruav.msg import fakedata
+#from std_msgs.msg import String
+from ros_counteruav.msg import fakedata
 
 body = ''
 
@@ -19,26 +19,7 @@ class data_analyzer():
     def __init__(self):
         self.sync = 0
         self.real_data=0
-                #  self.sync = np.array([])
-                #  self.data = np.array([])
-                #  self.sign = 0
-                #  self.connection = self.get_connection()
-                #  self.in_queue = self.subscribe(self.connection)
 
-            #def get_connection(self):
-                # parameters.connection_attempts = 5
-                # parameters.retry_delay = 5.0
-                # parameters.socket_timeout = 2.0
-                # connection = pika.BlockingConnection(parameters)
-
-                # channel = connection.channel()
-
-                # channel.exchange_declare(
-                #     EXCHANGE_NAME,
-                #     exchange_type='direct',
-                #     durable=True
-                # )
-                # return channel
             
     def get_sync(self):
         return self.sync
@@ -49,17 +30,10 @@ class data_analyzer():
     def listener(self):
         print('listener func START')
         rospy.init_node('analyzer_reciever', anonymous=True)
-        rospy.Subscriber('msg_for_analyzer', String, self.callback)
+        rospy.Subscriber('msg_for_analyzer', fakedata, self.callback)
         rospy.spin()
         print('AFTER spin')
-                # result = channel.queue_declare(exclusive=True)
-                # in_queue = result.method.queue
-                # channel.queue_bind(
-                #     queue=in_queue,
-                #     exchange=EXCHANGE_NAME,
-                #     routing_key='raw'
-                # )
-                # return in_queue
+
     
     def callback(self, data):
         ###########################get()#############################
@@ -67,114 +41,64 @@ class data_analyzer():
         print('Data length:', len(real_data))
 
         if len(real_data) < 2:
-            return None, None
+            self.sync = None
+            self.real_data = None
+
         if (real_data[0] >> 6) > 0:
             del real_data[:1]
+            values = []
+            sync = []
+            for index in range(0, len(real_data), 2):
+                high = int(real_data[index]) & 0x1F
+                low = int(real_data[index + 1]) & 0x1F
+                values.append(high << 5 | low)
+                sync.append(True if (real_data[index] >> 5) == 1 else False)
+
+            self.sync = np.array(sync)
+            self.real_data = np.array(values)
+            
         if len(real_data) % 2 == 1:
             del real_data[-1:]
+            values = []
+            sync = []
+            for index in range(0, len(real_data), 2):
+                high = int(real_data[index]) & 0x1F
+                low = int(real_data[index + 1]) & 0x1F
+                values.append(high << 5 | low)
+                sync.append(True if (real_data[index] >> 5) == 1 else False)
+            self.sync = np.array(sync)
+            self.real_data = np.array(values)
 
-        values = []
-        sync = []
-        for index in range(0, len(real_data), 2):
-            high = int(real_data[index]) & 0x1F
-            low = int(real_data[index + 1]) & 0x1F
-            values.append(high << 5 | low)
-            sync.append(True if (real_data[index] >> 5) == 1 else False)
 
-        self.sync = np.array(sync)
-        #np.append(self.sync, sync)
-        self.real_data = np.array(values)
-        #np.append(self.real_data, values)
-
-        global body
-        body = body + data.data
-        #print(body)
-        #rospy.Subscriber('msg_for_analyzer', String, self.callback).unregister()
-
-        ############################ ifft of main ###############################
+        ############################ ifft ###############################
         sync = analyzer.get_sync()
         data = analyzer.get_real_data()
         if sync is None:
-                    # print('no incomming data', data)
             time.sleep(0.2)
-        #continue
-                # else:
-                #     print('sync: ', sync, ' data: ', data)
 
         st = time.time()*1000
         print('BEFORE ifft')
         result_time, result_data = ifft.data_process(sync, data)  # It takes approximately 500 ms
         et = time.time()*1000
         print('AFTER ifft')
-                # print('FFT elapsed in %2.f' % (et-st), result_time.shape, result_data.shape)
-
-        #print(result_data)
         analyzer.publish(result_time, result_data)
 
     def publish(self, result_time, result_data):
         print('publish START')
         Analyzed_data = result_time.tostring() + result_data.tostring()
-                # headers = {'result_time': len(result_time.tostring()), 'result': len(result_data.tostring())}
-                # pika_properties = pika.BasicProperties(headers=headers)
-                # # pika_properties = pika.BasicProperties(content_type='application/json', headers=headers)
-                # self.connection.publish(
-                #     exchange=EXCHANGE_NAME,
-                #     properties=pika_properties,
-                #     routing_key='ifft',
-                #     body=data)
-        analyze_pub = rospy.Publisher('analyzed_data', String, queue_size=10)
+        analyze_pub = rospy.Publisher('analyzed_data', fakedata, queue_size=10)
         Re_rate = rospy.Rate(10)
+        MSG = fakedata()
+        MSG.data = Analyzed_data
             
         try:
-            #while not rospy.is_shutdown():
-            rospy.loginfo(Analyzed_data)
-            analyze_pub.publish(Analyzed_data)
+            rospy.loginfo(str(MSG.data))
+            analyze_pub.publish(MSG)
             Re_rate.sleep()
         except(KeyboardInterrupt, Exception) as ex:
             print(ex)
         finally:
             print('publisher Finish')
-"""
-    def get(self):
-            # method, properties, body = self.connection.basic_get(queue=self.in_queue, no_ack=True)
-
-                #if method is None:
-                #    return None, None
-        #global body
-        real_data = bytearray(body)
-        print('Data length:', len(real_data))
-
-        if len(real_data) < 2:
-            return None, None
-        if (real_data[0] >> 6) > 0:
-            del real_data[:1]
-        if len(real_data) % 2 == 1:
-            del real_data[-1:]
-
-        values = []
-        sync = []
-        for index in range(0, len(real_data), 2):
-            high = int(real_data[index]) & 0x1F
-            low = int(real_data[index + 1]) & 0x1F
-            values.append(high << 5 | low)
-            sync.append(True if (real_data[index] >> 5) == 1 else False)
-
-        self.sync = np.array(sync)
-        self.real_data = np.array(values)
-
-                # print(self.sync, self.data, len(self.sync), len(self.data))
-
-                # print(self.sync.shape, self.sync, self.data)
-        return self.sync, self.real_data
-"""
-
-
-# def callback(data):
-#     global body
-#     body = []
-#     body.append(data.data)
-#     print('CALLBACK')
-
 
 class ifft_handler():
     def __init__(self):
@@ -266,52 +190,8 @@ if __name__ == '__main__':
     global ifft 
     ifft = ifft_handler()
     print('init done')
-            # out_t = open('fft_result_time.txt','w+')   # Create a file
-            # out_sm = open('fft_result_data.txt','w+')   # Create a file
 
-            # try:
-
-    #while(True):
     analyzer.listener()
     print('listener fucn FINISH')
-
-    #sync, data = analyzer.get()
-    #sync = analyzer.get_sync()
-    #data = analyzer.get_real_data()
-    #print('Success to get')
-    # if sync is None:
-    #                 # print('no incomming data', data)
-    #     time.sleep(0.2)
-    #     #continue
-    #             # else:
-    #             #     print('sync: ', sync, ' data: ', data)
-
-    # st = time.time()*1000
-    # print('BEFORE ifft')
-    # #print(analyzer.get_sync())
-    # #print(analyzer.get_real_data())
-    # result_time, result_data = ifft.data_process(sync, data)  # It takes approximately 500 ms
-    # et = time.time()*1000
-    # print('AFTER ifft')
-    #             # print('FFT elapsed in %2.f' % (et-st), result_time.shape, result_data.shape)
-
-    # print(result_data)
-    # analyzer.publish(result_time, result_data)
-                # print(result_data)
-
-                # for k in range(0,len(result_time)):
-                #     out_t.write(str(result_time[k])+', ')
-                #     out_t.write("\n")
-                #     out_t.flush()
-                # for k in range(0,len(result_data)):
-                #     out_sm.write(str(result_data[k])+', ')
-                #     out_sm.write("\n")
-                #     out_sm.flush()
-
-            # except(KeyboardInterrupt, Exception) as ex:
-            #     print(ex)
-            # finally:
-            #     print('Close all')
-            #     analyzer.connection.close()
 
 

@@ -10,8 +10,8 @@
   ((data
     :reader data
     :initarg :data
-    :type cl:integer
-    :initform 0))
+    :type (cl:vector cl:fixnum)
+   :initform (cl:make-array 0 :element-type 'cl:fixnum :initial-element 0)))
 )
 
 (cl:defclass fakedata (<fakedata>)
@@ -28,11 +28,25 @@
   (data m))
 (cl:defmethod roslisp-msg-protocol:serialize ((msg <fakedata>) ostream)
   "Serializes a message object of type '<fakedata>"
-  (cl:write-byte (cl:ldb (cl:byte 8 0) (cl:slot-value msg 'data)) ostream)
+  (cl:let ((__ros_arr_len (cl:length (cl:slot-value msg 'data))))
+    (cl:write-byte (cl:ldb (cl:byte 8 0) __ros_arr_len) ostream)
+    (cl:write-byte (cl:ldb (cl:byte 8 8) __ros_arr_len) ostream)
+    (cl:write-byte (cl:ldb (cl:byte 8 16) __ros_arr_len) ostream)
+    (cl:write-byte (cl:ldb (cl:byte 8 24) __ros_arr_len) ostream))
+  (cl:map cl:nil #'(cl:lambda (ele) (cl:write-byte (cl:ldb (cl:byte 8 0) ele) ostream))
+   (cl:slot-value msg 'data))
 )
 (cl:defmethod roslisp-msg-protocol:deserialize ((msg <fakedata>) istream)
   "Deserializes a message object of type '<fakedata>"
-    (cl:setf (cl:ldb (cl:byte 8 0) (cl:slot-value msg 'data)) (cl:read-byte istream))
+  (cl:let ((__ros_arr_len 0))
+    (cl:setf (cl:ldb (cl:byte 8 0) __ros_arr_len) (cl:read-byte istream))
+    (cl:setf (cl:ldb (cl:byte 8 8) __ros_arr_len) (cl:read-byte istream))
+    (cl:setf (cl:ldb (cl:byte 8 16) __ros_arr_len) (cl:read-byte istream))
+    (cl:setf (cl:ldb (cl:byte 8 24) __ros_arr_len) (cl:read-byte istream))
+  (cl:setf (cl:slot-value msg 'data) (cl:make-array __ros_arr_len))
+  (cl:let ((vals (cl:slot-value msg 'data)))
+    (cl:dotimes (i __ros_arr_len)
+    (cl:setf (cl:ldb (cl:byte 8 0) (cl:aref vals i)) (cl:read-byte istream)))))
   msg
 )
 (cl:defmethod roslisp-msg-protocol:ros-datatype ((msg (cl:eql '<fakedata>)))
@@ -43,19 +57,19 @@
   "ros_counteruav/fakedata")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql '<fakedata>)))
   "Returns md5sum for a message object of type '<fakedata>"
-  "ad736a2e8818154c487bb80fe42ce43b")
+  "f43a8e1b362b75baa741461b46adc7e0")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql 'fakedata)))
   "Returns md5sum for a message object of type 'fakedata"
-  "ad736a2e8818154c487bb80fe42ce43b")
+  "f43a8e1b362b75baa741461b46adc7e0")
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql '<fakedata>)))
   "Returns full string definition for message of type '<fakedata>"
-  (cl:format cl:nil "byte data~%~%"))
+  (cl:format cl:nil "uint8[] data~%~%"))
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql 'fakedata)))
   "Returns full string definition for message of type 'fakedata"
-  (cl:format cl:nil "byte data~%~%"))
+  (cl:format cl:nil "uint8[] data~%~%"))
 (cl:defmethod roslisp-msg-protocol:serialization-length ((msg <fakedata>))
   (cl:+ 0
-     1
+     4 (cl:reduce #'cl:+ (cl:slot-value msg 'data) :key #'(cl:lambda (ele) (cl:declare (cl:ignorable ele)) (cl:+ 1)))
 ))
 (cl:defmethod roslisp-msg-protocol:ros-message-to-list ((msg <fakedata>))
   "Converts a ROS message object to a list"
