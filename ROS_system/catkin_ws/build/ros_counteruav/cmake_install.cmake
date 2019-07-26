@@ -42,7 +42,10 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/ros_counteruav/msg" TYPE FILE FILES "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/fakedata.msg")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/ros_counteruav/msg" TYPE FILE FILES
+    "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/fakedata.msg"
+    "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/result.msg"
+    )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)

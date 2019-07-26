@@ -3,5 +3,7 @@
   (:export
    "<FAKEDATA>"
    "FAKEDATA"
+   "<RESULT>"
+   "RESULT"
   ))
 

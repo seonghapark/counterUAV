@@ -11,7 +11,7 @@ import pika
 import time
 import rospy
 #from std_msgs.msg import String
-from ros_counteruav.msg import fakedata
+from ros_counteruav.msg import fakedata,result
 
 body = ''
 
@@ -85,15 +85,19 @@ class data_analyzer():
 
     def publish(self, result_time, result_data):
         print('publish START')
-        Analyzed_data = result_time.tostring() + result_data.tostring()
-        analyze_pub = rospy.Publisher('analyzed_data', fakedata, queue_size=10)
+        
+        results = result()
+        results.time = result_time.tostring()
+        results.data = result_data.tostring()
+        analyze_pub = rospy.Publisher('analyzed_data', result, queue_size=10)
         Re_rate = rospy.Rate(10)
-        MSG = fakedata()
-        MSG.data = Analyzed_data
+        #MSG = fakedata()
+        #MSG.data = Analyzed_data
             
         try:
-            rospy.loginfo(str(MSG.data))
-            analyze_pub.publish(MSG)
+            rospy.loginfo(str(results.time))
+            rospy.loginfo(str(results.data))
+            analyze_pub.publish(results)
             Re_rate.sleep()
         except(KeyboardInterrupt, Exception) as ex:
             print(ex)

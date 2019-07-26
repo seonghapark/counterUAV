@@ -1,7 +1,7 @@
 #! /usr/lib/python3
 
 from threading import Thread
-
+from flask import Flask, Response
 # import matplotlib.pyplot as plt
 # import matplotlib.animation as animation
 
@@ -74,7 +74,7 @@ class rmq_commumication(Thread):
 
 
     def _callback(self, channel, method, properties, body):
-        # print("_callback: ", 'channel: ', channel, ' method: ', method, ' properties: ', properties, ' body: ',body)
+        print("_callback: ", 'channel: ', channel, ' method: ', method, ' properties: ', properties, ' body: ',body)
         headers = properties.headers
         self.data_disassembler(bytearray(body), headers)
         self.plot.set(self.result_time, self.result_data)
