@@ -62,4 +62,17 @@
 2. try_data_analyzer 코드 생성
 > 어제까지 진행한 코드를 변경한 [try_data_analyzer](https://github.com/seonghapark/counterUAV/blob/sum2019/ROS_system/try/try_data_analyzer.py) 코드를 만듦. ctrl+C를 눌러야 callback 함수를 벗어나는 오류를 고치기 위해 자료조사하던 중 rospy.Subscriber.unregister() 함수를 찾아서 여러 위치에 넣어봤으나 callback 함수를 벗어나지 못했음. 다른 방법을 더 생각해보아야 할 것 같음.
 
-> try_data_analyzer에서는 callback 함수에 get() 코드를 포함시켜 넘어오는 데이터마다 비트연산을 하도록 수정했음. 코드 수정 중 ifft_handler()에 대한 처리 순서를 고민했었음. get()에서 받아온 데이터에 대한 처리를 한 것을 모두 합쳐서 푸리에 변환을 해야한다고 생각했는데, 원래 코드(2_analyzer.py)를 다시 보니 데이터를 받아올 때마다 푸리에 변환을 하는 것으로 파악하여 ifft_handler()도 get()과 마찬가지로 callback()
+> try_data_analyzer에서는 callback 함수에 get() 코드를 포함시켜 넘어오는 데이터마다 비트연산을 하도록 수정했음. 코드 수정 중 ifft_handler()에 대한 처리 순서를 고민했었음. get()에서 받아온 데이터에 대한 처리를 한 것을 모두 합쳐서 푸리에 변환을 해야한다고 생각했는데, 원래 코드(2_analyzer.py)를 다시 보니 데이터를 받아올 때마다 푸리에 변환을 하는 것으로 파악하여 ifft_handler()도 get()과 마찬가지로 callback()에서 바로 처리해도 될 것 같음.
+
+### 2019-7-25 (목)
+1. [try_data_analyzer](ROS_system/try/try_data_analyzer.py) 코드 완성
+> data_receiver에서 보내는 데이터를 받아와서 비트연산(get)과 푸리에 변환(ifft_handler)을 한 후, 다시 publish 하는 코드를 완성함. 어제 생각했던대로 데이터를 받자마자 callback 안에서 get과 ifft_handler 처리를 한 후, publish를 하는 코드로 완성함.
+
+> get과 ifft_handler가 잘 처리되었는지는 시각화를 해보아야 알 수 있을 것 같음. 전송하고, 수신하는 데이터를 출력해보아도 사람이 이해할 수 없는 형태로 출력됨.
+
+> 이전에 막히던 부분인 ctrl+C를 눌러야 이후의 과정이 실행되었던 건 callback() 함수가 계속 돌아가고 있기 때문이었음. callback 안에 get(), ifft_handler를 넣기 전에는 ctrl+C를 눌러 callback을 벗어나야 다음 과정이 실행이 되었던 것인데 완성한 코드에서는 callback() 안에서 다 실행을 하므로 코드 자체를 멈추기 위해서만 ctrl+C를 누르면 됨.
+
+2. test_visualize 코드로 테스트
+> try_data_analyzer에서 보낸 데이터를 받는 것을 테스트하기 위해 test_visualize를 작성하여 실행해보았는데, 잘 실행이 되었음. 
+
+> 문제는 파이썬 버전. visualizer에서 사용하는 라이브러리 중 파이썬3에서 사용하는 라이브러리가 있는데, 데이터를 보내는 try_data_analyzer는 파이썬2를 사용함. 데이터를 보내는 건 버전 2로, 받는 건 3으로 테스트 해보았는데 실행이 안 되었음. 그렇다고, try_data_analyzer를 파이썬 3로 실행하면 encoding 문제가 계속 발생함. 버전 문제에 대해서는 더 알아보거나, 생각해보아야 할 것 같음.
