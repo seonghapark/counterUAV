@@ -31,10 +31,16 @@ result_time = []
 result_data = []
 
 class ros_service(Thread):
+    def __init__(self,plotter) :
+        self.result_time = []
+        self.result_data = []
+        self.plot = plotter
+        
+
     def callback(self,data):
         print('START callback')
-        print(data.time)
-        print(data.data)
+        self.data_disassembler(data)
+        self.plot.set(self.result_time, self.result_data)
         print('FINISH callback')
         #return Response(status=400)
 
@@ -45,9 +51,24 @@ class ros_service(Thread):
         #print('BEFORE spin')
         rospy.spin()
         #print('AFTER spin')
-        
-class colorgraph_handler():
+    
+    # def _callback(self, channel, method, properties, body):
+    #     print("_callback: ", 'channel: ', channel, ' method: ', method, ' properties: ', properties, ' body: ',body)
+    #     self.data_disassembler(bytearray(body))
+    #     self.plot.set(self.result_time, self.result_data)
+
+
+    def data_disassembler(self, body):
+        #self.result_time = np.fromstring(np.array(body[:properties['result_time']]), dtype=np.float64)
+        self.result_time = np.fromstring(body.time, dtype=np.float64)
+                
+        self.result_data = np.fromstring(body.data, dtype=np.float64)
+        self.result_data = np.reshape(self.result_data, (int(len(self.result_time)), int(len(self.result_data)/len(self.result_time))))
+        self.plot.set(self.result_time, self.result_data) 
+
+class colorgraph_handler(Thread):
     def __init__(self):
+        Thread.__init__(self)
         ## constants for frame
         self.n = int(5512/50)  # Samples per a ramp up-time
         # self.n = int(5512/50)
@@ -126,30 +147,37 @@ class colorgraph_handler():
         # ani = animation.FuncAnimation(self.fig, self.animate, interval=1000, frames=range(0,5))
         ani = animation.FuncAnimation(self.fig, self.animate, interval=1000, blit=False)
         plt.show()
+    def run(self) :
+        try:
+            while(True):
+                # print('main while(True)')
+                if self.q_result_time.empty():
+                    print('queue is empty')
+                    time.sleep(1)
+                else:
+                    # print('queue is not empty')
+                    break
 
-        
+            # print('while(False)')
+
+            self.draw_graph()  # It takes approximately 500 ms
+
+        except(KeyboardInterrupt, Exception) as ex:
+            print(ex)
+        finally:
+            print('Close all')
+            #rabbitmq.channel.close()
+            
 class web_service(Thread):
-    def __init__(self, plotter) :
+    def __init__(self) :
         Thread.__init__(self)
-        self.plot = plotter
 
     def run(self):
         print('run')
         global app
         app.run(host='localhost',port='8080')
 
-    def _callback(self, channel, method, properties, body):
-        print("_callback: ", 'channel: ', channel, ' method: ', method, ' properties: ', properties, ' body: ',body)
-        self.data_disassembler(bytearray(body))
-        self.plot.set(self.result_time, self.result_data)
-
-
-    def data_disassembler(self, body):
-        #self.result_time = np.fromstring(np.array(body[:properties['result_time']]), dtype=np.float64)
-        self.result_time = np.fromstring(np.array(body.time), dtype=np.float64)
-        self.result_data = np.fromstring(np.array(body.data), dtype=np.float64)
-        self.result_data = np.reshape(self.result_data, (int(len(self.result_time)), int(len(self.result_data)/len(self.result_time))))
-        self.plot.set(self.result_time, self.result_data)        
+         
 
 @app.route('/')
 def plot_png():
@@ -173,7 +201,10 @@ def hello():
 
 if __name__=='__main__':
     plot = colorgraph_handler()
-    web = web_service(plot)
-    ros = ros_service()
+    web = web_service()
+    ros = ros_service(plot)
     web.start() 
+    plot.start()
     ros.listener()
+
+    

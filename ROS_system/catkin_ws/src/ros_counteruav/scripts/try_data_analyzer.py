@@ -90,7 +90,7 @@ class data_analyzer():
         results.time = result_time.tostring()
         results.data = result_data.tostring()
         analyze_pub = rospy.Publisher('analyzed_data', result, queue_size=10)
-        Re_rate = rospy.Rate(10)
+        Re_rate = rospy.Rate(1)
         #MSG = fakedata()
         #MSG.data = Analyzed_data
             

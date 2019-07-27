@@ -35,10 +35,10 @@ struct result_
 
 
 
-   typedef std::basic_string<char, std::char_traits<char>, typename ContainerAllocator::template rebind<char>::other >  _data_type;
+   typedef std::vector<uint8_t, typename ContainerAllocator::template rebind<uint8_t>::other >  _data_type;
   _data_type data;
 
-   typedef std::basic_string<char, std::char_traits<char>, typename ContainerAllocator::template rebind<char>::other >  _time_type;
+   typedef std::vector<uint8_t, typename ContainerAllocator::template rebind<uint8_t>::other >  _time_type;
   _time_type time;
 
 
@@ -119,12 +119,12 @@ struct MD5Sum< ::ros_counteruav::result_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "07e5952ea6719687121137e7c34f92e3";
+    return "27432271eaeca018008ff2d4a194b77d";
   }
 
   static const char* value(const ::ros_counteruav::result_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0x07e5952ea6719687ULL;
-  static const uint64_t static_value2 = 0x121137e7c34f92e3ULL;
+  static const uint64_t static_value1 = 0x27432271eaeca018ULL;
+  static const uint64_t static_value2 = 0x008ff2d4a194b77dULL;
 };
 
 template<class ContainerAllocator>
@@ -143,8 +143,8 @@ struct Definition< ::ros_counteruav::result_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "string data\n"
-"string time\n"
+    return "uint8[] data\n"
+"uint8[] time\n"
 ;
   }
 
@@ -183,10 +183,18 @@ struct Printer< ::ros_counteruav::result_<ContainerAllocator> >
 {
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::ros_counteruav::result_<ContainerAllocator>& v)
   {
-    s << indent << "data: ";
-    Printer<std::basic_string<char, std::char_traits<char>, typename ContainerAllocator::template rebind<char>::other > >::stream(s, indent + "  ", v.data);
-    s << indent << "time: ";
-    Printer<std::basic_string<char, std::char_traits<char>, typename ContainerAllocator::template rebind<char>::other > >::stream(s, indent + "  ", v.time);
+    s << indent << "data[]" << std::endl;
+    for (size_t i = 0; i < v.data.size(); ++i)
+    {
+      s << indent << "  data[" << i << "]: ";
+      Printer<uint8_t>::stream(s, indent + "  ", v.data[i]);
+    }
+    s << indent << "time[]" << std::endl;
+    for (size_t i = 0; i < v.time.size(); ++i)
+    {
+      s << indent << "  time[" << i << "]: ";
+      Printer<uint8_t>::stream(s, indent + "  ", v.time[i]);
+    }
   }
 };
 

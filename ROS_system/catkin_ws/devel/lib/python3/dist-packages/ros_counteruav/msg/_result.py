@@ -7,14 +7,14 @@ import struct
 
 
 class result(genpy.Message):
-  _md5sum = "07e5952ea6719687121137e7c34f92e3"
+  _md5sum = "27432271eaeca018008ff2d4a194b77d"
   _type = "ros_counteruav/result"
   _has_header = False #flag to mark the presence of a Header object
-  _full_text = """string data
-string time
+  _full_text = """uint8[] data
+uint8[] time
 """
   __slots__ = ['data','time']
-  _slot_types = ['string','string']
+  _slot_types = ['uint8[]','uint8[]']
 
   def __init__(self, *args, **kwds):
     """
@@ -34,12 +34,12 @@ string time
       super(result, self).__init__(*args, **kwds)
       #message fields cannot be None, assign default values for those that are
       if self.data is None:
-        self.data = ''
+        self.data = b''
       if self.time is None:
-        self.time = ''
+        self.time = b''
     else:
-      self.data = ''
-      self.time = ''
+      self.data = b''
+      self.time = b''
 
   def _get_types(self):
     """
@@ -55,16 +55,18 @@ string time
     try:
       _x = self.data
       length = len(_x)
-      if python3 or type(_x) == unicode:
-        _x = _x.encode('utf-8')
-        length = len(_x)
-      buff.write(struct.pack('<I%ss'%length, length, _x))
+      # - if encoded as a list instead, serialize as bytes instead of string
+      if type(_x) in [list, tuple]:
+        buff.write(struct.pack('<I%sB'%length, length, *_x))
+      else:
+        buff.write(struct.pack('<I%ss'%length, length, _x))
       _x = self.time
       length = len(_x)
-      if python3 or type(_x) == unicode:
-        _x = _x.encode('utf-8')
-        length = len(_x)
-      buff.write(struct.pack('<I%ss'%length, length, _x))
+      # - if encoded as a list instead, serialize as bytes instead of string
+      if type(_x) in [list, tuple]:
+        buff.write(struct.pack('<I%sB'%length, length, *_x))
+      else:
+        buff.write(struct.pack('<I%ss'%length, length, _x))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -80,19 +82,13 @@ string time
       (length,) = _struct_I.unpack(str[start:end])
       start = end
       end += length
-      if python3:
-        self.data = str[start:end].decode('utf-8')
-      else:
-        self.data = str[start:end]
+      self.data = str[start:end]
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
       start = end
       end += length
-      if python3:
-        self.time = str[start:end].decode('utf-8')
-      else:
-        self.time = str[start:end]
+      self.time = str[start:end]
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e) #most likely buffer underfill
@@ -107,16 +103,18 @@ string time
     try:
       _x = self.data
       length = len(_x)
-      if python3 or type(_x) == unicode:
-        _x = _x.encode('utf-8')
-        length = len(_x)
-      buff.write(struct.pack('<I%ss'%length, length, _x))
+      # - if encoded as a list instead, serialize as bytes instead of string
+      if type(_x) in [list, tuple]:
+        buff.write(struct.pack('<I%sB'%length, length, *_x))
+      else:
+        buff.write(struct.pack('<I%ss'%length, length, _x))
       _x = self.time
       length = len(_x)
-      if python3 or type(_x) == unicode:
-        _x = _x.encode('utf-8')
-        length = len(_x)
-      buff.write(struct.pack('<I%ss'%length, length, _x))
+      # - if encoded as a list instead, serialize as bytes instead of string
+      if type(_x) in [list, tuple]:
+        buff.write(struct.pack('<I%sB'%length, length, *_x))
+      else:
+        buff.write(struct.pack('<I%ss'%length, length, _x))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -133,19 +131,13 @@ string time
       (length,) = _struct_I.unpack(str[start:end])
       start = end
       end += length
-      if python3:
-        self.data = str[start:end].decode('utf-8')
-      else:
-        self.data = str[start:end]
+      self.data = str[start:end]
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
       start = end
       end += length
-      if python3:
-        self.time = str[start:end].decode('utf-8')
-      else:
-        self.time = str[start:end]
+      self.time = str[start:end]
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e) #most likely buffer underfill

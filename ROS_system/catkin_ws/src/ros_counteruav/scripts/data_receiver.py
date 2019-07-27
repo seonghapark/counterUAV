@@ -47,7 +47,7 @@ def callback(data):
     
     #Re_send
     repub = rospy.Publisher('msg_for_analyzer', fakedata, queue_size=1000)
-    re_rate = rospy.Rate(10)
+    re_rate = rospy.Rate(1)
     msg = fakedata()
     msg.data = data.data
     repub.publish(msg)

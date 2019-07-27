@@ -1,2 +1,2 @@
-string data
-string time
+uint8[] data
+uint8[] time

@@ -19,12 +19,12 @@
 (defmethod ros_counteruav::result
   (:init
    (&key
-    ((:data __data) "")
-    ((:time __time) "")
+    ((:data __data) (make-array 0 :initial-element 0 :element-type :char))
+    ((:time __time) (make-array 0 :initial-element 0 :element-type :char))
     )
    (send-super :init)
-   (setq _data (string __data))
-   (setq _time (string __time))
+   (setq _data __data)
+   (setq _time __time)
    self)
   (:data
    (&optional __data)
@@ -35,41 +35,47 @@
   (:serialization-length
    ()
    (+
-    ;; string _data
-    4 (length _data)
-    ;; string _time
-    4 (length _time)
+    ;; uint8[] _data
+    (* 1    (length _data)) 4
+    ;; uint8[] _time
+    (* 1    (length _time)) 4
     ))
   (:serialize
    (&optional strm)
    (let ((s (if strm strm
               (make-string-output-stream (send self :serialization-length)))))
-     ;; string _data
-       (write-long (length _data) s) (princ _data s)
-     ;; string _time
-       (write-long (length _time) s) (princ _time s)
+     ;; uint8[] _data
+     (write-long (length _data) s)
+     (princ _data s)
+     ;; uint8[] _time
+     (write-long (length _time) s)
+     (princ _time s)
      ;;
      (if (null strm) (get-output-stream-string s))))
   (:deserialize
    (buf &optional (ptr- 0))
-   ;; string _data
-     (let (n) (setq n (sys::peek buf ptr- :integer)) (incf ptr- 4) (setq _data (subseq buf ptr- (+ ptr- n))) (incf ptr- n))
-   ;; string _time
-     (let (n) (setq n (sys::peek buf ptr- :integer)) (incf ptr- 4) (setq _time (subseq buf ptr- (+ ptr- n))) (incf ptr- n))
+   ;; uint8[] _data
+   (let ((n (sys::peek buf ptr- :integer))) (incf ptr- 4)
+     (setq _data (make-array n :element-type :char))
+     (replace _data buf :start2 ptr-) (incf ptr- n))
+   ;; uint8[] _time
+   (let ((n (sys::peek buf ptr- :integer))) (incf ptr- 4)
+     (setq _time (make-array n :element-type :char))
+     (replace _time buf :start2 ptr-) (incf ptr- n))
    ;;
    self)
   )
 
-(setf (get ros_counteruav::result :md5sum-) "07e5952ea6719687121137e7c34f92e3")
+(setf (get ros_counteruav::result :md5sum-) "27432271eaeca018008ff2d4a194b77d")
 (setf (get ros_counteruav::result :datatype-) "ros_counteruav/result")
 (setf (get ros_counteruav::result :definition-)
-      "string data
-string time
+      "uint8[] data
+uint8[] time
 
 ")
 
 
 
-(provide :ros_counteruav/result "07e5952ea6719687121137e7c34f92e3")
+(provide :ros_counteruav/result "27432271eaeca018008ff2d4a194b77d")
 
 

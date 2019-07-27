@@ -26,13 +26,13 @@ class result {
         this.data = initObj.data
       }
       else {
-        this.data = '';
+        this.data = [];
       }
       if (initObj.hasOwnProperty('time')) {
         this.time = initObj.time
       }
       else {
-        this.time = '';
+        this.time = [];
       }
     }
   }
@@ -40,9 +40,9 @@ class result {
   static serialize(obj, buffer, bufferOffset) {
     // Serializes a message object of type result
     // Serialize message field [data]
-    bufferOffset = _serializer.string(obj.data, buffer, bufferOffset);
+    bufferOffset = _arraySerializer.uint8(obj.data, buffer, bufferOffset, null);
     // Serialize message field [time]
-    bufferOffset = _serializer.string(obj.time, buffer, bufferOffset);
+    bufferOffset = _arraySerializer.uint8(obj.time, buffer, bufferOffset, null);
     return bufferOffset;
   }
 
@@ -51,9 +51,9 @@ class result {
     let len;
     let data = new result(null);
     // Deserialize message field [data]
-    data.data = _deserializer.string(buffer, bufferOffset);
+    data.data = _arrayDeserializer.uint8(buffer, bufferOffset, null)
     // Deserialize message field [time]
-    data.time = _deserializer.string(buffer, bufferOffset);
+    data.time = _arrayDeserializer.uint8(buffer, bufferOffset, null)
     return data;
   }
 
@@ -71,14 +71,14 @@ class result {
 
   static md5sum() {
     //Returns md5sum for a message object
-    return '07e5952ea6719687121137e7c34f92e3';
+    return '27432271eaeca018008ff2d4a194b77d';
   }
 
   static messageDefinition() {
     // Returns full string definition for message
     return `
-    string data
-    string time
+    uint8[] data
+    uint8[] time
     
     `;
   }
@@ -93,14 +93,14 @@ class result {
       resolved.data = msg.data;
     }
     else {
-      resolved.data = ''
+      resolved.data = []
     }
 
     if (msg.time !== undefined) {
       resolved.time = msg.time;
     }
     else {
-      resolved.time = ''
+      resolved.time = []
     }
 
     return resolved;
