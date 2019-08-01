@@ -12,5 +12,5 @@
 4. for_rnn: 5sec_slice_wave_data 디렉토리에 있는 5초짜리 wav 파일을 수작업으로 training과 testing 데이터로 나누어 저장함
 5. old_backup: 과거 실험했던 파일들
 6. rawdata: binary.txt 파일들
-7. rnn_graph_save: rnn.py 에서 생성한 모델들을 저
+7. rnn_graph_save: rnn.py 에서 생성한 모델들을 저장함
 * * *
