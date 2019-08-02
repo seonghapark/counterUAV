@@ -10,7 +10,7 @@
 20181009_2_102508_binary.txt: w/ a car *(28~36, 57~59)*<br>
 20181009_2_102849_binary.txt: w/ a car *(25~32, 51~57)*<br>
 20181009_3_110458_binary.txt: w/ a drone , w/o reflection tape *(1~9, 36~47, 62~87, 106~115)*<br>
-20181009_3_110901_binary.txt: w/ a drone , w/o reflection tape *(5~16, 36~43, 46~49, 68~76)*<br>
+20181009_3_110901_binary.txt: w/ a drone , w/o reflection tape *(36~43, 46~49, 68~76)*<br>
 20181009_3_111450_binary.txt: w/ a drone , w/ reflection tape *(15~22, 44~49)*<br>
 20181009_3_111734_binary.txt: w/ a drone , w/ reflection tape *(27~37, 42~50, 71~80, 100~110)*<br>
 20181016_1_134334_binary.txt: background noise, a person at 5 sec *(36~41)*<br>

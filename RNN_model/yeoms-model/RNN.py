@@ -89,12 +89,13 @@ class CUAV_Model:
     def one_hot_encode(self, labels):
         n_labels = len(labels)
         n_unique_labels = len(np.unique(labels))
+        print(n_labels, n_unique_labels)
         one_hot_encode = np.zeros((n_labels,n_unique_labels))
         one_hot_encode[np.arange(n_labels), labels] = 1
         return one_hot_encode
     
     def make_data(self):
-        wav_file_path_training = 'C://Users//승윤//Desktop//purdue//연구자료//extractwav//for_rnn//training//'
+        wav_file_path_training = 'C://Users//승윤//Desktop//purdue//연구자료//extractwav//slice_wav_data//training//'
         file_list_training = os.listdir(wav_file_path_training)
 
         tr_features = []
@@ -116,7 +117,7 @@ class CUAV_Model:
         tr_labels = [n[1] for n in tmp]
 
 
-        wav_file_path_test = 'C://Users//승윤//Desktop//purdue//연구자료//extractwav//for_rnn//testing//'
+        wav_file_path_test = 'C://Users//승윤//Desktop//purdue//연구자료//extractwav//slice_wav_data//testing//'
         file_list_test = os.listdir(wav_file_path_test)
 
         ts_features = []
@@ -184,8 +185,8 @@ class CUAV_Model:
     def training(self):
         init = tf.global_variables_initializer()
         self.session.run(init)
-
-        training_epochs = 10000
+        
+        training_epochs = 300
         batch_size = 54 #1188과 216의 최대공약수는 54
         
         for epoch in range(training_epochs):
@@ -205,7 +206,6 @@ class CUAV_Model:
             print('Test accuracy: ',round(self.session.run(self.accuracy, feed_dict={self.x: self.ts_features, self.y: self.ts_labels}) , 3))
             if epoch % 100 == 0:
                 self.save_network(epoch)
-        
         print('Learning Finished!')
 
         
@@ -267,7 +267,7 @@ print('training')
 m1.training()
 print('training end')
 
-
+'''
 m1.graph_setting()
 m1.restore_graph(1200)
 
@@ -307,3 +307,4 @@ for i, labels in enumerate(sorted_total_dict):
         count+=1
 
 count/len(result_list)
+'''
