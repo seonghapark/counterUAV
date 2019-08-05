@@ -54,9 +54,11 @@ def talker():
     rospy.init_node('fake_data_sender', anonymous=True)
     rate = rospy.Rate(1) # 10hz
     # read file
-    pwd = os.getcwd() # current working folder
+    #pwd = os.getcwd() # current working folder
+    wd = '/home/project/counterUAV/raw_data/'
     #file_name = pwd+ '/' +sys.argv[1]
-    file_name = '/home/project/counterUAV/raw_data/20181114_135427_binary.txt'
+    #file_name = '/home/project/counterUAV/raw_data/20181114_135427_binary.txt'
+    file_name = sys.argv[1]
     message = fakedata()
     file = open(file_name, "rb")
     

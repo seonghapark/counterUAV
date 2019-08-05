@@ -9,13 +9,13 @@ import random
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 #from std_msgs.msg import String
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 # import matplotlib.animation as animation
 
 import matplotlib.colors as colors
 from matplotlib.colors import BoundaryNorm
 
-import matplotlib.pylab as plt
+#import matplotlib.pyplot as plt
 from matplotlib import animation
 
 import numpy as np
@@ -29,9 +29,13 @@ import argparse
 app = Flask(__name__)
 result_time = []
 result_data = []
+q_result_data = queue.Queue()
+q_result_time = queue.Queue()
 
 class ros_service(Thread):
     def __init__(self,plotter) :
+        global result_time
+        global result_data
         self.result_time = []
         self.result_data = []
         self.plot = plotter
@@ -40,7 +44,9 @@ class ros_service(Thread):
     def callback(self,data):
         print('START callback')
         self.data_disassembler(data)
-        self.plot.set(self.result_time, self.result_data)
+        # global result_time
+        # global result_data
+        # self.plot.set(self.result_time, self.result_data)
         print('FINISH callback')
         #return Response(status=400)
 
@@ -48,9 +54,9 @@ class ros_service(Thread):
         #print('listener START')
         rospy.init_node('visualizer_receiver', anonymous=True)
         rospy.Subscriber('analyzed_data', result, self.callback)
-        #print('BEFORE spin')
+        print('BEFORE spin')
         rospy.spin()
-        #print('AFTER spin')
+        print('AFTER spin')
     
     # def _callback(self, channel, method, properties, body):
     #     print("_callback: ", 'channel: ', channel, ' method: ', method, ' properties: ', properties, ' body: ',body)
@@ -60,7 +66,12 @@ class ros_service(Thread):
 
     def data_disassembler(self, body):
         #self.result_time = np.fromstring(np.array(body[:properties['result_time']]), dtype=np.float64)
-        self.result_time = np.fromstring(body.time, dtype=np.float64)       
+        print('disassembler START')
+        global result_time
+        global result_data
+
+        self.result_time = np.fromstring(body.time, dtype=np.float64)
+        print(self.result_time)       
         self.result_data = np.fromstring(body.data, dtype=np.float64)
         self.result_data = np.reshape(self.result_data, (int(len(self.result_time)), int(len(self.result_data)/len(self.result_time))))
         self.plot.set(self.result_time, self.result_data) 
@@ -71,7 +82,7 @@ class colorgraph_handler(Thread):
         ## constants for frame
         self.n = int(5512/50)  # Samples per a ramp up-time
         # self.n = int(5512/50)
-        #self.zpad = 8 * (self.n / 2)  # the number of data in 0.08 seconds?
+        # self.zpad = 8 * (self.n / 2)  # the number of data in 0.08 seconds?
         #self.zpad = 468 * 2
         self.zpad = 468 * 2
         # self.lfm = [2260E6, 2590E6]  # Radar frequency sweep range
@@ -102,7 +113,11 @@ class colorgraph_handler(Thread):
         self.colorbar = plt.colorbar()
         self.colorlabel = self.colorbar.set_label('Intensity (dB)')
 
+    def get_fig(self):
+        return self.fig
 
+    global result_time
+    global result_data
     def set(self, result_time, result_data):
         print('set')
         if self.previous != result_time.item(0):
@@ -126,7 +141,10 @@ class colorgraph_handler(Thread):
 
     def animate(self, time):
         # print('data', self.data_val, self.data_val.shape)
+        print('animate START')
+        print('get BEFORE')
         self.get()
+        print('get AFTER')
 
         time = time+1
 
@@ -138,24 +156,30 @@ class colorgraph_handler(Thread):
 
         # print(self.data_t.shape, self.data_val.shape, self.data_tlen)
         plt.pcolormesh(self.data_t, self.y, np.swapaxes(self.data_val[:self.data_tlen], 0, 1), cmap=self.cmap, norm=self.norm)
-        # print('animate ')
-
+        plt.draw()
+        #plt.show()
         return self.ax
 
     def draw_graph(self):
+        print('draw_graph START')
+        print(self.q_result_time)
         # ani = animation.FuncAnimation(self.fig, self.animate, init_func=self.animate_init, interval=1000)#, frames=self.set_t, repeat=False)
         # ani = animation.FuncAnimation(self.fig, self.animate, interval=1000, frames=range(0,5))
         ani = animation.FuncAnimation(self.fig, self.animate, interval=1000, blit=False)
         plt.show()
+        print('draw_graph FINISH')
+
     def run(self) :
         try:
             while(True):
+                print('while START')
                 # print('main while(True)')
                 if self.q_result_time.empty():
                     print('queue is empty')
                     time.sleep(1)
                 else:
                     # print('queue is not empty')
+                    print('while FINISH')
                     break
 
             # print('while(False)')
@@ -177,14 +201,23 @@ class web_service(Thread):
         global app
         app.run(host='localhost',port='8080')
 
-         
-
 @app.route('/')
 def plot_png():
-    fig = create_figure()
+    # while(True):
+    #     if not plot.q_result_time.empty():
+    fig = plot.get_fig()
     output = io.BytesIO()
-    FigureCanvas(fig).print_png(output)
+    FigureCanvas(fig).print_figure(output)
+    #return render_template('visualizer.html', )
     return Response(output.getvalue(), mimetype='image/png')
+        # else:
+        #     time.sleep(1)
+    #fig = create_figure()
+    #FigureCanvas(fig).print_png(output)    
+    # output = io.BytesIO()
+    # canvas = FigureCanvas(plot.get_fig())
+    # canvas.print_figure('app', dpi=150)
+    # return Response(canvas.getvalue(), mimetype='image/png')
 
 def create_figure():
     fig = Figure()

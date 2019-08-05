@@ -180,8 +180,8 @@ class ifft_handler():
         max_real = real_value.max()
         result_data = real_value - max_real
 
-        result_time = result_time[:100]
-        result_data = result_data[:100]
+        result_time = result_time[:1000]
+        result_data = result_data[:1000]
 
                 # print(result_time.dtype, result_data.dtype)
         return result_time, result_data
