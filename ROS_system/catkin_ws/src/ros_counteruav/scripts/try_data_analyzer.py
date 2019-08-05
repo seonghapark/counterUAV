@@ -20,7 +20,6 @@ class data_analyzer():
         self.sync = 0
         self.real_data=0
 
-            
     def get_sync(self):
         return self.sync
     
@@ -38,7 +37,7 @@ class data_analyzer():
     def callback(self, data):
         ###########################get()#############################
         real_data = bytearray(data.data)
-        print('Data length:', len(real_data))
+        print('Data length: ', len(real_data))
 
         if len(real_data) < 2:
             self.sync = None
@@ -95,8 +94,8 @@ class data_analyzer():
         #MSG.data = Analyzed_data
             
         try:
-            #rospy.loginfo(str(results.time))
-            #rospy.loginfo(str(results.data))
+            # rospy.loginfo(str(results.time))
+            # rospy.loginfo(str(results.data))
             analyze_pub.publish(results)
             Re_rate.sleep()
         except(KeyboardInterrupt, Exception) as ex:

@@ -1,10 +1,10 @@
 
 "use strict";
 
-let result = require('./result.js');
 let fakedata = require('./fakedata.js');
+let result = require('./result.js');
 
 module.exports = {
-  result: result,
   fakedata: fakedata,
+  result: result,
 };

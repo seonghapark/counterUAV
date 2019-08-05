@@ -200,15 +200,18 @@ class web_service(Thread):
         print('run')
         global app
         app.run(host='localhost',port='8080')
-
 @app.route('/')
+def show_graph():
+    return render_template('show_graph.html')
+
+@app.route('/plot')
 def plot_png():
     # while(True):
     #     if not plot.q_result_time.empty():
     fig = plot.get_fig()
     output = io.BytesIO()
     FigureCanvas(fig).print_figure(output)
-    #return render_template('visualizer.html', )
+    #return render_template('show_graph.html', )
     return Response(output.getvalue(), mimetype='image/png')
         # else:
         #     time.sleep(1)
