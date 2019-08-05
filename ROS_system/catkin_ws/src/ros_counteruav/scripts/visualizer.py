@@ -202,7 +202,17 @@ class web_service(Thread):
         app.run(host='localhost',port='8080')
 @app.route('/')
 def show_graph():
-    return render_template('show_graph.html')
+    return '''
+    <html>
+    <head>
+        <title> Plot</title>
+        <meta content="1" url="http://127.0.0.1:8080" http-equiv="refresh">
+    </head>
+    <body>
+        <img src="/plot" alt="Image Placeholder" >
+    </body>
+</html>'''
+
 
 @app.route('/plot')
 def plot_png():
