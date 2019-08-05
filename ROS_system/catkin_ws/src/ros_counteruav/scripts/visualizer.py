@@ -60,8 +60,7 @@ class ros_service(Thread):
 
     def data_disassembler(self, body):
         #self.result_time = np.fromstring(np.array(body[:properties['result_time']]), dtype=np.float64)
-        self.result_time = np.fromstring(body.time, dtype=np.float64)
-                
+        self.result_time = np.fromstring(body.time, dtype=np.float64)       
         self.result_data = np.fromstring(body.data, dtype=np.float64)
         self.result_data = np.reshape(self.result_data, (int(len(self.result_time)), int(len(self.result_data)/len(self.result_time))))
         self.plot.set(self.result_time, self.result_data) 
@@ -72,7 +71,8 @@ class colorgraph_handler(Thread):
         ## constants for frame
         self.n = int(5512/50)  # Samples per a ramp up-time
         # self.n = int(5512/50)
-        # self.zpad = 8 * (self.n / 2)  # the number of data in 0.08 seconds?
+        #self.zpad = 8 * (self.n / 2)  # the number of data in 0.08 seconds?
+        #self.zpad = 468 * 2
         self.zpad = 468 * 2
         # self.lfm = [2260E6, 2590E6]  # Radar frequency sweep range
         self.lfm = [2400E6, 2500E6]
@@ -206,5 +206,3 @@ if __name__=='__main__':
     web.start() 
     plot.start()
     ros.listener()
-
-    

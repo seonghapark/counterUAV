@@ -95,8 +95,8 @@ class data_analyzer():
         #MSG.data = Analyzed_data
             
         try:
-            rospy.loginfo(str(results.time))
-            rospy.loginfo(str(results.data))
+            #rospy.loginfo(str(results.time))
+            #rospy.loginfo(str(results.data))
             analyze_pub.publish(results)
             Re_rate.sleep()
         except(KeyboardInterrupt, Exception) as ex:
@@ -180,8 +180,8 @@ class ifft_handler():
         max_real = real_value.max()
         result_data = real_value - max_real
 
-        result_time = result_time[:50]
-        result_data = result_data[:50]
+        result_time = result_time[:100]
+        result_data = result_data[:100]
 
                 # print(result_time.dtype, result_data.dtype)
         return result_time, result_data
