@@ -126,21 +126,21 @@ def cut_nsec(file_cut, time, i):
     label = file_cut.split('_')[-1]
     label = label.split('.')[0]
     Y, sr = librosa.load(file_cut, sr=5862, mono=True)
-    sec = len(Y)/5862
+    sec = len(Y)//5862
     sec = int(sec)
-    p=0
-    for time_slice in range(0,sec,time):
-        start = time_slice*5862
-        finis = time_slice*5862 + 5*5862
-        Y1 = np.array(Y[start:finis])
-        librosa.output.write_wav('C://Users//승윤//Desktop//purdue//연구자료//extractwav//5sec_slice_wav_data//'+label+'_'+str(p)+''+str(i)+'.wav', Y1, 5862, norm=False)
-        p +=1
+    p = 0
+    if sec >= 5:
+        for time_slice in range(0,sec,time):
+            start = time_slice*5862
+            finis = time_slice*5862 + 5*5862
+            Y1 = np.array(Y[start:finis])
+            if len(Y1) >= 5862*5:
+                librosa.output.write_wav('C://Users//승윤//Desktop//purdue//연구자료//extractwav//5sec_slice_wav_data//'+label+'_'+str(p)+''+str(i)+'.wav', Y1, 5862, norm=False)
+            p +=1
 
 wav_repo = 'C://Users//승윤//Desktop//purdue//연구자료//extractwav//cut_wav//'
 wav_data = glob.glob(os.path.join(wav_repo,'**','*.wav'), recursive=True)
 for i in range(len(wav_data)):
     cut_nsec(wav_data[i],5,i)
-
-
 
 

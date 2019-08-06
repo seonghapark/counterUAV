@@ -1,2 +1,2 @@
-model_checkpoint_path: "C://Users//\354\212\271\354\234\244//Desktop//purdue//\354\227\260\352\265\254\354\236\220\353\243\214//extractwav//rnn_graph_save//cuav_rnn.ckpt-0"
-all_model_checkpoint_paths: "C://Users//\354\212\271\354\234\244//Desktop//purdue//\354\227\260\352\265\254\354\236\220\353\243\214//extractwav//rnn_graph_save//cuav_rnn.ckpt-0"
+model_checkpoint_path: "C://Users//\354\212\271\354\234\244//Desktop//purdue//\354\227\260\352\265\254\354\236\220\353\243\214//extractwav//rnn_graph_save//cuav_rnn.ckpt-600"
+all_model_checkpoint_paths: "C://Users//\354\212\271\354\234\244//Desktop//purdue//\354\227\260\352\265\254\354\236\220\353\243\214//extractwav//rnn_graph_save//cuav_rnn.ckpt-600"

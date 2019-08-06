@@ -267,7 +267,7 @@ m1.graph_setting()
 print('training')
 m1.training()
 print('training end')
-'''
+
 print('angsangble start')
 m1.graph_setting()
 m1.restore_graph(1200)
@@ -314,4 +314,3 @@ for i, labels in enumerate(sorted_total_dict):
         count+=1
 
 count/len(result_list)
-'''
