@@ -14,7 +14,7 @@ plt.rcParams['ytick.labelsize'] = 10
 plt.rcParams['legend.fontsize'] = 11
 plt.rcParams['figure.titlesize'] = 13
 
-f = open('C://Users//승윤//Desktop//purdue//연구자료//extractwav//sec_try.txt','r')
+f = open('C://Users//승윤//Desktop//purdue//연구자료//extractwav//try.txt','r')
 
 lines = f.readlines()
 print(len(lines))
@@ -27,14 +27,17 @@ for line in lines:
         cost_history.append(float(line.split('=')[1].split('Test')[0]))
         accuracy_history.append(float(line.split('Test accuracy: ')[1]))
 
-fig = plt.figure(figsize=(10,8))
+#fig = plt.figure(figsize=(10,8))
+fig = plt.figure()
+fig.add_subplot(2,1,1)
 plt.plot(cost_history)
 plt.ylabel("Cost")
 plt.xlabel("Iterations")
 plt.axis([0, len(cost_history), 0, max(cost_history)])
-plt.show()
+#plt.show()
 
-fig = plt.figure(figsize=(10,8))
+#fig = plt.figure(figsize=(10,8))
+fig.add_subplot(2,1,2)
 plt.plot(accuracy_history)
 plt.ylabel("Accucary")
 plt.xlabel("Iterations")

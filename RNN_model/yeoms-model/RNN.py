@@ -44,7 +44,6 @@ class CUAV_Model:
             end = int(end)
             if(len(sound_clip[start:end]) == window_size):
                 signal = sound_clip[start:end]
-
                 melspec = librosa.feature.melspectrogram(signal, n_mels = bands)
                 logspec = librosa.amplitude_to_db(melspec)
                 logspec = logspec.T.flatten()[:, np.newaxis].T
@@ -55,7 +54,7 @@ class CUAV_Model:
                 mfccs.append(mfcc)
                 #print(2, mfcc.shape)
                 features = np.hstack((mfccs, log_specgrams))
-                labels.append(label_code)         
+                labels.append(label_code)
         features = np.asarray(features).reshape(len(mfccs), frames, bands*2)
         #print(features.shape)
         return np.array(features), np.array(labels,dtype = np.int)
@@ -102,6 +101,7 @@ class CUAV_Model:
         tr_labels = []
         for f in file_list_training:
             file_label = f.split("_")[0]
+            #file_label = f.split('.')[0]
             #if file_label=='person' or file_label=='car': ## 2개씩만 하는 코드
              #   continue
             features_temp, labels_temp = self.extract_features(wav_file_path_training + f, file_label)
@@ -124,6 +124,7 @@ class CUAV_Model:
         ts_labels = []
         for f in file_list_test:
             file_label = f.split("_")[0]
+            #file_label = f.split('.')[0]
             #if file_label=='person' or file_label=='car': ## 2개씩만 하는 코드
              #   continue
             features_temp, labels_temp = self.extract_features(wav_file_path_test + f, file_label)
@@ -186,8 +187,8 @@ class CUAV_Model:
         init = tf.global_variables_initializer()
         self.session.run(init)
         
-        training_epochs = 300
-        batch_size = 54 #1188과 216의 최대공약수는 54
+        training_epochs = 5000
+        batch_size = 108 #1188과 216의 최대공약수는 54
         
         for epoch in range(training_epochs):
             avg_cost = 0
@@ -246,7 +247,7 @@ class CUAV_Model:
             #print(temp_output)
         
     def restore_graph(self, step):
-        save_file = './rnn_graph_save_3/cuav_rnn.ckpt' + '-' + str(step)
+        save_file = './rnn_graph_save/cuav_rnn.ckpt' + '-' + str(step)
         saver = tf.train.Saver()
         saver.restore(self.session, save_file)
         
@@ -266,12 +267,12 @@ m1.graph_setting()
 print('training')
 m1.training()
 print('training end')
-
 '''
+print('angsangble start')
 m1.graph_setting()
 m1.restore_graph(1200)
 
-wav_file_path_test = 'C://slice_wav_data/testing/'
+wav_file_path_test = 'C://Users//승윤//Desktop//purdue//연구자료//extractwav//slice_wav_data//testing//'
 test_file_list = os.listdir(wav_file_path_test)
 print(test_file_list)
 
@@ -299,6 +300,12 @@ total_dict = [{'others': 0, 'person': 0, 'car': 0, 'drone': 0,} for _ in range(l
 for one_result in total_result:
     for i, label in enumerate(one_result):
         total_dict[i][label] += 1
+
+sorted_total_dict = []
+for one_dict in total_dict:
+    t = list(zip(list(one_dict.values()), list(one_dict.keys())))
+    t.sort(reverse=True)
+    sorted_total_dict.append(t)
 
 count = 0
 for i, labels in enumerate(sorted_total_dict):

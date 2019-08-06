@@ -14,7 +14,7 @@ import random
 # In[2]:
 
 
-path_dir = 'C://Users//승윤//Desktop//purdue//연구자료//extractwav//rawdata//' 
+path_dir = 'C://Users//승윤//Desktop//purdue//연구자료//extractwav//rawdata//'
 file_list = os.listdir(path_dir)
 
 # 20181016_135027_binary.txt 삭제 (no data)
