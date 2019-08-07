@@ -1,0 +1,1499 @@
+Jupyter Notebook
+RNN-Model-wav
+Last Checkpoint: 어제 오전 11:20
+(unsaved changes)
+Current Kernel Logo
+Python 3 
+File
+Edit
+View
+Insert
+Cell
+Kernel
+Help
+
+1
+import glob
+2
+import os
+3
+import random
+4
+import librosa
+5
+import matplotlib.pyplot as plt
+6
+import tensorflow as tf
+7
+from tensorflow.python.ops import rnn, rnn_cell
+8
+import numpy as np
+9
+%matplotlib inline
+10
+plt.style.use('ggplot')
+1
+1
+def windows(data, window_size):
+2
+    start = 0
+3
+    while start < len(data):
+4
+        yield start, start + window_size
+5
+        start += (window_size / 2)
+6
+?
+7
+# 각 33개 input, 각 6개 label
+8
+        
+9
+def extract_features(file_path, file_label, file_ext="*.wav",bands = 20, frames = 41):
+10
+    window_size = 512 * (frames - 1)
+11
+    mfccs = []
+12
+    labels = []
+13
+    sound_clip, s = librosa.load(file_path)
+14
+    #print(type(sound_clip))
+15
+    if file_label=='other':
+16
+        label_code = 0
+17
+    elif file_label=='person':
+18
+        label_code = 1
+19
+    elif file_label=='car':
+20
+        label_code = 0
+21
+    elif file_label=='drone':
+22
+        label_code = 1
+23
+        
+24
+        
+25
+    #print(file_label, label_code)
+26
+    for (start,end) in windows(sound_clip,window_size):
+27
+        start = int(start)
+28
+        end = int(end)
+29
+        if(len(sound_clip[start:end]) == window_size):
+30
+            signal = sound_clip[start:end]
+31
+            mfcc = librosa.feature.mfcc(y=signal, sr=s, n_mfcc = bands).T.flatten()[:, np.newaxis].T
+32
+            mfccs.append(mfcc)
+33
+            labels.append(label_code)         
+34
+    features = np.asarray(mfccs).reshape(len(mfccs),frames,bands)
+35
+    return np.array(features), np.array(labels,dtype = np.int)
+36
+?
+37
+def one_hot_encode(labels):
+38
+    n_labels = len(labels)
+39
+    n_unique_labels = len(np.unique(labels))
+40
+    one_hot_encode = np.zeros((n_labels,n_unique_labels))
+41
+    one_hot_encode[np.arange(n_labels), labels] = 1
+42
+    return one_hot_encode
+drone
+1
+wav_file_path_training = 'C://slice_wav_data/training/'
+2
+file_list_training = os.listdir(wav_file_path_training)
+3
+?
+4
+tr_features = []
+5
+tr_labels = []
+6
+for f in file_list_training:
+7
+    file_label = f.split("_")[0]
+8
+    if file_label=='other' or file_label=='person': ## 2개씩만 하는 코드
+9
+        continue
+10
+    features_temp, labels_temp = extract_features(wav_file_path_training + f, file_label)
+11
+    for tr_f in features_temp:
+12
+        tr_features.append(tr_f)
+13
+    for tr_l in labels_temp:
+14
+        tr_labels.append(tr_l)
+15
+    
+16
+?
+17
+tmp = [[x,y] for x,y in zip(tr_features, tr_labels)]
+18
+random.shuffle(tmp)
+19
+tr_features = [n[0] for n in tmp]
+20
+tr_labels = [n[1] for n in tmp]
+21
+?
+22
+?
+23
+wav_file_path_test = 'C://slice_wav_data/testing/'
+24
+file_list_test = os.listdir(wav_file_path_test)
+25
+?
+26
+ts_features = []
+27
+ts_labels = []
+28
+for f in file_list_test:
+29
+    file_label = f.split("_")[0]
+30
+    if file_label=='other' or file_label=='person': ## 2개씩만 하는 코드
+31
+        continue
+32
+    features_temp, labels_temp = extract_features(wav_file_path_test + f, file_label)
+33
+    for ts_f in features_temp:
+34
+        ts_features.append(ts_f)
+35
+    for ts_l in labels_temp:
+36
+        ts_labels.append(ts_l)
+37
+    
+38
+tr_labels = one_hot_encode(tr_labels)
+39
+ts_labels = one_hot_encode(ts_labels)
+40
+?
+41
+tr_features = np.array(tr_features)
+42
+tr_labels = np.array(tr_labels)
+43
+?
+44
+ts_features = np.array(ts_features)
+45
+ts_labels = np.array(ts_labels)
+temp_arr = np.array(tr_features)
+temp_arr.shape
+(594, 41, 20)
+temp_arr = np.array(ts_labels) #mfcc를 통해 1188개 트레이닝 데이터, 216개 테스팅 데이터로 변환
+temp_arr.shape
+(108, 2)
+2
+tf.reset_default_graph()
+?
+learning_rate = 0.0006
+training_iters = 20000
+batch_size = 54 #1188과 216의 최대공약수는 54
+display_step = 200
+?
+# Network Parameters
+n_input = 20
+n_steps = 41
+n_hidden = 20
+n_classes = 2
+?
+#앞에거는 hidden *2, 뒤에거는 n_input + n_hidden
+?
+x = tf.placeholder("float", [None, n_steps, n_input])
+y = tf.placeholder("float", [None, n_classes])
+?
+weight = tf.Variable(tf.random_normal([n_hidden, n_classes]))
+bias = tf.Variable(tf.random_normal([n_classes]))
+def RNN(x, weight, bias):
+    cell = rnn_cell.LSTMCell(n_hidden,state_is_tuple = True)
+    cell = rnn_cell.MultiRNNCell([cell] * 8, state_is_tuple=True)
+    output, state = tf.nn.dynamic_rnn(cell, x, dtype = tf.float32)
+    print(1, output)
+    output = tf.transpose(output, [1, 0, 2])
+    print(1, output)
+    last = tf.gather(output, int(output.get_shape()[0]) - 1)
+    print(output.get_shape())
+    print(1, last)
+    return tf.nn.softmax(tf.matmul(last, weight) + bias)
+prediction = RNN(x, weight, bias)
+print(prediction)
+?
+# Define loss and optimizer
+loss_f = -tf.reduce_sum(y * tf.log(prediction))
+optimizer = tf.train.AdamOptimizer(learning_rate = learning_rate).minimize(loss_f)
+?
+# Evaluate model
+correct_pred = tf.equal(tf.argmax(prediction,1), tf.argmax(y,1))
+accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+?
+# Initializing the variables
+init = tf.global_variables_initializer()
+1 Tensor("rnn/transpose_1:0", shape=(?, 41, 20), dtype=float32)
+1 Tensor("transpose:0", shape=(41, ?, 20), dtype=float32)
+(41, ?, 20)
+1 Tensor("GatherV2:0", shape=(?, 20), dtype=float32)
+Tensor("Softmax:0", shape=(?, 2), dtype=float32)
+C:\Users\kvlks\Miniconda3\lib\site-packages\tensorflow\python\ops\gradients_impl.py:110: UserWarning: Converting sparse IndexedSlices to a dense Tensor of unknown shape. This may consume a large amount of memory.
+  "Converting sparse IndexedSlices to a dense Tensor of unknown shape. "
+5000
+with tf.Session() as session:
+    session.run(init)
+    
+    training_epochs = 5000
+    for epoch in range(training_epochs):
+        avg_cost = 0
+        total_batch = int(len(tr_features) / batch_size)
+ 
+        for i in range(total_batch):
+            start = ((i+1) * batch_size) - batch_size
+            end = ((i+1) * batch_size)
+            batch_x = tr_features[start:end]
+            batch_y = tr_labels[start:end]
+                
+            _, c = session.run([optimizer, loss_f], feed_dict={x: batch_x, y : batch_y})
+            avg_cost += c / total_batch
+ 
+        print('Epoch:', '%04d' % (epoch + 1), 'cost =', '{:.9f}'.format(avg_cost), end='')
+        print('Test accuracy: ',round(session.run(accuracy, feed_dict={x: ts_features, y: ts_labels}) , 3))
+    print('Learning Finished!')
+    saver = tf.train.Saver()
+    saver.save(session, './cuav_rnn.ckpt')
+    print('Graph Saved! ')
+    
+    '''
+    for itr in range(training_iters):    
+        offset = (itr * batch_size) % (tr_labels.shape[0] - batch_size)
+        batch_x = tr_features[offset:offset + batch_size]
+        batch_y = tr_labels[offset:offset + batch_size]
+        _, c = session.run([optimizer, loss_f],feed_dict={x: batch_x, y : batch_y})
+            
+        #if epoch % display_step == 0:
+        if itr % 100 == 0:
+            # Calculate batch accuracy
+            acc = session.run(accuracy, feed_dict={x: batch_x, y: batch_y})
+            # Calculate batch loss
+            loss = session.run(loss_f, feed_dict={x: batch_x, y: batch_y})
+            print("Iter " + str(itr) + ", Minibatch Loss= " + 
+                  "{:.6f}".format(loss) + ", Training Accuracy= " + 
+                  "{:.5f}".format(acc))
+    '''
+Epoch: 0001 cost = 37.505636389Test accuracy:  0.519
+Epoch: 0002 cost = 37.259807240Test accuracy:  0.833
+Epoch: 0003 cost = 37.005658930Test accuracy:  0.528
+Epoch: 0004 cost = 35.592629519Test accuracy:  0.722
+Epoch: 0005 cost = 28.201203260Test accuracy:  0.833
+Epoch: 0006 cost = 22.232538743Test accuracy:  0.759
+Epoch: 0007 cost = 19.697034836Test accuracy:  0.815
+Epoch: 0008 cost = 17.870847355Test accuracy:  0.769
+Epoch: 0009 cost = 16.928426136Test accuracy:  0.796
+Epoch: 0010 cost = 15.983717572Test accuracy:  0.769
+Epoch: 0011 cost = 14.824265653Test accuracy:  0.796
+Epoch: 0012 cost = 14.770009041Test accuracy:  0.769
+Epoch: 0013 cost = 13.625495304Test accuracy:  0.796
+Epoch: 0014 cost = 12.890396638Test accuracy:  0.769
+Epoch: 0015 cost = 12.175707990Test accuracy:  0.796
+Epoch: 0016 cost = 11.867359248Test accuracy:  0.713
+Epoch: 0017 cost = 10.459727114Test accuracy:  0.796
+Epoch: 0018 cost = 8.675694466Test accuracy:  0.769
+Epoch: 0019 cost = 8.533390175Test accuracy:  0.769
+Epoch: 0020 cost = 8.583789652Test accuracy:  0.778
+Epoch: 0021 cost = 8.368200237Test accuracy:  0.815
+Epoch: 0022 cost = 8.810903636Test accuracy:  0.806
+Epoch: 0023 cost = 9.255135688Test accuracy:  0.778
+Epoch: 0024 cost = 7.934535937Test accuracy:  0.778
+Epoch: 0025 cost = 6.463255427Test accuracy:  0.778
+Epoch: 0026 cost = 5.985174775Test accuracy:  0.787
+Epoch: 0027 cost = 6.076429584Test accuracy:  0.778
+Epoch: 0028 cost = 6.353230585Test accuracy:  0.778
+Epoch: 0029 cost = 6.471783150Test accuracy:  0.778
+Epoch: 0030 cost = 5.896218148Test accuracy:  0.769
+Epoch: 0031 cost = 5.054721085Test accuracy:  0.769
+Epoch: 0032 cost = 4.431959824Test accuracy:  0.769
+Epoch: 0033 cost = 4.151983120Test accuracy:  0.778
+Epoch: 0034 cost = 4.047784123Test accuracy:  0.778
+Epoch: 0035 cost = 4.014654658Test accuracy:  0.778
+Epoch: 0036 cost = 3.986578855Test accuracy:  0.796
+Epoch: 0037 cost = 3.929079273Test accuracy:  0.796
+Epoch: 0038 cost = 3.852872090Test accuracy:  0.796
+Epoch: 0039 cost = 3.745462819Test accuracy:  0.796
+Epoch: 0040 cost = 3.600467682Test accuracy:  0.796
+Epoch: 0041 cost = 3.412344076Test accuracy:  0.796
+Epoch: 0042 cost = 3.205312621Test accuracy:  0.796
+Epoch: 0043 cost = 3.034793204Test accuracy:  0.796
+Epoch: 0044 cost = 2.942508719Test accuracy:  0.796
+Epoch: 0045 cost = 3.021391571Test accuracy:  0.806
+Epoch: 0046 cost = 3.173813934Test accuracy:  0.796
+Epoch: 0047 cost = 2.992974991Test accuracy:  0.833
+Epoch: 0048 cost = 2.619181235Test accuracy:  0.815
+Epoch: 0049 cost = 2.689226866Test accuracy:  0.806
+Epoch: 0050 cost = 2.840539675Test accuracy:  0.806
+Epoch: 0051 cost = 2.929907677Test accuracy:  0.806
+Epoch: 0052 cost = 2.699691477Test accuracy:  0.806
+Epoch: 0053 cost = 2.376185165Test accuracy:  0.806
+Epoch: 0054 cost = 2.266506293Test accuracy:  0.815
+Epoch: 0055 cost = 2.376945867Test accuracy:  0.824
+Epoch: 0056 cost = 2.578584259Test accuracy:  0.824
+Epoch: 0057 cost = 2.506891695Test accuracy:  0.796
+Epoch: 0058 cost = 2.112194441Test accuracy:  0.806
+Epoch: 0059 cost = 1.971810655Test accuracy:  0.806
+Epoch: 0060 cost = 2.061610636Test accuracy:  0.843
+Epoch: 0061 cost = 2.358114910Test accuracy:  0.843
+Epoch: 0062 cost = 2.620491383Test accuracy:  0.815
+Epoch: 0063 cost = 1.975057808Test accuracy:  0.806
+Epoch: 0064 cost = 1.611166686Test accuracy:  0.824
+Epoch: 0065 cost = 1.551021325Test accuracy:  0.833
+Epoch: 0066 cost = 1.607011565Test accuracy:  0.843
+Epoch: 0067 cost = 1.785401626Test accuracy:  0.852
+Epoch: 0068 cost = 2.235492828Test accuracy:  0.861
+Epoch: 0069 cost = 2.549816971Test accuracy:  0.833
+Epoch: 0070 cost = 1.694522419Test accuracy:  0.833
+Epoch: 0071 cost = 1.200799351Test accuracy:  0.796
+Epoch: 0072 cost = 1.172114888Test accuracy:  0.806
+Epoch: 0073 cost = 1.154406380Test accuracy:  0.833
+Epoch: 0074 cost = 1.081608467Test accuracy:  0.833
+Epoch: 0075 cost = 1.036488037Test accuracy:  0.843
+Epoch: 0076 cost = 1.011884118Test accuracy:  0.833
+Epoch: 0077 cost = 1.001936331Test accuracy:  0.843
+Epoch: 0078 cost = 0.970542432Test accuracy:  0.852
+Epoch: 0079 cost = 0.921469820Test accuracy:  0.861
+Epoch: 0080 cost = 0.889308252Test accuracy:  0.843
+Epoch: 0081 cost = 0.897783584Test accuracy:  0.843
+Epoch: 0082 cost = 0.889905538Test accuracy:  0.889
+Epoch: 0083 cost = 0.828810588Test accuracy:  0.889
+Epoch: 0084 cost = 0.789361092Test accuracy:  0.88
+Epoch: 0085 cost = 0.813381248Test accuracy:  0.843
+Epoch: 0086 cost = 0.907035323Test accuracy:  0.87
+Epoch: 0087 cost = 0.900087025Test accuracy:  0.889
+Epoch: 0088 cost = 1.356045706Test accuracy:  0.889
+Epoch: 0089 cost = 3.703889849Test accuracy:  0.898
+Epoch: 0090 cost = 3.851694426Test accuracy:  0.889
+Epoch: 0091 cost = 5.597623163Test accuracy:  0.926
+Epoch: 0092 cost = 4.767987330Test accuracy:  0.917
+Epoch: 0093 cost = 4.503506888Test accuracy:  0.917
+Epoch: 0094 cost = 3.725281818Test accuracy:  0.806
+Epoch: 0095 cost = 1.639409060Test accuracy:  0.787
+Epoch: 0096 cost = 1.584970435Test accuracy:  0.889
+Epoch: 0097 cost = 1.428277036Test accuracy:  0.824
+Epoch: 0098 cost = 1.162965321Test accuracy:  0.861
+Epoch: 0099 cost = 1.024875491Test accuracy:  0.843
+Epoch: 0100 cost = 0.879542158Test accuracy:  0.861
+Epoch: 0101 cost = 0.760975870Test accuracy:  0.824
+Epoch: 0102 cost = 0.990551724Test accuracy:  0.861
+Epoch: 0103 cost = 0.760252188Test accuracy:  0.843
+Epoch: 0104 cost = 0.893418870Test accuracy:  0.87
+Epoch: 0105 cost = 0.713392470Test accuracy:  0.833
+Epoch: 0106 cost = 0.942311086Test accuracy:  0.87
+Epoch: 0107 cost = 0.689282236Test accuracy:  0.833
+Epoch: 0108 cost = 0.907039408Test accuracy:  0.87
+Epoch: 0109 cost = 0.647765890Test accuracy:  0.824
+Epoch: 0110 cost = 0.930315091Test accuracy:  0.87
+Epoch: 0111 cost = 0.625336272Test accuracy:  0.833
+Epoch: 0112 cost = 0.895243823Test accuracy:  0.88
+Epoch: 0113 cost = 0.587286350Test accuracy:  0.824
+Epoch: 0114 cost = 0.927425738Test accuracy:  0.889
+Epoch: 0115 cost = 0.572382943Test accuracy:  0.833
+Epoch: 0116 cost = 0.898878621Test accuracy:  0.889
+Epoch: 0117 cost = 0.537577247Test accuracy:  0.833
+Epoch: 0118 cost = 0.926643577Test accuracy:  0.889
+Epoch: 0119 cost = 0.519661626Test accuracy:  0.843
+Epoch: 0120 cost = 0.923225994Test accuracy:  0.889
+Epoch: 0121 cost = 0.500203918Test accuracy:  0.843
+Epoch: 0122 cost = 0.929067451Test accuracy:  0.889
+Epoch: 0123 cost = 0.476729521Test accuracy:  0.852
+Epoch: 0124 cost = 0.936739849Test accuracy:  0.88
+Epoch: 0125 cost = 0.456062771Test accuracy:  0.861
+Epoch: 0126 cost = 0.945661448Test accuracy:  0.88
+Epoch: 0127 cost = 0.441259751Test accuracy:  0.861
+Epoch: 0128 cost = 0.961562977Test accuracy:  0.88
+Epoch: 0129 cost = 0.441726557Test accuracy:  0.861
+Epoch: 0130 cost = 0.974582337Test accuracy:  0.88
+Epoch: 0131 cost = 0.442700647Test accuracy:  0.861
+Epoch: 0132 cost = 0.915710541Test accuracy:  0.88
+Epoch: 0133 cost = 0.358107466Test accuracy:  0.861
+Epoch: 0134 cost = 0.834135871Test accuracy:  0.87
+Epoch: 0135 cost = 0.351992234Test accuracy:  0.861
+Epoch: 0136 cost = 0.907252034Test accuracy:  0.88
+Epoch: 0137 cost = 0.356030193Test accuracy:  0.861
+Epoch: 0138 cost = 0.893744896Test accuracy:  0.889
+Epoch: 0139 cost = 0.348117091Test accuracy:  0.861
+Epoch: 0140 cost = 0.866638121Test accuracy:  0.87
+Epoch: 0141 cost = 0.386848211Test accuracy:  0.861
+Epoch: 0142 cost = 1.123411596Test accuracy:  0.898
+Epoch: 0143 cost = 0.924656153Test accuracy:  0.861
+Epoch: 0144 cost = 0.569883559Test accuracy:  0.88
+Epoch: 0145 cost = 0.292004530Test accuracy:  0.87
+Epoch: 0146 cost = 0.772981348Test accuracy:  0.87
+Epoch: 0147 cost = 0.344803547Test accuracy:  0.861
+Epoch: 0148 cost = 0.945596515Test accuracy:  0.87
+Epoch: 0149 cost = 0.351395112Test accuracy:  0.861
+Epoch: 0150 cost = 1.007306775Test accuracy:  0.898
+Epoch: 0151 cost = 0.344294904Test accuracy:  0.861
+Epoch: 0152 cost = 0.620476889Test accuracy:  0.861
+Epoch: 0153 cost = 0.294395177Test accuracy:  0.88
+Epoch: 0154 cost = 0.525820645Test accuracy:  0.88
+Epoch: 0155 cost = 0.205457663Test accuracy:  0.907
+Epoch: 0156 cost = 0.325851239Test accuracy:  0.907
+Epoch: 0157 cost = 0.367688470Test accuracy:  0.852
+Epoch: 0158 cost = 0.746277259Test accuracy:  0.88
+Epoch: 0159 cost = 0.331381369Test accuracy:  0.88
+Epoch: 0160 cost = 0.914608099Test accuracy:  0.907
+Epoch: 0161 cost = 0.316145855Test accuracy:  0.87
+Epoch: 0162 cost = 0.973575171Test accuracy:  0.907
+Epoch: 0163 cost = 0.289159998Test accuracy:  0.861
+Epoch: 0164 cost = 0.807606910Test accuracy:  0.861
+Epoch: 0165 cost = 0.293389689Test accuracy:  0.861
+Epoch: 0166 cost = 1.031335121Test accuracy:  0.889
+Epoch: 0167 cost = 0.327732037Test accuracy:  0.852
+Epoch: 0168 cost = 0.597481490Test accuracy:  0.87
+Epoch: 0169 cost = 0.277103754Test accuracy:  0.907
+Epoch: 0170 cost = 0.423604491Test accuracy:  0.898
+Epoch: 0171 cost = 0.175370146Test accuracy:  0.88
+Epoch: 0172 cost = 0.718621311Test accuracy:  0.861
+Epoch: 0173 cost = 0.449405319Test accuracy:  0.87
+Epoch: 0174 cost = 0.525104930Test accuracy:  0.861
+Epoch: 0175 cost = 0.392969463Test accuracy:  0.889
+Epoch: 0176 cost = 0.223871972Test accuracy:  0.889
+Epoch: 0177 cost = 0.247919256Test accuracy:  0.917
+Epoch: 0178 cost = 0.157834542Test accuracy:  0.861
+Epoch: 0179 cost = 0.788862998Test accuracy:  0.852
+Epoch: 0180 cost = 0.268117798Test accuracy:  0.852
+Epoch: 0181 cost = 0.985923388Test accuracy:  0.88
+Epoch: 0182 cost = 0.287387904Test accuracy:  0.861
+Epoch: 0183 cost = 0.519504205Test accuracy:  0.861
+Epoch: 0184 cost = 0.137074119Test accuracy:  0.889
+Epoch: 0185 cost = 0.074538335Test accuracy:  0.87
+Epoch: 0186 cost = 0.341161659Test accuracy:  0.898
+Epoch: 0187 cost = 0.224863227Test accuracy:  0.843
+Epoch: 0188 cost = 0.763309623Test accuracy:  0.87
+Epoch: 0189 cost = 0.252216271Test accuracy:  0.898
+Epoch: 0190 cost = 0.417875109Test accuracy:  0.898
+Epoch: 0191 cost = 0.093713710Test accuracy:  0.898
+Epoch: 0192 cost = 0.164114468Test accuracy:  0.898
+Epoch: 0193 cost = 0.143230812Test accuracy:  0.861
+Epoch: 0194 cost = 0.040030153Test accuracy:  0.88
+Epoch: 0195 cost = 0.044948621Test accuracy:  0.861
+Epoch: 0196 cost = 0.103814047Test accuracy:  0.889
+Epoch: 0197 cost = 0.124075217Test accuracy:  0.852
+Epoch: 0198 cost = 0.816390866Test accuracy:  0.852
+Epoch: 0199 cost = 0.209798158Test accuracy:  0.861
+Epoch: 0200 cost = 0.960099840Test accuracy:  0.88
+Epoch: 0201 cost = 0.239543996Test accuracy:  0.87
+Epoch: 0202 cost = 0.571554745Test accuracy:  0.87
+Epoch: 0203 cost = 0.294362660Test accuracy:  0.907
+Epoch: 0204 cost = 0.139184410Test accuracy:  0.87
+Epoch: 0205 cost = 0.171069532Test accuracy:  0.907
+Epoch: 0206 cost = 2.700325387Test accuracy:  0.954
+Epoch: 0207 cost = 2.778058870Test accuracy:  0.889
+Epoch: 0208 cost = 2.669843080Test accuracy:  0.87
+Epoch: 0209 cost = 0.590254952Test accuracy:  0.843
+Epoch: 0210 cost = 0.673893136Test accuracy:  0.88
+Epoch: 0211 cost = 0.165373734Test accuracy:  0.88
+Epoch: 0212 cost = 0.342572929Test accuracy:  0.88
+Epoch: 0213 cost = 0.216981596Test accuracy:  0.88
+Epoch: 0214 cost = 0.081203782Test accuracy:  0.88
+Epoch: 0215 cost = 0.080491791Test accuracy:  0.88
+Epoch: 0216 cost = 0.081993060Test accuracy:  0.88
+Epoch: 0217 cost = 0.047436868Test accuracy:  0.88
+Epoch: 0218 cost = 0.040228828Test accuracy:  0.88
+Epoch: 0219 cost = 0.049289049Test accuracy:  0.88
+Epoch: 0220 cost = 0.182999279Test accuracy:  0.889
+Epoch: 0221 cost = 0.835491069Test accuracy:  0.843
+Epoch: 0222 cost = 0.451817474Test accuracy:  0.889
+Epoch: 0223 cost = 0.577840198Test accuracy:  0.88
+Epoch: 0224 cost = 0.200085754Test accuracy:  0.898
+Epoch: 0225 cost = 0.403167719Test accuracy:  0.889
+Epoch: 0226 cost = 0.069280089Test accuracy:  0.889
+Epoch: 0227 cost = 0.280451440Test accuracy:  0.898
+Epoch: 0228 cost = 0.635659718Test accuracy:  0.889
+Epoch: 0229 cost = 0.093316211Test accuracy:  0.889
+Epoch: 0230 cost = 0.076337082Test accuracy:  0.889
+Epoch: 0231 cost = 0.175114361Test accuracy:  0.898
+Epoch: 0232 cost = 0.561363660Test accuracy:  0.889
+Epoch: 0233 cost = 0.045048984Test accuracy:  0.889
+Epoch: 0234 cost = 0.033543449Test accuracy:  0.889
+Epoch: 0235 cost = 0.032575170Test accuracy:  0.889
+Epoch: 0236 cost = 0.026719644Test accuracy:  0.889
+Epoch: 0237 cost = 0.022878148Test accuracy:  0.889
+Epoch: 0238 cost = 0.019561843Test accuracy:  0.889
+Epoch: 0239 cost = 0.017577605Test accuracy:  0.889
+Epoch: 0240 cost = 0.016229205Test accuracy:  0.889
+Epoch: 0241 cost = 0.015089864Test accuracy:  0.889
+Epoch: 0242 cost = 0.014090594Test accuracy:  0.889
+Epoch: 0243 cost = 0.013248897Test accuracy:  0.889
+Epoch: 0244 cost = 0.012529707Test accuracy:  0.889
+Epoch: 0245 cost = 0.011890331Test accuracy:  0.889
+Epoch: 0246 cost = 0.011318544Test accuracy:  0.889
+Epoch: 0247 cost = 0.010807814Test accuracy:  0.889
+Epoch: 0248 cost = 0.010347917Test accuracy:  0.889
+Epoch: 0249 cost = 0.009930214Test accuracy:  0.898
+Epoch: 0250 cost = 0.009548530Test accuracy:  0.898
+Epoch: 0251 cost = 0.009198912Test accuracy:  0.898
+Epoch: 0252 cost = 0.008876765Test accuracy:  0.898
+Epoch: 0253 cost = 0.008579075Test accuracy:  0.898
+Epoch: 0254 cost = 0.008302980Test accuracy:  0.898
+Epoch: 0255 cost = 0.008046094Test accuracy:  0.898
+Epoch: 0256 cost = 0.007806051Test accuracy:  0.898
+Epoch: 0257 cost = 0.007581688Test accuracy:  0.898
+Epoch: 0258 cost = 0.007371204Test accuracy:  0.898
+Epoch: 0259 cost = 0.007173163Test accuracy:  0.889
+Epoch: 0260 cost = 0.006986504Test accuracy:  0.889
+Epoch: 0261 cost = 0.006810344Test accuracy:  0.889
+Epoch: 0262 cost = 0.006643590Test accuracy:  0.889
+Epoch: 0263 cost = 0.006485595Test accuracy:  0.889
+Epoch: 0264 cost = 0.006335374Test accuracy:  0.889
+Epoch: 0265 cost = 0.006192729Test accuracy:  0.889
+Epoch: 0266 cost = 0.006056895Test accuracy:  0.88
+Epoch: 0267 cost = 0.005927265Test accuracy:  0.88
+Epoch: 0268 cost = 0.005803465Test accuracy:  0.88
+Epoch: 0269 cost = 0.005685023Test accuracy:  0.88
+Epoch: 0270 cost = 0.005571633Test accuracy:  0.88
+Epoch: 0271 cost = 0.005463066Test accuracy:  0.88
+Epoch: 0272 cost = 0.005358864Test accuracy:  0.88
+Epoch: 0273 cost = 0.005258615Test accuracy:  0.88
+Epoch: 0274 cost = 0.005162551Test accuracy:  0.88
+Epoch: 0275 cost = 0.005069722Test accuracy:  0.88
+Epoch: 0276 cost = 0.004980425Test accuracy:  0.88
+Epoch: 0277 cost = 0.004894643Test accuracy:  0.88
+Epoch: 0278 cost = 0.004811541Test accuracy:  0.88
+Epoch: 0279 cost = 0.004731183Test accuracy:  0.88
+Epoch: 0280 cost = 0.004653742Test accuracy:  0.88
+Epoch: 0281 cost = 0.004578811Test accuracy:  0.88
+Epoch: 0282 cost = 0.004506200Test accuracy:  0.88
+Epoch: 0283 cost = 0.004435719Test accuracy:  0.88
+Epoch: 0284 cost = 0.004367854Test accuracy:  0.88
+Epoch: 0285 cost = 0.004301636Test accuracy:  0.88
+Epoch: 0286 cost = 0.004237596Test accuracy:  0.88
+Epoch: 0287 cost = 0.004175338Test accuracy:  0.88
+Epoch: 0288 cost = 0.004114730Test accuracy:  0.88
+Epoch: 0289 cost = 0.004056088Test accuracy:  0.88
+Epoch: 0290 cost = 0.003999048Test accuracy:  0.88
+Epoch: 0291 cost = 0.003943262Test accuracy:  0.88
+Epoch: 0292 cost = 0.003889090Test accuracy:  0.88
+Epoch: 0293 cost = 0.003836356Test accuracy:  0.88
+Epoch: 0294 cost = 0.003784936Test accuracy:  0.88
+Epoch: 0295 cost = 0.003735019Test accuracy:  0.88
+Epoch: 0296 cost = 0.003686238Test accuracy:  0.88
+Epoch: 0297 cost = 0.003638656Test accuracy:  0.88
+Epoch: 0298 cost = 0.003592139Test accuracy:  0.88
+Epoch: 0299 cost = 0.003546788Test accuracy:  0.88
+Epoch: 0300 cost = 0.003502150Test accuracy:  0.88
+Epoch: 0301 cost = 0.003458917Test accuracy:  0.88
+Epoch: 0302 cost = 0.003416785Test accuracy:  0.88
+Epoch: 0303 cost = 0.003375219Test accuracy:  0.88
+Epoch: 0304 cost = 0.003334543Test accuracy:  0.88
+Epoch: 0305 cost = 0.003295099Test accuracy:  0.88
+Epoch: 0306 cost = 0.003256311Test accuracy:  0.88
+Epoch: 0307 cost = 0.003218306Test accuracy:  0.88
+Epoch: 0308 cost = 0.003181114Test accuracy:  0.88
+Epoch: 0309 cost = 0.003144699Test accuracy:  0.88
+Epoch: 0310 cost = 0.003109082Test accuracy:  0.88
+Epoch: 0311 cost = 0.003073986Test accuracy:  0.88
+Epoch: 0312 cost = 0.003039877Test accuracy:  0.88
+Epoch: 0313 cost = 0.003006138Test accuracy:  0.88
+Epoch: 0314 cost = 0.002973158Test accuracy:  0.88
+Epoch: 0315 cost = 0.002940846Test accuracy:  0.88
+Epoch: 0316 cost = 0.002909066Test accuracy:  0.88
+Epoch: 0317 cost = 0.002877965Test accuracy:  0.88
+Epoch: 0318 cost = 0.002847530Test accuracy:  0.88
+Epoch: 0319 cost = 0.002817563Test accuracy:  0.88
+Epoch: 0320 cost = 0.002788008Test accuracy:  0.88
+Epoch: 0321 cost = 0.002758991Test accuracy:  0.88
+Epoch: 0322 cost = 0.002730625Test accuracy:  0.88
+Epoch: 0323 cost = 0.002702525Test accuracy:  0.88
+Epoch: 0324 cost = 0.002674989Test accuracy:  0.88
+Epoch: 0325 cost = 0.002648044Test accuracy:  0.88
+Epoch: 0326 cost = 0.002621523Test accuracy:  0.88
+Epoch: 0327 cost = 0.002595317Test accuracy:  0.88
+Epoch: 0328 cost = 0.002569523Test accuracy:  0.88
+Epoch: 0329 cost = 0.002544516Test accuracy:  0.88
+Epoch: 0330 cost = 0.002519552Test accuracy:  0.88
+Epoch: 0331 cost = 0.002494920Test accuracy:  0.88
+Epoch: 0332 cost = 0.002470917Test accuracy:  0.88
+Epoch: 0333 cost = 0.002447223Test accuracy:  0.88
+Epoch: 0334 cost = 0.002423991Test accuracy:  0.88
+Epoch: 0335 cost = 0.002400911Test accuracy:  0.88
+Epoch: 0336 cost = 0.002378297Test accuracy:  0.88
+Epoch: 0337 cost = 0.002356133Test accuracy:  0.88
+Epoch: 0338 cost = 0.002334046Test accuracy:  0.88
+Epoch: 0339 cost = 0.002312312Test accuracy:  0.88
+Epoch: 0340 cost = 0.002290962Test accuracy:  0.88
+Epoch: 0341 cost = 0.002270128Test accuracy:  0.88
+Epoch: 0342 cost = 0.002249381Test accuracy:  0.88
+Epoch: 0343 cost = 0.002228992Test accuracy:  0.88
+Epoch: 0344 cost = 0.002208804Test accuracy:  0.88
+Epoch: 0345 cost = 0.002189137Test accuracy:  0.88
+Epoch: 0346 cost = 0.002169432Test accuracy:  0.88
+Epoch: 0347 cost = 0.002150166Test accuracy:  0.88
+Epoch: 0348 cost = 0.002131280Test accuracy:  0.88
+Epoch: 0349 cost = 0.002112465Test accuracy:  0.88
+Epoch: 0350 cost = 0.002094046Test accuracy:  0.88
+Epoch: 0351 cost = 0.002075747Test accuracy:  0.88
+Epoch: 0352 cost = 0.002057610Test accuracy:  0.88
+Epoch: 0353 cost = 0.002039788Test accuracy:  0.88
+Epoch: 0354 cost = 0.002022399Test accuracy:  0.88
+Epoch: 0355 cost = 0.002005093Test accuracy:  0.88
+Epoch: 0356 cost = 0.001987998Test accuracy:  0.88
+Epoch: 0357 cost = 0.001970973Test accuracy:  0.88
+Epoch: 0358 cost = 0.001954496Test accuracy:  0.88
+Epoch: 0359 cost = 0.001937944Test accuracy:  0.889
+Epoch: 0360 cost = 0.001921766Test accuracy:  0.889
+Epoch: 0361 cost = 0.001905816Test accuracy:  0.889
+Epoch: 0362 cost = 0.001889920Test accuracy:  0.889
+Epoch: 0363 cost = 0.001874355Test accuracy:  0.889
+Epoch: 0364 cost = 0.001858898Test accuracy:  0.889
+Epoch: 0365 cost = 0.001843578Test accuracy:  0.889
+Epoch: 0366 cost = 0.001828545Test accuracy:  0.889
+Epoch: 0367 cost = 0.001813598Test accuracy:  0.889
+Epoch: 0368 cost = 0.001798912Test accuracy:  0.889
+Epoch: 0369 cost = 0.001784362Test accuracy:  0.889
+Epoch: 0370 cost = 0.001769974Test accuracy:  0.889
+Epoch: 0371 cost = 0.001755901Test accuracy:  0.889
+Epoch: 0372 cost = 0.001741899Test accuracy:  0.889
+Epoch: 0373 cost = 0.001728000Test accuracy:  0.889
+Epoch: 0374 cost = 0.001714133Test accuracy:  0.889
+Epoch: 0375 cost = 0.001700739Test accuracy:  0.889
+Epoch: 0376 cost = 0.001687311Test accuracy:  0.889
+Epoch: 0377 cost = 0.001674145Test accuracy:  0.889
+Epoch: 0378 cost = 0.001660918Test accuracy:  0.889
+Epoch: 0379 cost = 0.001648017Test accuracy:  0.889
+Epoch: 0380 cost = 0.001635312Test accuracy:  0.889
+Epoch: 0381 cost = 0.001622595Test accuracy:  0.889
+Epoch: 0382 cost = 0.001609977Test accuracy:  0.889
+Epoch: 0383 cost = 0.001597672Test accuracy:  0.889
+Epoch: 0384 cost = 0.001585466Test accuracy:  0.889
+Epoch: 0385 cost = 0.001573351Test accuracy:  0.889
+Epoch: 0386 cost = 0.001561449Test accuracy:  0.889
+Epoch: 0387 cost = 0.001549492Test accuracy:  0.889
+Epoch: 0388 cost = 0.001537709Test accuracy:  0.889
+Epoch: 0389 cost = 0.001526224Test accuracy:  0.889
+Epoch: 0390 cost = 0.001514766Test accuracy:  0.889
+Epoch: 0391 cost = 0.001503270Test accuracy:  0.889
+Epoch: 0392 cost = 0.001492127Test accuracy:  0.889
+Epoch: 0393 cost = 0.001481011Test accuracy:  0.889
+Epoch: 0394 cost = 0.001469917Test accuracy:  0.889
+Epoch: 0395 cost = 0.001459105Test accuracy:  0.889
+Epoch: 0396 cost = 0.001448422Test accuracy:  0.889
+Epoch: 0397 cost = 0.001437605Test accuracy:  0.889
+Epoch: 0398 cost = 0.001427015Test accuracy:  0.889
+Epoch: 0399 cost = 0.001416550Test accuracy:  0.889
+Epoch: 0400 cost = 0.001406096Test accuracy:  0.889
+Epoch: 0401 cost = 0.001395940Test accuracy:  0.889
+Epoch: 0402 cost = 0.001385768Test accuracy:  0.889
+Epoch: 0403 cost = 0.001375997Test accuracy:  0.889
+Epoch: 0404 cost = 0.001365766Test accuracy:  0.889
+Epoch: 0405 cost = 0.001355984Test accuracy:  0.889
+Epoch: 0406 cost = 0.001346241Test accuracy:  0.889
+Epoch: 0407 cost = 0.001336503Test accuracy:  0.889
+Epoch: 0408 cost = 0.001327009Test accuracy:  0.889
+Epoch: 0409 cost = 0.001317493Test accuracy:  0.889
+Epoch: 0410 cost = 0.001308357Test accuracy:  0.889
+Epoch: 0411 cost = 0.001298771Test accuracy:  0.889
+Epoch: 0412 cost = 0.001289706Test accuracy:  0.889
+Epoch: 0413 cost = 0.001280705Test accuracy:  0.889
+Epoch: 0414 cost = 0.001271618Test accuracy:  0.889
+Epoch: 0415 cost = 0.001262564Test accuracy:  0.889
+Epoch: 0416 cost = 0.001253683Test accuracy:  0.889
+Epoch: 0417 cost = 0.001244899Test accuracy:  0.889
+Epoch: 0418 cost = 0.001236420Test accuracy:  0.889
+Epoch: 0419 cost = 0.001227420Test accuracy:  0.889
+Epoch: 0420 cost = 0.001219157Test accuracy:  0.889
+Epoch: 0421 cost = 0.001210601Test accuracy:  0.889
+Epoch: 0422 cost = 0.001202447Test accuracy:  0.889
+Epoch: 0423 cost = 0.001194006Test accuracy:  0.889
+Epoch: 0424 cost = 0.001185656Test accuracy:  0.889
+Epoch: 0425 cost = 0.001177670Test accuracy:  0.889
+Epoch: 0426 cost = 0.001169402Test accuracy:  0.889
+Epoch: 0427 cost = 0.001161514Test accuracy:  0.889
+Epoch: 0428 cost = 0.001153631Test accuracy:  0.889
+Epoch: 0429 cost = 0.001145802Test accuracy:  0.889
+Epoch: 0430 cost = 0.001137908Test accuracy:  0.889
+Epoch: 0431 cost = 0.001130096Test accuracy:  0.889
+Epoch: 0432 cost = 0.001122452Test accuracy:  0.889
+Epoch: 0433 cost = 0.001114835Test accuracy:  0.889
+Epoch: 0434 cost = 0.001107532Test accuracy:  0.889
+Epoch: 0435 cost = 0.001099883Test accuracy:  0.889
+Epoch: 0436 cost = 0.001092667Test accuracy:  0.889
+Epoch: 0437 cost = 0.001085234Test accuracy:  0.889
+Epoch: 0438 cost = 0.001078078Test accuracy:  0.889
+Epoch: 0439 cost = 0.001070786Test accuracy:  0.889
+Epoch: 0440 cost = 0.001063581Test accuracy:  0.889
+Epoch: 0441 cost = 0.001056463Test accuracy:  0.889
+Epoch: 0442 cost = 0.001049627Test accuracy:  0.889
+Epoch: 0443 cost = 0.001042492Test accuracy:  0.889
+Epoch: 0444 cost = 0.001035645Test accuracy:  0.889
+Epoch: 0445 cost = 0.001028918Test accuracy:  0.889
+Epoch: 0446 cost = 0.001021968Test accuracy:  0.889
+Epoch: 0447 cost = 0.001015435Test accuracy:  0.889
+Epoch: 0448 cost = 0.001008550Test accuracy:  0.889
+Epoch: 0449 cost = 0.001002040Test accuracy:  0.889
+Epoch: 0450 cost = 0.000995453Test accuracy:  0.889
+Epoch: 0451 cost = 0.000988910Test accuracy:  0.889
+Epoch: 0452 cost = 0.000982432Test accuracy:  0.889
+Epoch: 0453 cost = 0.000976105Test accuracy:  0.889
+Epoch: 0454 cost = 0.000969719Test accuracy:  0.889
+Epoch: 0455 cost = 0.000963382Test accuracy:  0.889
+Epoch: 0456 cost = 0.000957034Test accuracy:  0.889
+Epoch: 0457 cost = 0.000951125Test accuracy:  0.889
+Epoch: 0458 cost = 0.000944886Test accuracy:  0.889
+Epoch: 0459 cost = 0.000938706Test accuracy:  0.889
+Epoch: 0460 cost = 0.000932542Test accuracy:  0.889
+Epoch: 0461 cost = 0.000926628Test accuracy:  0.889
+Epoch: 0462 cost = 0.000920703Test accuracy:  0.889
+Epoch: 0463 cost = 0.000914718Test accuracy:  0.889
+Epoch: 0464 cost = 0.000908837Test accuracy:  0.889
+Epoch: 0465 cost = 0.000903037Test accuracy:  0.889
+Epoch: 0466 cost = 0.000897236Test accuracy:  0.889
+Epoch: 0467 cost = 0.000891626Test accuracy:  0.889
+Epoch: 0468 cost = 0.000885864Test accuracy:  0.889
+Epoch: 0469 cost = 0.000880426Test accuracy:  0.889
+Epoch: 0470 cost = 0.000874794Test accuracy:  0.889
+Epoch: 0471 cost = 0.000869043Test accuracy:  0.889
+Epoch: 0472 cost = 0.000863622Test accuracy:  0.889
+Epoch: 0473 cost = 0.000858174Test accuracy:  0.889
+Epoch: 0474 cost = 0.000852781Test accuracy:  0.889
+Epoch: 0475 cost = 0.000847393Test accuracy:  0.889
+Epoch: 0476 cost = 0.000842140Test accuracy:  0.889
+Epoch: 0477 cost = 0.000836665Test accuracy:  0.889
+Epoch: 0478 cost = 0.000831602Test accuracy:  0.889
+Epoch: 0479 cost = 0.000826339Test accuracy:  0.889
+Epoch: 0480 cost = 0.000821016Test accuracy:  0.889
+Epoch: 0481 cost = 0.000816002Test accuracy:  0.889
+Epoch: 0482 cost = 0.000810820Test accuracy:  0.889
+Epoch: 0483 cost = 0.000805784Test accuracy:  0.889
+Epoch: 0484 cost = 0.000800678Test accuracy:  0.889
+Epoch: 0485 cost = 0.000795751Test accuracy:  0.889
+Epoch: 0486 cost = 0.000790927Test accuracy:  0.889
+Epoch: 0487 cost = 0.000785734Test accuracy:  0.889
+Epoch: 0488 cost = 0.000780931Test accuracy:  0.889
+Epoch: 0489 cost = 0.000776351Test accuracy:  0.889
+Epoch: 0490 cost = 0.000771267Test accuracy:  0.889
+Epoch: 0491 cost = 0.000766508Test accuracy:  0.889
+Epoch: 0492 cost = 0.000761987Test accuracy:  0.889
+Epoch: 0493 cost = 0.000757060Test accuracy:  0.889
+Epoch: 0494 cost = 0.000752366Test accuracy:  0.889
+Epoch: 0495 cost = 0.000747916Test accuracy:  0.889
+Epoch: 0496 cost = 0.000743124Test accuracy:  0.889
+Epoch: 0497 cost = 0.000738690Test accuracy:  0.889
+Epoch: 0498 cost = 0.000734207Test accuracy:  0.889
+Epoch: 0499 cost = 0.000729698Test accuracy:  0.889
+Epoch: 0500 cost = 0.000725259Test accuracy:  0.889
+Epoch: 0501 cost = 0.000720803Test accuracy:  0.889
+Epoch: 0502 cost = 0.000716218Test accuracy:  0.889
+Epoch: 0503 cost = 0.000711941Test accuracy:  0.889
+Epoch: 0504 cost = 0.000707626Test accuracy:  0.889
+Epoch: 0505 cost = 0.000703372Test accuracy:  0.889
+Epoch: 0506 cost = 0.000699100Test accuracy:  0.889
+Epoch: 0507 cost = 0.000694710Test accuracy:  0.889
+Epoch: 0508 cost = 0.000690618Test accuracy:  0.889
+Epoch: 0509 cost = 0.000686390Test accuracy:  0.889
+Epoch: 0510 cost = 0.000682119Test accuracy:  0.889
+Epoch: 0511 cost = 0.000678027Test accuracy:  0.889
+Epoch: 0512 cost = 0.000673918Test accuracy:  0.889
+Epoch: 0513 cost = 0.000670021Test accuracy:  0.889
+Epoch: 0514 cost = 0.000665734Test accuracy:  0.889
+Epoch: 0515 cost = 0.000661842Test accuracy:  0.889
+Epoch: 0516 cost = 0.000657940Test accuracy:  0.889
+Epoch: 0517 cost = 0.000653869Test accuracy:  0.889
+Epoch: 0518 cost = 0.000649956Test accuracy:  0.889
+Epoch: 0519 cost = 0.000646021Test accuracy:  0.889
+Epoch: 0520 cost = 0.000642146Test accuracy:  0.889
+Epoch: 0521 cost = 0.000638265Test accuracy:  0.889
+Epoch: 0522 cost = 0.000634514Test accuracy:  0.889
+Epoch: 0523 cost = 0.000630688Test accuracy:  0.889
+Epoch: 0524 cost = 0.000626785Test accuracy:  0.889
+Epoch: 0525 cost = 0.000623154Test accuracy:  0.889
+Epoch: 0526 cost = 0.000619436Test accuracy:  0.889
+Epoch: 0527 cost = 0.000615723Test accuracy:  0.889
+Epoch: 0528 cost = 0.000611929Test accuracy:  0.889
+Epoch: 0529 cost = 0.000608482Test accuracy:  0.889
+Epoch: 0530 cost = 0.000604639Test accuracy:  0.889
+Epoch: 0531 cost = 0.000601311Test accuracy:  0.889
+Epoch: 0532 cost = 0.000597518Test accuracy:  0.889
+Epoch: 0533 cost = 0.000593930Test accuracy:  0.889
+Epoch: 0534 cost = 0.000590607Test accuracy:  0.889
+Epoch: 0535 cost = 0.000587106Test accuracy:  0.889
+Epoch: 0536 cost = 0.000583442Test accuracy:  0.889
+Epoch: 0537 cost = 0.000580017Test accuracy:  0.889
+Epoch: 0538 cost = 0.000576434Test accuracy:  0.889
+Epoch: 0539 cost = 0.000573334Test accuracy:  0.889
+Epoch: 0540 cost = 0.000569822Test accuracy:  0.889
+Epoch: 0541 cost = 0.000566397Test accuracy:  0.889
+Epoch: 0542 cost = 0.000563025Test accuracy:  0.889
+Epoch: 0543 cost = 0.000559736Test accuracy:  0.889
+Epoch: 0544 cost = 0.000556408Test accuracy:  0.889
+Epoch: 0545 cost = 0.000553178Test accuracy:  0.889
+Epoch: 0546 cost = 0.000549937Test accuracy:  0.889
+Epoch: 0547 cost = 0.000546587Test accuracy:  0.889
+Epoch: 0548 cost = 0.000543276Test accuracy:  0.889
+Epoch: 0549 cost = 0.000540203Test accuracy:  0.889
+Epoch: 0550 cost = 0.000537135Test accuracy:  0.889
+Epoch: 0551 cost = 0.000533851Test accuracy:  0.889
+Epoch: 0552 cost = 0.000530729Test accuracy:  0.889
+Epoch: 0553 cost = 0.000527602Test accuracy:  0.889
+Epoch: 0554 cost = 0.000524578Test accuracy:  0.889
+Epoch: 0555 cost = 0.000521358Test accuracy:  0.889
+Epoch: 0556 cost = 0.000518464Test accuracy:  0.889
+Epoch: 0557 cost = 0.000515451Test accuracy:  0.889
+Epoch: 0558 cost = 0.000512291Test accuracy:  0.889
+Epoch: 0559 cost = 0.000509310Test accuracy:  0.889
+Epoch: 0560 cost = 0.000506481Test accuracy:  0.889
+Epoch: 0561 cost = 0.000503511Test accuracy:  0.889
+Epoch: 0562 cost = 0.000500379Test accuracy:  0.889
+Epoch: 0563 cost = 0.000497691Test accuracy:  0.889
+Epoch: 0564 cost = 0.000494553Test accuracy:  0.889
+Epoch: 0565 cost = 0.000491799Test accuracy:  0.889
+Epoch: 0566 cost = 0.000488938Test accuracy:  0.889
+Epoch: 0567 cost = 0.000486174Test accuracy:  0.889
+Epoch: 0568 cost = 0.000483106Test accuracy:  0.889
+Epoch: 0569 cost = 0.000480418Test accuracy:  0.889
+Epoch: 0570 cost = 0.000477633Test accuracy:  0.889
+Epoch: 0571 cost = 0.000474885Test accuracy:  0.889
+Epoch: 0572 cost = 0.000472034Test accuracy:  0.889
+Epoch: 0573 cost = 0.000469281Test accuracy:  0.889
+Epoch: 0574 cost = 0.000466539Test accuracy:  0.889
+Epoch: 0575 cost = 0.000463916Test accuracy:  0.889
+Epoch: 0576 cost = 0.000461217Test accuracy:  0.889
+Epoch: 0577 cost = 0.000458670Test accuracy:  0.889
+Epoch: 0578 cost = 0.000455900Test accuracy:  0.889
+Epoch: 0579 cost = 0.000453125Test accuracy:  0.889
+Epoch: 0580 cost = 0.000450589Test accuracy:  0.889
+Epoch: 0581 cost = 0.000448009Test accuracy:  0.889
+Epoch: 0582 cost = 0.000445538Test accuracy:  0.889
+Epoch: 0583 cost = 0.000442828Test accuracy:  0.889
+Epoch: 0584 cost = 0.000440368Test accuracy:  0.889
+Epoch: 0585 cost = 0.000437669Test accuracy:  0.889
+Epoch: 0586 cost = 0.000435246Test accuracy:  0.889
+Epoch: 0587 cost = 0.000432775Test accuracy:  0.889
+Epoch: 0588 cost = 0.000430174Test accuracy:  0.889
+Epoch: 0589 cost = 0.000427638Test accuracy:  0.889
+Epoch: 0590 cost = 0.000425372Test accuracy:  0.889
+Epoch: 0591 cost = 0.000422858Test accuracy:  0.889
+Epoch: 0592 cost = 0.000420310Test accuracy:  0.889
+Epoch: 0593 cost = 0.000417828Test accuracy:  0.889
+Epoch: 0594 cost = 0.000415401Test accuracy:  0.889
+Epoch: 0595 cost = 0.000413195Test accuracy:  0.889
+Epoch: 0596 cost = 0.000410810Test accuracy:  0.889
+Epoch: 0597 cost = 0.000408263Test accuracy:  0.889
+Epoch: 0598 cost = 0.000405933Test accuracy:  0.889
+Epoch: 0599 cost = 0.000403787Test accuracy:  0.889
+Epoch: 0600 cost = 0.000401359Test accuracy:  0.889
+Epoch: 0601 cost = 0.000398866Test accuracy:  0.889
+Epoch: 0602 cost = 0.000396676Test accuracy:  0.889
+Epoch: 0603 cost = 0.000394574Test accuracy:  0.889
+Epoch: 0604 cost = 0.000392233Test accuracy:  0.889
+Epoch: 0605 cost = 0.000389897Test accuracy:  0.889
+Epoch: 0606 cost = 0.000387588Test accuracy:  0.889
+Epoch: 0607 cost = 0.000385496Test accuracy:  0.889
+Epoch: 0608 cost = 0.000383394Test accuracy:  0.889
+Epoch: 0609 cost = 0.000380933Test accuracy:  0.889
+Epoch: 0610 cost = 0.000378863Test accuracy:  0.889
+Epoch: 0611 cost = 0.000376695Test accuracy:  0.889
+Epoch: 0612 cost = 0.000374582Test accuracy:  0.889
+Epoch: 0613 cost = 0.000372512Test accuracy:  0.889
+Epoch: 0614 cost = 0.000370181Test accuracy:  0.889
+Epoch: 0615 cost = 0.000368090Test accuracy:  0.889
+Epoch: 0616 cost = 0.000366128Test accuracy:  0.889
+Epoch: 0617 cost = 0.000363890Test accuracy:  0.889
+Epoch: 0618 cost = 0.000361852Test accuracy:  0.889
+Epoch: 0619 cost = 0.000359836Test accuracy:  0.889
+Epoch: 0620 cost = 0.000357636Test accuracy:  0.889
+Epoch: 0621 cost = 0.000355728Test accuracy:  0.889
+Epoch: 0622 cost = 0.000353723Test accuracy:  0.889
+Epoch: 0623 cost = 0.000351555Test accuracy:  0.889
+Epoch: 0624 cost = 0.000349615Test accuracy:  0.889
+Epoch: 0625 cost = 0.000347697Test accuracy:  0.889
+Epoch: 0626 cost = 0.000345648Test accuracy:  0.889
+Epoch: 0627 cost = 0.000343665Test accuracy:  0.889
+Epoch: 0628 cost = 0.000341790Test accuracy:  0.889
+Epoch: 0629 cost = 0.000339741Test accuracy:  0.889
+Epoch: 0630 cost = 0.000337834Test accuracy:  0.889
+Epoch: 0631 cost = 0.000335775Test accuracy:  0.889
+Epoch: 0632 cost = 0.000333862Test accuracy:  0.889
+Epoch: 0633 cost = 0.000332062Test accuracy:  0.889
+Epoch: 0634 cost = 0.000330241Test accuracy:  0.889
+Epoch: 0635 cost = 0.000328475Test accuracy:  0.889
+Epoch: 0636 cost = 0.000326491Test accuracy:  0.889
+Epoch: 0637 cost = 0.000324465Test accuracy:  0.889
+Epoch: 0638 cost = 0.000322698Test accuracy:  0.889
+Epoch: 0639 cost = 0.000320758Test accuracy:  0.889
+Epoch: 0640 cost = 0.000319154Test accuracy:  0.889
+Epoch: 0641 cost = 0.000317203Test accuracy:  0.889
+Epoch: 0642 cost = 0.000315306Test accuracy:  0.889
+Epoch: 0643 cost = 0.000313680Test accuracy:  0.889
+Epoch: 0644 cost = 0.000311881Test accuracy:  0.889
+Epoch: 0645 cost = 0.000310093Test accuracy:  0.889
+Epoch: 0646 cost = 0.000308359Test accuracy:  0.889
+Epoch: 0647 cost = 0.000306484Test accuracy:  0.889
+Epoch: 0648 cost = 0.000304641Test accuracy:  0.889
+Epoch: 0649 cost = 0.000302907Test accuracy:  0.889
+Epoch: 0650 cost = 0.000301254Test accuracy:  0.889
+Epoch: 0651 cost = 0.000299791Test accuracy:  0.889
+Epoch: 0652 cost = 0.000298057Test accuracy:  0.889
+Epoch: 0653 cost = 0.000296193Test accuracy:  0.889
+Epoch: 0654 cost = 0.000294513Test accuracy:  0.889
+Epoch: 0655 cost = 0.000292801Test accuracy:  0.889
+Epoch: 0656 cost = 0.000291121Test accuracy:  0.889
+Epoch: 0657 cost = 0.000289549Test accuracy:  0.889
+Epoch: 0658 cost = 0.000287934Test accuracy:  0.889
+Epoch: 0659 cost = 0.000286233Test accuracy:  0.889
+Epoch: 0660 cost = 0.000284558Test accuracy:  0.88
+Epoch: 0661 cost = 0.000282987Test accuracy:  0.88
+Epoch: 0662 cost = 0.000281361Test accuracy:  0.88
+Epoch: 0663 cost = 0.000279919Test accuracy:  0.88
+Epoch: 0664 cost = 0.000278315Test accuracy:  0.88
+Epoch: 0665 cost = 0.000276559Test accuracy:  0.88
+Epoch: 0666 cost = 0.000275010Test accuracy:  0.88
+Epoch: 0667 cost = 0.000273406Test accuracy:  0.88
+Epoch: 0668 cost = 0.000271877Test accuracy:  0.88
+Epoch: 0669 cost = 0.000270458Test accuracy:  0.88
+Epoch: 0670 cost = 0.000268929Test accuracy:  0.88
+Epoch: 0671 cost = 0.000267250Test accuracy:  0.88
+Epoch: 0672 cost = 0.000265776Test accuracy:  0.88
+Epoch: 0673 cost = 0.000264150Test accuracy:  0.88
+Epoch: 0674 cost = 0.000262708Test accuracy:  0.88
+Epoch: 0675 cost = 0.000261316Test accuracy:  0.88
+Epoch: 0676 cost = 0.000259885Test accuracy:  0.88
+Epoch: 0677 cost = 0.000258476Test accuracy:  0.88
+Epoch: 0678 cost = 0.000256861Test accuracy:  0.88
+Epoch: 0679 cost = 0.000255420Test accuracy:  0.88
+Epoch: 0680 cost = 0.000253978Test accuracy:  0.88
+Epoch: 0681 cost = 0.000252483Test accuracy:  0.88
+Epoch: 0682 cost = 0.000251117Test accuracy:  0.88
+Epoch: 0683 cost = 0.000249697Test accuracy:  0.88
+Epoch: 0684 cost = 0.000248212Test accuracy:  0.88
+Epoch: 0685 cost = 0.000246782Test accuracy:  0.88
+Epoch: 0686 cost = 0.000245405Test accuracy:  0.88
+Epoch: 0687 cost = 0.000243899Test accuracy:  0.88
+Epoch: 0688 cost = 0.000242609Test accuracy:  0.88
+Epoch: 0689 cost = 0.000241374Test accuracy:  0.88
+Epoch: 0690 cost = 0.000240041Test accuracy:  0.88
+Epoch: 0691 cost = 0.000238578Test accuracy:  0.88
+Epoch: 0692 cost = 0.000237093Test accuracy:  0.88
+Epoch: 0693 cost = 0.000235738Test accuracy:  0.88
+Epoch: 0694 cost = 0.000234437Test accuracy:  0.88
+Epoch: 0695 cost = 0.000233213Test accuracy:  0.88
+Epoch: 0696 cost = 0.000231934Test accuracy:  0.88
+Epoch: 0697 cost = 0.000230644Test accuracy:  0.88
+Epoch: 0698 cost = 0.000229148Test accuracy:  0.88
+Epoch: 0699 cost = 0.000227794Test accuracy:  0.88
+Epoch: 0700 cost = 0.000226591Test accuracy:  0.88
+Epoch: 0701 cost = 0.000225355Test accuracy:  0.88
+Epoch: 0702 cost = 0.000224217Test accuracy:  0.88
+Epoch: 0703 cost = 0.000222841Test accuracy:  0.88
+Epoch: 0704 cost = 0.000221616Test accuracy:  0.88
+Epoch: 0705 cost = 0.000220175Test accuracy:  0.88
+Epoch: 0706 cost = 0.000218831Test accuracy:  0.88
+Epoch: 0707 cost = 0.000217725Test accuracy:  0.88
+Epoch: 0708 cost = 0.000216631Test accuracy:  0.88
+Epoch: 0709 cost = 0.000215460Test accuracy:  0.88
+Epoch: 0710 cost = 0.000214170Test accuracy:  0.88
+Epoch: 0711 cost = 0.000212881Test accuracy:  0.88
+Epoch: 0712 cost = 0.000211656Test accuracy:  0.88
+Epoch: 0713 cost = 0.000210437Test accuracy:  0.88
+Epoch: 0714 cost = 0.000209234Test accuracy:  0.88
+Epoch: 0715 cost = 0.000208063Test accuracy:  0.88
+Epoch: 0716 cost = 0.000206915Test accuracy:  0.88
+Epoch: 0717 cost = 0.000205766Test accuracy:  0.88
+Epoch: 0718 cost = 0.000204574Test accuracy:  0.88
+Epoch: 0719 cost = 0.000203414Test accuracy:  0.88
+Epoch: 0720 cost = 0.000202352Test accuracy:  0.88
+Epoch: 0721 cost = 0.000201138Test accuracy:  0.88
+Epoch: 0722 cost = 0.000200022Test accuracy:  0.88
+Epoch: 0723 cost = 0.000198786Test accuracy:  0.88
+Epoch: 0724 cost = 0.000197735Test accuracy:  0.88
+Epoch: 0725 cost = 0.000196575Test accuracy:  0.88
+Epoch: 0726 cost = 0.000195405Test accuracy:  0.88
+Epoch: 0727 cost = 0.000194289Test accuracy:  0.88
+Epoch: 0728 cost = 0.000193205Test accuracy:  0.88
+Epoch: 0729 cost = 0.000192197Test accuracy:  0.88
+Epoch: 0730 cost = 0.000191135Test accuracy:  0.88
+Epoch: 0731 cost = 0.000190008Test accuracy:  0.88
+Epoch: 0732 cost = 0.000188989Test accuracy:  0.88
+Epoch: 0733 cost = 0.000187786Test accuracy:  0.88
+Epoch: 0734 cost = 0.000186735Test accuracy:  0.88
+Epoch: 0735 cost = 0.000185640Test accuracy:  0.88
+Epoch: 0736 cost = 0.000184665Test accuracy:  0.88
+Epoch: 0737 cost = 0.000183722Test accuracy:  0.88
+Epoch: 0738 cost = 0.000182616Test accuracy:  0.88
+Epoch: 0739 cost = 0.000181554Test accuracy:  0.88
+Epoch: 0740 cost = 0.000180535Test accuracy:  0.88
+Epoch: 0741 cost = 0.000179430Test accuracy:  0.88
+Epoch: 0742 cost = 0.000178433Test accuracy:  0.88
+Epoch: 0743 cost = 0.000177425Test accuracy:  0.88
+Epoch: 0744 cost = 0.000176536Test accuracy:  0.88
+Epoch: 0745 cost = 0.000175452Test accuracy:  0.88
+Epoch: 0746 cost = 0.000174455Test accuracy:  0.88
+Epoch: 0747 cost = 0.000173361Test accuracy:  0.88
+Epoch: 0748 cost = 0.000172461Test accuracy:  0.88
+Epoch: 0749 cost = 0.000171540Test accuracy:  0.88
+Epoch: 0750 cost = 0.000170467Test accuracy:  0.88
+Epoch: 0751 cost = 0.000169481Test accuracy:  0.88
+Epoch: 0752 cost = 0.000168679Test accuracy:  0.88
+Epoch: 0753 cost = 0.000167725Test accuracy:  0.88
+Epoch: 0754 cost = 0.000166804Test accuracy:  0.88
+Epoch: 0755 cost = 0.000165861Test accuracy:  0.88
+Epoch: 0756 cost = 0.000164799Test accuracy:  0.88
+Epoch: 0757 cost = 0.000163759Test accuracy:  0.88
+Epoch: 0758 cost = 0.000162783Test accuracy:  0.88
+Epoch: 0759 cost = 0.000161916Test accuracy:  0.88
+Epoch: 0760 cost = 0.000160941Test accuracy:  0.88
+Epoch: 0761 cost = 0.000159998Test accuracy:  0.88
+Epoch: 0762 cost = 0.000159228Test accuracy:  0.88
+Epoch: 0763 cost = 0.000158437Test accuracy:  0.88
+Epoch: 0764 cost = 0.000157559Test accuracy:  0.88
+Epoch: 0765 cost = 0.000156627Test accuracy:  0.88
+Epoch: 0766 cost = 0.000155695Test accuracy:  0.88
+Epoch: 0767 cost = 0.000154731Test accuracy:  0.88
+Epoch: 0768 cost = 0.000153875Test accuracy:  0.88
+Epoch: 0769 cost = 0.000152932Test accuracy:  0.88
+Epoch: 0770 cost = 0.000152227Test accuracy:  0.88
+Epoch: 0771 cost = 0.000151393Test accuracy:  0.88
+Epoch: 0772 cost = 0.000150699Test accuracy:  0.88
+Epoch: 0773 cost = 0.000149637Test accuracy:  0.88
+Epoch: 0774 cost = 0.000148759Test accuracy:  0.88
+Epoch: 0775 cost = 0.000147719Test accuracy:  0.88
+Epoch: 0776 cost = 0.000146787Test accuracy:  0.88
+Epoch: 0777 cost = 0.000146039Test accuracy:  0.88
+Epoch: 0778 cost = 0.000145150Test accuracy:  0.88
+Epoch: 0779 cost = 0.000144489Test accuracy:  0.88
+Epoch: 0780 cost = 0.000143785Test accuracy:  0.88
+Epoch: 0781 cost = 0.000143156Test accuracy:  0.88
+Epoch: 0782 cost = 0.000142387Test accuracy:  0.88
+Epoch: 0783 cost = 0.000141336Test accuracy:  0.88
+Epoch: 0784 cost = 0.000140436Test accuracy:  0.88
+Epoch: 0785 cost = 0.000139526Test accuracy:  0.88
+Epoch: 0786 cost = 0.000138745Test accuracy:  0.88
+Epoch: 0787 cost = 0.000138041Test accuracy:  0.88
+Epoch: 0788 cost = 0.000137282Test accuracy:  0.88
+Epoch: 0789 cost = 0.000136589Test accuracy:  0.88
+Epoch: 0790 cost = 0.000135884Test accuracy:  0.88
+Epoch: 0791 cost = 0.000135126Test accuracy:  0.88
+Epoch: 0792 cost = 0.000134356Test accuracy:  0.88
+Epoch: 0793 cost = 0.000133608Test accuracy:  0.88
+Epoch: 0794 cost = 0.000132725Test accuracy:  0.88
+Epoch: 0795 cost = 0.000131815Test accuracy:  0.88
+Epoch: 0796 cost = 0.000131089Test accuracy:  0.88
+Epoch: 0797 cost = 0.000130341Test accuracy:  0.88
+Epoch: 0798 cost = 0.000129626Test accuracy:  0.88
+Epoch: 0799 cost = 0.000128899Test accuracy:  0.88
+Epoch: 0800 cost = 0.000128217Test accuracy:  0.88
+Epoch: 0801 cost = 0.000127491Test accuracy:  0.88
+Epoch: 0802 cost = 0.000126819Test accuracy:  0.88
+Epoch: 0803 cost = 0.000126190Test accuracy:  0.88
+Epoch: 0804 cost = 0.000125464Test accuracy:  0.88
+Epoch: 0805 cost = 0.000124608Test accuracy:  0.88
+Epoch: 0806 cost = 0.000123979Test accuracy:  0.88
+Epoch: 0807 cost = 0.000123069Test accuracy:  0.88
+Epoch: 0808 cost = 0.000122364Test accuracy:  0.88
+Epoch: 0809 cost = 0.000121714Test accuracy:  0.88
+Epoch: 0810 cost = 0.000121140Test accuracy:  0.88
+Epoch: 0811 cost = 0.000120500Test accuracy:  0.88
+Epoch: 0812 cost = 0.000119796Test accuracy:  0.88
+Epoch: 0813 cost = 0.000119189Test accuracy:  0.88
+Epoch: 0814 cost = 0.000118485Test accuracy:  0.88
+Epoch: 0815 cost = 0.000117878Test accuracy:  0.88
+Epoch: 0816 cost = 0.000117141Test accuracy:  0.88
+Epoch: 0817 cost = 0.000116306Test accuracy:  0.88
+Epoch: 0818 cost = 0.000115721Test accuracy:  0.88
+Epoch: 0819 cost = 0.000114952Test accuracy:  0.88
+Epoch: 0820 cost = 0.000114236Test accuracy:  0.88
+Epoch: 0821 cost = 0.000113629Test accuracy:  0.88
+Epoch: 0822 cost = 0.000113012Test accuracy:  0.88
+Epoch: 0823 cost = 0.000112437Test accuracy:  0.88
+Epoch: 0824 cost = 0.000111874Test accuracy:  0.88
+Epoch: 0825 cost = 0.000111158Test accuracy:  0.88
+Epoch: 0826 cost = 0.000110682Test accuracy:  0.88
+Epoch: 0827 cost = 0.000110021Test accuracy:  0.88
+Epoch: 0828 cost = 0.000109381Test accuracy:  0.88
+Epoch: 0829 cost = 0.000108731Test accuracy:  0.88
+Epoch: 0830 cost = 0.000108135Test accuracy:  0.88
+Epoch: 0831 cost = 0.000107452Test accuracy:  0.88
+Epoch: 0832 cost = 0.000106823Test accuracy:  0.88
+Epoch: 0833 cost = 0.000106173Test accuracy:  0.88
+Epoch: 0834 cost = 0.000105577Test accuracy:  0.88
+Epoch: 0835 cost = 0.000105024Test accuracy:  0.88
+Epoch: 0836 cost = 0.000104363Test accuracy:  0.88
+Epoch: 0837 cost = 0.000103746Test accuracy:  0.88
+Epoch: 0838 cost = 0.000103247Test accuracy:  0.88
+Epoch: 0839 cost = 0.000102532Test accuracy:  0.88
+Epoch: 0840 cost = 0.000102044Test accuracy:  0.88
+Epoch: 0841 cost = 0.000101502Test accuracy:  0.88
+Epoch: 0842 cost = 0.000100874Test accuracy:  0.88
+Epoch: 0843 cost = 0.000100354Test accuracy:  0.88
+Epoch: 0844 cost = 0.000099768Test accuracy:  0.88
+Epoch: 0845 cost = 0.000099129Test accuracy:  0.88
+Epoch: 0846 cost = 0.000098533Test accuracy:  0.88
+Epoch: 0847 cost = 0.000098034Test accuracy:  0.88
+Epoch: 0848 cost = 0.000097460Test accuracy:  0.88
+Epoch: 0849 cost = 0.000096929Test accuracy:  0.88
+Epoch: 0850 cost = 0.000096322Test accuracy:  0.88
+Epoch: 0851 cost = 0.000095758Test accuracy:  0.88
+Epoch: 0852 cost = 0.000095195Test accuracy:  0.88
+Epoch: 0853 cost = 0.000094718Test accuracy:  0.88
+Epoch: 0854 cost = 0.000094285Test accuracy:  0.88
+Epoch: 0855 cost = 0.000093894Test accuracy:  0.88
+Epoch: 0856 cost = 0.000093396Test accuracy:  0.88
+Epoch: 0857 cost = 0.000092735Test accuracy:  0.88
+Epoch: 0858 cost = 0.000092160Test accuracy:  0.88
+Epoch: 0859 cost = 0.000091608Test accuracy:  0.88
+Epoch: 0860 cost = 0.000091033Test accuracy:  0.88
+Epoch: 0861 cost = 0.000090437Test accuracy:  0.88
+Epoch: 0862 cost = 0.000089960Test accuracy:  0.88
+Epoch: 0863 cost = 0.000089386Test accuracy:  0.88
+Epoch: 0864 cost = 0.000088757Test accuracy:  0.88
+Epoch: 0865 cost = 0.000088302Test accuracy:  0.88
+Epoch: 0866 cost = 0.000087706Test accuracy:  0.88
+Epoch: 0867 cost = 0.000087294Test accuracy:  0.88
+Epoch: 0868 cost = 0.000086904Test accuracy:  0.88
+Epoch: 0869 cost = 0.000086536Test accuracy:  0.88
+Epoch: 0870 cost = 0.000086178Test accuracy:  0.88
+Epoch: 0871 cost = 0.000085701Test accuracy:  0.88
+Epoch: 0872 cost = 0.000085159Test accuracy:  0.88
+Epoch: 0873 cost = 0.000084607Test accuracy:  0.88
+Epoch: 0874 cost = 0.000083978Test accuracy:  0.88
+Epoch: 0875 cost = 0.000083469Test accuracy:  0.88
+Epoch: 0876 cost = 0.000083003Test accuracy:  0.88
+Epoch: 0877 cost = 0.000082558Test accuracy:  0.88
+Epoch: 0878 cost = 0.000081984Test accuracy:  0.88
+Epoch: 0879 cost = 0.000081453Test accuracy:  0.88
+Epoch: 0880 cost = 0.000080998Test accuracy:  0.88
+Epoch: 0881 cost = 0.000080478Test accuracy:  0.88
+Epoch: 0882 cost = 0.000080098Test accuracy:  0.88
+Epoch: 0883 cost = 0.000079687Test accuracy:  0.88
+Epoch: 0884 cost = 0.000079394Test accuracy:  0.88
+Epoch: 0885 cost = 0.000079036Test accuracy:  0.88
+Epoch: 0886 cost = 0.000078603Test accuracy:  0.88
+Epoch: 0887 cost = 0.000078267Test accuracy:  0.88
+Epoch: 0888 cost = 0.000077898Test accuracy:  0.88
+Epoch: 0889 cost = 0.000077357Test accuracy:  0.88
+Epoch: 0890 cost = 0.000076782Test accuracy:  0.88
+Epoch: 0891 cost = 0.000076240Test accuracy:  0.88
+Epoch: 0892 cost = 0.000075720Test accuracy:  0.88
+Epoch: 0893 cost = 0.000075232Test accuracy:  0.88
+Epoch: 0894 cost = 0.000074777Test accuracy:  0.88
+Epoch: 0895 cost = 0.000074333Test accuracy:  0.88
+Epoch: 0896 cost = 0.000073921Test accuracy:  0.88
+Epoch: 0897 cost = 0.000073444Test accuracy:  0.88
+Epoch: 0898 cost = 0.000073032Test accuracy:  0.88
+Epoch: 0899 cost = 0.000072675Test accuracy:  0.88
+Epoch: 0900 cost = 0.000072339Test accuracy:  0.88
+Epoch: 0901 cost = 0.000071970Test accuracy:  0.88
+Epoch: 0902 cost = 0.000071580Test accuracy:  0.88
+Epoch: 0903 cost = 0.000071212Test accuracy:  0.88
+Epoch: 0904 cost = 0.000070973Test accuracy:  0.88
+Epoch: 0905 cost = 0.000070637Test accuracy:  0.88
+Epoch: 0906 cost = 0.000070291Test accuracy:  0.88
+Epoch: 0907 cost = 0.000069814Test accuracy:  0.88
+Epoch: 0908 cost = 0.000069369Test accuracy:  0.88
+Epoch: 0909 cost = 0.000068708Test accuracy:  0.88
+Epoch: 0910 cost = 0.000068253Test accuracy:  0.88
+Epoch: 0911 cost = 0.000067874Test accuracy:  0.88
+Epoch: 0912 cost = 0.000067516Test accuracy:  0.88
+Epoch: 0913 cost = 0.000067094Test accuracy:  0.88
+Epoch: 0914 cost = 0.000066747Test accuracy:  0.88
+Epoch: 0915 cost = 0.000066172Test accuracy:  0.88
+Epoch: 0916 cost = 0.000065793Test accuracy:  0.88
+Epoch: 0917 cost = 0.000065381Test accuracy:  0.88
+Epoch: 0918 cost = 0.000065067Test accuracy:  0.88
+Epoch: 0919 cost = 0.000064731Test accuracy:  0.88
+Epoch: 0920 cost = 0.000064384Test accuracy:  0.88
+Epoch: 0921 cost = 0.000064232Test accuracy:  0.88
+Epoch: 0922 cost = 0.000063962Test accuracy:  0.88
+Epoch: 0923 cost = 0.000063691Test accuracy:  0.88
+Epoch: 0924 cost = 0.000063376Test accuracy:  0.88
+Epoch: 0925 cost = 0.000063149Test accuracy:  0.88
+Epoch: 0926 cost = 0.000062683Test accuracy:  0.88
+Epoch: 0927 cost = 0.000062217Test accuracy:  0.88
+Epoch: 0928 cost = 0.000061772Test accuracy:  0.88
+Epoch: 0929 cost = 0.000061350Test accuracy:  0.88
+Epoch: 0930 cost = 0.000060905Test accuracy:  0.88
+Epoch: 0931 cost = 0.000060548Test accuracy:  0.88
+Epoch: 0932 cost = 0.000060125Test accuracy:  0.88
+Epoch: 0933 cost = 0.000059670Test accuracy:  0.88
+Epoch: 0934 cost = 0.000059291Test accuracy:  0.88
+Epoch: 0935 cost = 0.000058846Test accuracy:  0.88
+Epoch: 0936 cost = 0.000058532Test accuracy:  0.88
+Epoch: 0937 cost = 0.000058272Test accuracy:  0.88
+Epoch: 0938 cost = 0.000057990Test accuracy:  0.88
+Epoch: 0939 cost = 0.000057763Test accuracy:  0.88
+Epoch: 0940 cost = 0.000057383Test accuracy:  0.88
+Epoch: 0941 cost = 0.000057069Test accuracy:  0.88
+Epoch: 0942 cost = 0.000056885Test accuracy:  0.88
+Epoch: 0943 cost = 0.000056646Test accuracy:  0.88
+Epoch: 0944 cost = 0.000056462Test accuracy:  0.88
+Epoch: 0945 cost = 0.000056213Test accuracy:  0.88
+Epoch: 0946 cost = 0.000055985Test accuracy:  0.88
+Epoch: 0947 cost = 0.000055758Test accuracy:  0.88
+Epoch: 0948 cost = 0.000055476Test accuracy:  0.88
+Epoch: 0949 cost = 0.000054934Test accuracy:  0.88
+Epoch: 0950 cost = 0.000054576Test accuracy:  0.88
+Epoch: 0951 cost = 0.000054132Test accuracy:  0.88
+Epoch: 0952 cost = 0.000053688Test accuracy:  0.88
+Epoch: 0953 cost = 0.000053395Test accuracy:  0.88
+Epoch: 0954 cost = 0.000053070Test accuracy:  0.88
+Epoch: 0955 cost = 0.000052691Test accuracy:  0.88
+Epoch: 0956 cost = 0.000052311Test accuracy:  0.88
+Epoch: 0957 cost = 0.000051932Test accuracy:  0.88
+Epoch: 0958 cost = 0.000051585Test accuracy:  0.88
+Epoch: 0959 cost = 0.000051293Test accuracy:  0.88
+Epoch: 0960 cost = 0.000051054Test accuracy:  0.88
+Epoch: 0961 cost = 0.000050794Test accuracy:  0.88
+Epoch: 0962 cost = 0.000050621Test accuracy:  0.88
+Epoch: 0963 cost = 0.000050339Test accuracy:  0.88
+Epoch: 0964 cost = 0.000050111Test accuracy:  0.88
+Epoch: 0965 cost = 0.000049851Test accuracy:  0.88
+Epoch: 0966 cost = 0.000049548Test accuracy:  0.88
+Epoch: 0967 cost = 0.000049288Test accuracy:  0.88
+Epoch: 0968 cost = 0.000049028Test accuracy:  0.88
+Epoch: 0969 cost = 0.000048778Test accuracy:  0.88
+Epoch: 0970 cost = 0.000048681Test accuracy:  0.88
+Epoch: 0971 cost = 0.000048432Test accuracy:  0.88
+Epoch: 0972 cost = 0.000048258Test accuracy:  0.88
+Epoch: 0973 cost = 0.000048085Test accuracy:  0.88
+Epoch: 0974 cost = 0.000047836Test accuracy:  0.88
+Epoch: 0975 cost = 0.000047370Test accuracy:  0.88
+Epoch: 0976 cost = 0.000047023Test accuracy:  0.88
+Epoch: 0977 cost = 0.000046654Test accuracy:  0.88
+Epoch: 0978 cost = 0.000046286Test accuracy:  0.88
+Epoch: 0979 cost = 0.000045939Test accuracy:  0.88
+Epoch: 0980 cost = 0.000045571Test accuracy:  0.88
+Epoch: 0981 cost = 0.000045126Test accuracy:  0.88
+Epoch: 0982 cost = 0.000044736Test accuracy:  0.88
+Epoch: 0983 cost = 0.000044465Test accuracy:  0.88
+Epoch: 0984 cost = 0.000044227Test accuracy:  0.88
+Epoch: 0985 cost = 0.000043923Test accuracy:  0.88
+Epoch: 0986 cost = 0.000043761Test accuracy:  0.88
+Epoch: 0987 cost = 0.000043555Test accuracy:  0.88
+Epoch: 0988 cost = 0.000043349Test accuracy:  0.88
+Epoch: 0989 cost = 0.000043132Test accuracy:  0.88
+Epoch: 0990 cost = 0.000042915Test accuracy:  0.88
+Epoch: 0991 cost = 0.000042764Test accuracy:  0.88
+Epoch: 0992 cost = 0.000042569Test accuracy:  0.88
+Epoch: 0993 cost = 0.000042363Test accuracy:  0.88
+Epoch: 0994 cost = 0.000042233Test accuracy:  0.88
+Epoch: 0995 cost = 0.000042059Test accuracy:  0.88
+Epoch: 0996 cost = 0.000041908Test accuracy:  0.88
+Epoch: 0997 cost = 0.000041734Test accuracy:  0.88
+Epoch: 0998 cost = 0.000041593Test accuracy:  0.88
+Epoch: 0999 cost = 0.000041463Test accuracy:  0.88
+Epoch: 1000 cost = 0.000041257Test accuracy:  0.88
+Epoch: 1001 cost = 0.000041116Test accuracy:  0.88
+Epoch: 1002 cost = 0.000040954Test accuracy:  0.88
+Epoch: 1003 cost = 0.000040802Test accuracy:  0.88
+Epoch: 1004 cost = 0.000040380Test accuracy:  0.88
+Epoch: 1005 cost = 0.000039979Test accuracy:  0.88
+Epoch: 1006 cost = 0.000039621Test accuracy:  0.88
+Epoch: 1007 cost = 0.000039252Test accuracy:  0.88
+Epoch: 1008 cost = 0.000038971Test accuracy:  0.88
+Epoch: 1009 cost = 0.000038667Test accuracy:  0.88
+Epoch: 1010 cost = 0.000038266Test accuracy:  0.88
+Epoch: 1011 cost = 0.000037995Test accuracy:  0.88
+Epoch: 1012 cost = 0.000037703Test accuracy:  0.88
+Epoch: 1013 cost = 0.000037453Test accuracy:  0.88
+Epoch: 1014 cost = 0.000037215Test accuracy:  0.88
+Epoch: 1015 cost = 0.000036977Test accuracy:  0.88
+Epoch: 1016 cost = 0.000036782Test accuracy:  0.88
+Epoch: 1017 cost = 0.000036608Test accuracy:  0.88
+Epoch: 1018 cost = 0.000036424Test accuracy:  0.88
+Epoch: 1019 cost = 0.000036240Test accuracy:  0.88
+Epoch: 1020 cost = 0.000036066Test accuracy:  0.88
+Epoch: 1021 cost = 0.000035936Test accuracy:  0.88
+Epoch: 1022 cost = 0.000035752Test accuracy:  0.88
+Epoch: 1023 cost = 0.000035557Test accuracy:  0.88
+Epoch: 1024 cost = 0.000035438Test accuracy:  0.88
+Epoch: 1025 cost = 0.000035308Test accuracy:  0.88
+Epoch: 1026 cost = 0.000035221Test accuracy:  0.88
+Epoch: 1027 cost = 0.000035037Test accuracy:  0.88
+Epoch: 1028 cost = 0.000034928Test accuracy:  0.88
+Epoch: 1029 cost = 0.000034733Test accuracy:  0.88
+Epoch: 1030 cost = 0.000034614Test accuracy:  0.88
+Epoch: 1031 cost = 0.000034452Test accuracy:  0.88
+Epoch: 1032 cost = 0.000034354Test accuracy:  0.88
+Epoch: 1033 cost = 0.000034148Test accuracy:  0.88
+Epoch: 1034 cost = 0.000033996Test accuracy:  0.88
+Epoch: 1035 cost = 0.000033834Test accuracy:  0.88
+Epoch: 1036 cost = 0.000033671Test accuracy:  0.88
+Epoch: 1037 cost = 0.000033585Test accuracy:  0.88
+Epoch: 1038 cost = 0.000033400Test accuracy:  0.88
+Epoch: 1039 cost = 0.000033119Test accuracy:  0.88
+Epoch: 1040 cost = 0.000032739Test accuracy:  0.88
+Epoch: 1041 cost = 0.000032360Test accuracy:  0.88
+Epoch: 1042 cost = 0.000032035Test accuracy:  0.88
+Epoch: 1043 cost = 0.000031775Test accuracy:  0.88
+Epoch: 1044 cost = 0.000031471Test accuracy:  0.88
+Epoch: 1045 cost = 0.000031060Test accuracy:  0.88
+Epoch: 1046 cost = 0.000030756Test accuracy:  0.88
+Epoch: 1047 cost = 0.000030496Test accuracy:  0.88
+Epoch: 1048 cost = 0.000030333Test accuracy:  0.88
+Epoch: 1049 cost = 0.000030138Test accuracy:  0.88
+Epoch: 1050 cost = 0.000029965Test accuracy:  0.88
+Epoch: 1051 cost = 0.000029824Test accuracy:  0.88
+Epoch: 1052 cost = 0.000029629Test accuracy:  0.88
+Epoch: 1053 cost = 0.000029488Test accuracy:  0.88
+Epoch: 1054 cost = 0.000029358Test accuracy:  0.88
+Epoch: 1055 cost = 0.000029185Test accuracy:  0.88
+Epoch: 1056 cost = 0.000029076Test accuracy:  0.88
+Epoch: 1057 cost = 0.000028935Test accuracy:  0.88
+Epoch: 1058 cost = 0.000028762Test accuracy:  0.88
+Epoch: 1059 cost = 0.000028643Test accuracy:  0.88
+Epoch: 1060 cost = 0.000028534Test accuracy:  0.88
+Epoch: 1061 cost = 0.000028437Test accuracy:  0.88
+Epoch: 1062 cost = 0.000028296Test accuracy:  0.88
+Epoch: 1063 cost = 0.000028198Test accuracy:  0.88
+Epoch: 1064 cost = 0.000028090Test accuracy:  0.88
+Epoch: 1065 cost = 0.000027993Test accuracy:  0.88
+Epoch: 1066 cost = 0.000027852Test accuracy:  0.88
+Epoch: 1067 cost = 0.000027732Test accuracy:  0.88
+Epoch: 1068 cost = 0.000027635Test accuracy:  0.88
+Epoch: 1069 cost = 0.000027516Test accuracy:  0.88
+Epoch: 1070 cost = 0.000027364Test accuracy:  0.88
+Epoch: 1071 cost = 0.000027299Test accuracy:  0.88
+Epoch: 1072 cost = 0.000027201Test accuracy:  0.88
+Epoch: 1073 cost = 0.000027104Test accuracy:  0.88
+Epoch: 1074 cost = 0.000027006Test accuracy:  0.88
+Epoch: 1075 cost = 0.000026931Test accuracy:  0.88
+Epoch: 1076 cost = 0.000026811Test accuracy:  0.88
+Epoch: 1077 cost = 0.000026768Test accuracy:  0.88
+Epoch: 1078 cost = 0.000026670Test accuracy:  0.88
+Epoch: 1079 cost = 0.000026616Test accuracy:  0.88
+Epoch: 1080 cost = 0.000026540Test accuracy:  0.88
+Epoch: 1081 cost = 0.000026443Test accuracy:  0.88
+Epoch: 1082 cost = 0.000026356Test accuracy:  0.88
+Epoch: 1083 cost = 0.000026064Test accuracy:  0.88
+Epoch: 1084 cost = 0.000025695Test accuracy:  0.88
+Epoch: 1085 cost = 0.000025370Test accuracy:  0.88
+Epoch: 1086 cost = 0.000025045Test accuracy:  0.88
+Epoch: 1087 cost = 0.000024806Test accuracy:  0.88
+Epoch: 1088 cost = 0.000024525Test accuracy:  0.88
+Epoch: 1089 cost = 0.000024221Test accuracy:  0.88
+Epoch: 1090 cost = 0.000024037Test accuracy:  0.88
+Epoch: 1091 cost = 0.000023820Test accuracy:  0.88
+Epoch: 1092 cost = 0.000023625Test accuracy:  0.88
+Epoch: 1093 cost = 0.000023441Test accuracy:  0.88
+Epoch: 1094 cost = 0.000023343Test accuracy:  0.88
+Epoch: 1095 cost = 0.000023203Test accuracy:  0.88
+Epoch: 1096 cost = 0.000023072Test accuracy:  0.88
+Epoch: 1097 cost = 0.000022953Test accuracy:  0.88
+Epoch: 1098 cost = 0.000022845Test accuracy:  0.88
+Epoch: 1099 cost = 0.000022758Test accuracy:  0.88
+Epoch: 1100 cost = 0.000022617Test accuracy:  0.88
+Epoch: 1101 cost = 0.000022498Test accuracy:  0.88
+Epoch: 1102 cost = 0.000022368Test accuracy:  0.88
+Epoch: 1103 cost = 0.000022303Test accuracy:  0.88
+Epoch: 1104 cost = 0.000022173Test accuracy:  0.88
+Epoch: 1105 cost = 0.000022108Test accuracy:  0.88
+Epoch: 1106 cost = 0.000022021Test accuracy:  0.88
+Epoch: 1107 cost = 0.000021902Test accuracy:  0.88
+Epoch: 1108 cost = 0.000021837Test accuracy:  0.88
+Epoch: 1109 cost = 0.000021761Test accuracy:  0.88
+Epoch: 1110 cost = 0.000021653Test accuracy:  0.88
+Epoch: 1111 cost = 0.000021523Test accuracy:  0.88
+Epoch: 1112 cost = 0.000021479Test accuracy:  0.88
+Epoch: 1113 cost = 0.000021349Test accuracy:  0.88
+Epoch: 1114 cost = 0.000021263Test accuracy:  0.88
+Epoch: 1115 cost = 0.000021165Test accuracy:  0.88
+Epoch: 1116 cost = 0.000021100Test accuracy:  0.88
+Epoch: 1117 cost = 0.000021003Test accuracy:  0.88
+Epoch: 1118 cost = 0.000020872Test accuracy:  0.88
+Epoch: 1119 cost = 0.000020807Test accuracy:  0.88
+Epoch: 1120 cost = 0.000020742Test accuracy:  0.88
+Epoch: 1121 cost = 0.000020688Test accuracy:  0.88
+Epoch: 1122 cost = 0.000020623Test accuracy:  0.88
+Epoch: 1123 cost = 0.000020526Test accuracy:  0.88
+Epoch: 1124 cost = 0.000020450Test accuracy:  0.88
+Epoch: 1125 cost = 0.000020363Test accuracy:  0.88
+Epoch: 1126 cost = 0.000020298Test accuracy:  0.88
+Epoch: 1127 cost = 0.000020201Test accuracy:  0.88
+Epoch: 1128 cost = 0.000020071Test accuracy:  0.88
+Epoch: 1129 cost = 0.000020027Test accuracy:  0.88
+Epoch: 1130 cost = 0.000019951Test accuracy:  0.88
+Epoch: 1131 cost = 0.000019821Test accuracy:  0.88
+Epoch: 1132 cost = 0.000019670Test accuracy:  0.88
+Epoch: 1133 cost = 0.000019615Test accuracy:  0.88
+---------------------------------------------------------------------------
+KeyboardInterrupt                         Traceback (most recent call last)
+<ipython-input-18-ea695e17b974> in <module>
+     13             batch_y = tr_labels[start:end]
+     14 
+---> 15             _, c = session.run([optimizer, loss_f], feed_dict={x: batch_x, y : batch_y})
+     16             avg_cost += c / total_batch
+     17 
+
+~\Miniconda3\lib\site-packages\tensorflow\python\client\session.py in run(self, fetches, feed_dict, options, run_metadata)
+    927     try:
+    928       result = self._run(None, fetches, feed_dict, options_ptr,
+--> 929                          run_metadata_ptr)
+    930       if run_metadata:
+    931         proto_data = tf_session.TF_GetBuffer(run_metadata_ptr)
+
+~\Miniconda3\lib\site-packages\tensorflow\python\client\session.py in _run(self, handle, fetches, feed_dict, options, run_metadata)
+   1150     if final_fetches or final_targets or (handle and feed_dict_tensor):
+   1151       results = self._do_run(handle, final_targets, final_fetches,
+-> 1152                              feed_dict_tensor, options, run_metadata)
+   1153     else:
+   1154       results = []
+
+~\Miniconda3\lib\site-packages\tensorflow\python\client\session.py in _do_run(self, handle, target_list, fetch_list, feed_dict, options, run_metadata)
+   1326     if handle is None:
+   1327       return self._do_call(_run_fn, feeds, fetches, targets, options,
+-> 1328                            run_metadata)
+   1329     else:
+   1330       return self._do_call(_prun_fn, handle, feeds, fetches)
+
+~\Miniconda3\lib\site-packages\tensorflow\python\client\session.py in _do_call(self, fn, *args)
+   1332   def _do_call(self, fn, *args):
+   1333     try:
+-> 1334       return fn(*args)
+   1335     except errors.OpError as e:
+   1336       message = compat.as_text(e.message)
+
+~\Miniconda3\lib\site-packages\tensorflow\python\client\session.py in _run_fn(feed_dict, fetch_list, target_list, options, run_metadata)
+   1317       self._extend_graph()
+   1318       return self._call_tf_sessionrun(
+-> 1319           options, feed_dict, fetch_list, target_list, run_metadata)
+   1320 
+   1321     def _prun_fn(handle, feed_dict, fetch_list):
+
+~\Miniconda3\lib\site-packages\tensorflow\python\client\session.py in _call_tf_sessionrun(self, options, feed_dict, fetch_list, target_list, run_metadata)
+   1405     return tf_session.TF_SessionRun_wrapper(
+   1406         self._session, options, feed_dict, fetch_list, target_list,
+-> 1407         run_metadata)
+   1408 
+   1409   def _call_tf_sessionprun(self, handle, feed_dict, fetch_list):
+
+KeyboardInterrupt: 
+
+?
+# 안뇽 
+?

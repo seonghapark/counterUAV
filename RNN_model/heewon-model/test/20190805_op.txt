@@ -1,0 +1,3420 @@
+Jupyter Notebook
+RNN-Model-wav-4
+Last Checkpoint: 3시간 전
+(unsaved changes)
+Current Kernel Logo
+Python 3 
+File
+Edit
+View
+Insert
+Cell
+Kernel
+Help
+
+import glob
+import os
+import random
+import librosa
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from tensorflow.python.ops import rnn, rnn_cell
+import numpy as np
+class CUAV_Model:
+    
+    def __init__(self):
+        self.n_hidden = 40
+        pass
+?
+    def windows(self, data, window_size):
+        start = 0
+        while start < len(data):
+            yield start, start + window_size
+            start += (window_size / 2) #윈도우를 더 겹쳐서 밀음
+?
+    # 각 33개 input, 각 6개 label
+?
+    def extract_features(self, file_path, file_label, file_ext="*.wav",bands = 20, frames = 41):
+        window_size = 512 * (frames - 1)
+        mfccs = []
+        log_specgrams = []
+        features = []
+        labels = []
+        sound_clip, s = librosa.load(file_path)
+        #print(type(sound_clip))
+        if file_label=='other':
+            label_code = 0
+        elif file_label=='person':
+            label_code = 1
+        elif file_label=='car':
+            label_code = 2
+        elif file_label=='drone':
+            label_code = 3
+?
+        #print(file_label, label_code)
+        for (start,end) in self.windows(sound_clip, window_size):
+            start = int(start)
+            end = int(end)
+            if(len(sound_clip[start:end]) == window_size):
+                signal = sound_clip[start:end]
+?
+                melspec = librosa.feature.melspectrogram(signal, n_mels = bands)
+                logspec = librosa.amplitude_to_db(melspec)
+                logspec = logspec.T.flatten()[:, np.newaxis].T
+                #print(1, logspec.shape)
+                log_specgrams.append(logspec)
+?
+                mfcc = librosa.feature.mfcc(y=signal, sr=s, n_mfcc = bands).T.flatten()[:, np.newaxis].T
+                mfccs.append(mfcc)
+                #print(2, mfcc.shape)
+                features = np.hstack((mfccs, log_specgrams))
+                labels.append(label_code)         
+        features = np.asarray(features).reshape(len(mfccs), frames, bands*2)
+        #print(features.shape)
+        return np.array(features), np.array(labels,dtype = np.int)
+?
+    def extract_features_for_predict(self, file_path, bands = 20, frames = 41):
+        window_size = 512 * (frames - 1)
+        mfccs = []
+        log_specgrams = []
+        features = []
+        sound_clip, s = librosa.load(file_path)
+?
+        for (start,end) in self.windows(sound_clip,window_size):
+            start = int(start)
+            end = int(end)
+            if(len(sound_clip[start:end]) == window_size):
+                signal = sound_clip[start:end]
+?
+                melspec = librosa.feature.melspectrogram(signal, n_mels = bands)
+                logspec = librosa.amplitude_to_db(melspec)
+                logspec = logspec.T.flatten()[:, np.newaxis].T
+                log_specgrams.append(logspec)
+?
+                mfcc = librosa.feature.mfcc(y=signal, sr=s, n_mfcc = bands).T.flatten()[:, np.newaxis].T
+                mfccs.append(mfcc)
+                features = np.hstack((mfccs, log_specgrams))      
+?
+        features = np.asarray(features).reshape(len(mfccs), frames, bands*2)
+        #print(features.shape)
+        return np.array(features)
+?
+    def one_hot_encode(self, labels):
+        n_labels = len(labels)
+        n_unique_labels = len(np.unique(labels))
+        one_hot_encode = np.zeros((n_labels,n_unique_labels))
+        one_hot_encode[np.arange(n_labels), labels] = 1
+        return one_hot_encode
+    
+    def make_data(self):
+        wav_file_path_training = 'C://slice_wav_data/training/'
+        file_list_training = os.listdir(wav_file_path_training)
+?
+        tr_features = []
+        tr_labels = []
+        for f in file_list_training:
+            print(f)
+            file_label = f.split("_")[0]
+            if file_label=='car' or file_label=='drone': ## 2개씩만 하는 코드
+                continue
+            features_temp, labels_temp = self.extract_features(wav_file_path_training + f, file_label)
+            for tr_f in features_temp:
+                tr_features.append(tr_f)
+            for tr_l in labels_temp:
+                tr_labels.append(tr_l)
+?
+?
+        tmp = [[x,y] for x,y in zip(tr_features, tr_labels)]
+        random.shuffle(tmp)
+        tr_features = [n[0] for n in tmp]
+        tr_labels = [n[1] for n in tmp]
+?
+?
+        wav_file_path_test = 'C://slice_wav_data/testing/'
+        file_list_test = os.listdir(wav_file_path_test)
+?
+        ts_features = []
+        ts_labels = []
+        for f in file_list_test:
+            file_label = f.split("_")[0]
+            if file_label=='car' or file_label=='drone': ## 2개씩만 하는 코드
+                continue
+            features_temp, labels_temp = self.extract_features(wav_file_path_test + f, file_label)
+            for ts_f in features_temp:
+                ts_features.append(ts_f)
+            for ts_l in labels_temp:
+                ts_labels.append(ts_l)
+?
+        tr_labels = self.one_hot_encode(tr_labels)
+        ts_labels = self.one_hot_encode(ts_labels)
+?
+        self.tr_features = np.array(tr_features)
+        self.tr_labels = np.array(tr_labels)
+?
+        self.ts_features = np.array(ts_features)
+        self.ts_labels = np.array(ts_labels)
+        
+        
+    def RNN(self, x, weight, bias):
+        cell = rnn_cell.LSTMCell(self.n_hidden,state_is_tuple = True)
+        cell = rnn_cell.MultiRNNCell([cell] * 8, state_is_tuple=True)
+        output, state = tf.nn.dynamic_rnn(cell, x, dtype = tf.float32)
+        output = tf.transpose(output, [1, 0, 2])
+        last = tf.gather(output, int(output.get_shape()[0]) - 1)
+        return tf.nn.softmax(tf.matmul(last, weight) + bias)
+    
+    def graph_setting(self):
+        tf.reset_default_graph()
+        self.session = tf.Session()
+?
+        learning_rate = 0.0003
+?
+        # Network Parameters
+        n_input = 40
+        n_steps = 41
+        n_classes = 2
+        
+        #n_classes = 4  # 2라벨이면 2
+?
+        #앞에거는 hidden *2, 뒤에거는 n_input + n_hidden
+?
+        self.x = tf.placeholder("float", [None, n_steps, n_input])
+        self.y = tf.placeholder("float", [None, n_classes])
+?
+        
+        weight = tf.get_variable("W1", shape=[self.n_hidden, n_classes], initializer=tf.contrib.layers.xavier_initializer())
+        bias = tf.get_variable("b1", shape=[n_classes], initializer=tf.contrib.layers.xavier_initializer())
+        #weight = tf.Variable(tf.random_normal([self.n_hidden, n_classes]))
+        #bias = tf.Variable(tf.random_normal([n_classes]))
+        
+        self.prediction = self.RNN(self.x, weight, bias)
+        self.prediction_str = tf.argmax(self.prediction, 1)
+        #prediction_str, prediction, x, 
+        # Define loss and optimizer
+        self.loss_f = -tf.reduce_sum(self.y * tf.log(self.prediction))
+        self.optimizer = tf.train.AdamOptimizer(learning_rate = learning_rate).minimize(self.loss_f)
+?
+        # Evaluate model
+        self.correct_pred = tf.equal(tf.argmax(self.prediction,1), tf.argmax(self.y,1))
+        self.accuracy = tf.reduce_mean(tf.cast(self.correct_pred, tf.float32))
+?
+        # Initializing the variables
+        
+    def training(self):
+        init = tf.global_variables_initializer()
+        self.session.run(init)
+?
+        training_epochs = 10000
+        batch_size = 54 #1188과 216의 최대공약수는 54
+        
+        for epoch in range(training_epochs):
+            avg_cost = 0
+            total_batch = int(len(self.tr_features) / batch_size)
+?
+            for i in range(total_batch):
+                start = ((i+1) * batch_size) - batch_size
+                end = ((i+1) * batch_size)
+                batch_x = self.tr_features[start:end]
+                batch_y = self.tr_labels[start:end]
+?
+                _, c = self.session.run([self.optimizer, self.loss_f], feed_dict={self.x: batch_x, self.y : batch_y})
+                avg_cost += c / total_batch
+?
+            print('Epoch:', '%04d' % (epoch + 1), 'cost =', '{:.9f}'.format(avg_cost), end='')
+            print('Test accuracy: ',round(self.session.run(self.accuracy, feed_dict={self.x: self.ts_features, self.y: self.ts_labels}) , 3))
+            if epoch % 100 == 0:
+                self.save_network(epoch)
+        
+        print('Learning Finished!')
+?
+        
+    def save_network(self, step):
+        saver = tf.train.Saver()
+        saver.save(self.session, './rnn_graph_save_5/cuav_rnn.ckpt', step)
+        print('Graph Saved! ')
+        
+        
+    def predict(self, file_source):
+        print(file_source)
+        data_label = file_source.split('/')[-1].split('_')[0]
+        data_to_predict = self.extract_features_for_predict(file_source)
+        print(data_to_predict.shape)
+        result_list = self.session.run(self.prediction_str, feed_dict={self.x: data_to_predict})
+        print(result_list)
+        result_list = list(result_list)
+        label_count = {'others': 0, 'person': 0, 'car': 0, 'drone': 0,}
+?
+        total = 0
+        for i, key in enumerate(list(label_count.keys())):
+            label_count[key] = (result_list.count(i))
+            print(key, int(label_count[key])/data_to_predict.shape[0])
+?
+        t = list(zip(list(label_count.values()), list(label_count.keys())))
+        t.sort(reverse=True)
+        print(t)
+        print("")
+        return t[0][1]
+        #print(t[0][1][:-1])
+        #if t[0][1] == data_label or t[0][1][:-1] == data_label:
+        #    return True, data_label
+        #else :
+        #    return False, data_label
+?
+        #for i in range(data_to_predict.shape[0]):
+            #temp_output = session.run(prediction, feed_dict={x: data_to_predict[i]})
+            #print(temp_output)
+        
+    def restore_graph(self, step):
+        save_file = './rnn_graph_save_5/cuav_rnn.ckpt' + '-' + str(step)
+        saver = tf.train.Saver()
+        saver.restore(self.session, save_file)
+        
+?
+        #sess = tf.InteractiveSession()
+        #saver = tf.train.import_meta_graph('./cuav_rnn.ckpt.meta')
+        #saver.restore(self.sess,'./cuav_rnn.ckpt.ckpt')
+?
+        #graph = tf.get_default_graph()
+        #self.X =  self.sess.graph.get_tensor_by_name("Placeholder:0")
+        #self.Y =  self.sess.graph.get_tensor_by_name("Placeholder_1:0")
+    
+m1 = CUAV_Model()
+m1.make_data()
+car_046.wav
+car_1042.wav
+car_1142.wav
+car_1144.wav
+car_1146.wav
+car_1242.wav
+car_134.wav
+car_1346.wav
+car_144.wav
+car_216.wav
+car_242.wav
+car_246.wav
+car_342.wav
+car_346.wav
+car_434.wav
+car_442.wav
+car_444.wav
+car_534.wav
+car_542.wav
+car_544.wav
+car_546.wav
+car_634.wav
+car_642.wav
+car_644.wav
+car_646.wav
+car_734.wav
+car_742.wav
+car_744.wav
+car_746.wav
+car_834.wav
+car_842.wav
+car_844.wav
+car_942.wav
+drone_022.wav
+drone_024.wav
+drone_026.wav
+drone_028.wav
+drone_036.wav
+drone_038.wav
+drone_048.wav
+drone_124.wav
+drone_126.wav
+drone_136.wav
+drone_148.wav
+drone_224.wav
+drone_228.wav
+drone_236.wav
+drone_248.wav
+drone_322.wav
+drone_324.wav
+drone_328.wav
+drone_336.wav
+drone_348.wav
+drone_422.wav
+drone_424.wav
+drone_428.wav
+drone_436.wav
+drone_448.wav
+drone_522.wav
+drone_528.wav
+drone_536.wav
+drone_548.wav
+drone_622.wav
+drone_628.wav
+drone_636.wav
+drone_648.wav
+other_435.wav
+other_437.wav
+other_439.wav
+other_440.wav
+other_443.wav
+other_445.wav
+other_447.wav
+other_449.wav
+other_523.wav
+other_525.wav
+other_529.wav
+other_535.wav
+other_537.wav
+other_539.wav
+other_540.wav
+other_543.wav
+other_545.wav
+other_547.wav
+other_549.wav
+other_623.wav
+other_625.wav
+other_629.wav
+other_635.wav
+other_637.wav
+other_639.wav
+other_640.wav
+other_643.wav
+other_645.wav
+other_647.wav
+other_649.wav
+other_723.wav
+other_725.wav
+other_729.wav
+person_1011.wav
+person_1013.wav
+person_1015.wav
+person_1033.wav
+person_1041.wav
+person_1111.wav
+person_1113.wav
+person_1115.wav
+person_1133.wav
+person_1141.wav
+person_1211.wav
+person_1213.wav
+person_1233.wav
+person_1241.wav
+person_1311.wav
+person_1333.wav
+person_1341.wav
+person_1433.wav
+person_711.wav
+person_713.wav
+person_715.wav
+person_733.wav
+person_741.wav
+person_811.wav
+person_813.wav
+person_815.wav
+person_833.wav
+person_841.wav
+person_911.wav
+person_913.wav
+person_915.wav
+person_933.wav
+person_941.wav
+m1.graph_setting()
+m1.tr_features.shape
+(594, 41, 40)
+m1.ts_features.shape
+(108, 41, 40)
+m1.training()
+Epoch: 0001 cost = 37.535909133Test accuracy:  0.5
+Graph Saved! 
+Epoch: 0002 cost = 37.113682834Test accuracy:  0.528
+Epoch: 0003 cost = 36.742719477Test accuracy:  0.519
+Epoch: 0004 cost = 36.123925989Test accuracy:  0.426
+Epoch: 0005 cost = 34.928944328Test accuracy:  0.537
+Epoch: 0006 cost = 33.882735686Test accuracy:  0.546
+Epoch: 0007 cost = 33.491667661Test accuracy:  0.556
+Epoch: 0008 cost = 32.614157937Test accuracy:  0.556
+Epoch: 0009 cost = 30.544006348Test accuracy:  0.62
+Epoch: 0010 cost = 25.863690810Test accuracy:  0.722
+Epoch: 0011 cost = 23.133354707Test accuracy:  0.731
+Epoch: 0012 cost = 21.802880894Test accuracy:  0.611
+Epoch: 0013 cost = 20.870652806Test accuracy:  0.546
+Epoch: 0014 cost = 21.246072596Test accuracy:  0.704
+Epoch: 0015 cost = 20.104318619Test accuracy:  0.648
+Epoch: 0016 cost = 18.566536036Test accuracy:  0.731
+Epoch: 0017 cost = 18.921085184Test accuracy:  0.62
+Epoch: 0018 cost = 17.345046303Test accuracy:  0.685
+Epoch: 0019 cost = 17.018219254Test accuracy:  0.63
+Epoch: 0020 cost = 16.293156884Test accuracy:  0.741
+Epoch: 0021 cost = 16.241743781Test accuracy:  0.685
+Epoch: 0022 cost = 15.125140710Test accuracy:  0.676
+Epoch: 0023 cost = 14.605474039Test accuracy:  0.639
+Epoch: 0024 cost = 13.681392323Test accuracy:  0.722
+Epoch: 0025 cost = 12.965805487Test accuracy:  0.657
+Epoch: 0026 cost = 13.459471963Test accuracy:  0.685
+Epoch: 0027 cost = 11.851297118Test accuracy:  0.648
+Epoch: 0028 cost = 12.294052644Test accuracy:  0.648
+Epoch: 0029 cost = 13.323653308Test accuracy:  0.657
+Epoch: 0030 cost = 11.835977468Test accuracy:  0.639
+Epoch: 0031 cost = 14.921786395Test accuracy:  0.602
+Epoch: 0032 cost = 17.705541784Test accuracy:  0.657
+Epoch: 0033 cost = 11.751842846Test accuracy:  0.685
+Epoch: 0034 cost = 10.791677865Test accuracy:  0.667
+Epoch: 0035 cost = 11.108016578Test accuracy:  0.62
+Epoch: 0036 cost = 11.781869281Test accuracy:  0.639
+Epoch: 0037 cost = 12.692160953Test accuracy:  0.704
+Epoch: 0038 cost = 12.361924692Test accuracy:  0.611
+Epoch: 0039 cost = 12.098149950Test accuracy:  0.667
+Epoch: 0040 cost = 10.826736840Test accuracy:  0.611
+Epoch: 0041 cost = 11.136568676Test accuracy:  0.667
+Epoch: 0042 cost = 10.860529076Test accuracy:  0.648
+Epoch: 0043 cost = 9.643604539Test accuracy:  0.667
+Epoch: 0044 cost = 9.218637943Test accuracy:  0.657
+Epoch: 0045 cost = 10.334886074Test accuracy:  0.657
+Epoch: 0046 cost = 9.148971037Test accuracy:  0.648
+Epoch: 0047 cost = 9.435577219Test accuracy:  0.741
+Epoch: 0048 cost = 9.519110420Test accuracy:  0.657
+Epoch: 0049 cost = 8.794994788Test accuracy:  0.704
+Epoch: 0050 cost = 8.508844679Test accuracy:  0.667
+Epoch: 0051 cost = 9.010101752Test accuracy:  0.657
+Epoch: 0052 cost = 8.061008063Test accuracy:  0.704
+Epoch: 0053 cost = 7.894428773Test accuracy:  0.611
+Epoch: 0054 cost = 8.891586477Test accuracy:  0.639
+Epoch: 0055 cost = 7.683128920Test accuracy:  0.667
+Epoch: 0056 cost = 9.519928455Test accuracy:  0.704
+Epoch: 0057 cost = 9.597676364Test accuracy:  0.639
+Epoch: 0058 cost = 8.904922659Test accuracy:  0.685
+Epoch: 0059 cost = 8.950597546Test accuracy:  0.667
+Epoch: 0060 cost = 7.232382211Test accuracy:  0.731
+Epoch: 0061 cost = 7.489486174Test accuracy:  0.676
+Epoch: 0062 cost = 6.560857253Test accuracy:  0.676
+Epoch: 0063 cost = 6.555170666Test accuracy:  0.676
+Epoch: 0064 cost = 7.612652735Test accuracy:  0.667
+Epoch: 0065 cost = 6.995247277Test accuracy:  0.676
+Epoch: 0066 cost = 5.781216491Test accuracy:  0.769
+Epoch: 0067 cost = 7.831897129Test accuracy:  0.667
+Epoch: 0068 cost = 6.367732872Test accuracy:  0.75
+Epoch: 0069 cost = 6.019525983Test accuracy:  0.657
+Epoch: 0070 cost = 8.165117654Test accuracy:  0.704
+Epoch: 0071 cost = 8.426750357Test accuracy:  0.741
+Epoch: 0072 cost = 5.999269550Test accuracy:  0.694
+Epoch: 0073 cost = 6.457475229Test accuracy:  0.676
+Epoch: 0074 cost = 6.762197429Test accuracy:  0.731
+Epoch: 0075 cost = 5.375516913Test accuracy:  0.741
+Epoch: 0076 cost = 5.768226927Test accuracy:  0.676
+Epoch: 0077 cost = 5.246976072Test accuracy:  0.722
+Epoch: 0078 cost = 5.330909252Test accuracy:  0.722
+Epoch: 0079 cost = 5.607657021Test accuracy:  0.704
+Epoch: 0080 cost = 5.611955729Test accuracy:  0.731
+Epoch: 0081 cost = 5.643116431Test accuracy:  0.722
+Epoch: 0082 cost = 5.499173338Test accuracy:  0.704
+Epoch: 0083 cost = 4.670503638Test accuracy:  0.713
+Epoch: 0084 cost = 5.339769927Test accuracy:  0.722
+Epoch: 0085 cost = 4.750240391Test accuracy:  0.731
+Epoch: 0086 cost = 3.764157685Test accuracy:  0.741
+Epoch: 0087 cost = 6.578767755Test accuracy:  0.639
+Epoch: 0088 cost = 7.995921525Test accuracy:  0.815
+Epoch: 0089 cost = 5.986940666Test accuracy:  0.704
+Epoch: 0090 cost = 7.850379424Test accuracy:  0.75
+Epoch: 0091 cost = 5.433177493Test accuracy:  0.713
+Epoch: 0092 cost = 5.818003720Test accuracy:  0.741
+Epoch: 0093 cost = 6.378435330Test accuracy:  0.713
+Epoch: 0094 cost = 6.621484150Test accuracy:  0.722
+Epoch: 0095 cost = 7.288770112Test accuracy:  0.713
+Epoch: 0096 cost = 7.232301669Test accuracy:  0.741
+Epoch: 0097 cost = 5.875079567Test accuracy:  0.704
+Epoch: 0098 cost = 6.721084833Test accuracy:  0.731
+Epoch: 0099 cost = 10.530030099Test accuracy:  0.639
+Epoch: 0100 cost = 12.101732644Test accuracy:  0.694
+Epoch: 0101 cost = 12.545323719Test accuracy:  0.787
+Graph Saved! 
+Epoch: 0102 cost = 9.785034028Test accuracy:  0.731
+Epoch: 0103 cost = 6.297300144Test accuracy:  0.787
+Epoch: 0104 cost = 4.161327893Test accuracy:  0.806
+Epoch: 0105 cost = 5.368943149Test accuracy:  0.769
+Epoch: 0106 cost = 5.711397518Test accuracy:  0.769
+Epoch: 0107 cost = 5.230303851Test accuracy:  0.787
+Epoch: 0108 cost = 5.121161472Test accuracy:  0.815
+Epoch: 0109 cost = 5.351680387Test accuracy:  0.778
+Epoch: 0110 cost = 4.780241934Test accuracy:  0.833
+Epoch: 0111 cost = 5.968343280Test accuracy:  0.769
+Epoch: 0112 cost = 5.023058003Test accuracy:  0.806
+Epoch: 0113 cost = 4.565748236Test accuracy:  0.787
+Epoch: 0114 cost = 4.711881172Test accuracy:  0.787
+Epoch: 0115 cost = 4.170873274Test accuracy:  0.824
+Epoch: 0116 cost = 5.302330234Test accuracy:  0.769
+Epoch: 0117 cost = 4.991353729Test accuracy:  0.796
+Epoch: 0118 cost = 4.120877147Test accuracy:  0.815
+Epoch: 0119 cost = 4.769171368Test accuracy:  0.769
+Epoch: 0120 cost = 4.835211255Test accuracy:  0.833
+Epoch: 0121 cost = 4.791662661Test accuracy:  0.806
+Epoch: 0122 cost = 5.034224814Test accuracy:  0.806
+Epoch: 0123 cost = 4.019570470Test accuracy:  0.852
+Epoch: 0124 cost = 4.731375651Test accuracy:  0.787
+Epoch: 0125 cost = 4.020303499Test accuracy:  0.833
+Epoch: 0126 cost = 3.140515425Test accuracy:  0.843
+Epoch: 0127 cost = 4.940287417Test accuracy:  0.769
+Epoch: 0128 cost = 4.995389288Test accuracy:  0.833
+Epoch: 0129 cost = 3.981451988Test accuracy:  0.759
+Epoch: 0130 cost = 7.808143204Test accuracy:  0.806
+Epoch: 0131 cost = 5.754179543Test accuracy:  0.843
+Epoch: 0132 cost = 4.248126962Test accuracy:  0.75
+Epoch: 0133 cost = 6.538291422Test accuracy:  0.815
+Epoch: 0134 cost = 4.828871478Test accuracy:  0.861
+Epoch: 0135 cost = 4.108172438Test accuracy:  0.806
+Epoch: 0136 cost = 4.006070896Test accuracy:  0.824
+Epoch: 0137 cost = 3.105450966Test accuracy:  0.843
+Epoch: 0138 cost = 3.966485089Test accuracy:  0.778
+Epoch: 0139 cost = 3.611344229Test accuracy:  0.87
+Epoch: 0140 cost = 3.029259400Test accuracy:  0.824
+Epoch: 0141 cost = 3.867033438Test accuracy:  0.796
+Epoch: 0142 cost = 3.581266035Test accuracy:  0.861
+Epoch: 0143 cost = 3.209918299Test accuracy:  0.815
+Epoch: 0144 cost = 3.545121540Test accuracy:  0.815
+Epoch: 0145 cost = 3.222269345Test accuracy:  0.852
+Epoch: 0146 cost = 2.361836645Test accuracy:  0.843
+Epoch: 0147 cost = 3.297963630Test accuracy:  0.815
+Epoch: 0148 cost = 2.738979421Test accuracy:  0.833
+Epoch: 0149 cost = 2.344094569Test accuracy:  0.852
+Epoch: 0150 cost = 2.766161599Test accuracy:  0.833
+Epoch: 0151 cost = 3.045918015Test accuracy:  0.833
+Epoch: 0152 cost = 2.597559170Test accuracy:  0.833
+Epoch: 0153 cost = 2.086233732Test accuracy:  0.852
+Epoch: 0154 cost = 3.208737701Test accuracy:  0.843
+Epoch: 0155 cost = 2.875165408Test accuracy:  0.824
+Epoch: 0156 cost = 2.571215776Test accuracy:  0.852
+Epoch: 0157 cost = 2.109780704Test accuracy:  0.843
+Epoch: 0158 cost = 5.934599259Test accuracy:  0.787
+Epoch: 0159 cost = 4.371215073Test accuracy:  0.833
+Epoch: 0160 cost = 2.487489375Test accuracy:  0.806
+Epoch: 0161 cost = 2.964530132Test accuracy:  0.833
+Epoch: 0162 cost = 2.508171938Test accuracy:  0.833
+Epoch: 0163 cost = 2.457559737Test accuracy:  0.815
+Epoch: 0164 cost = 3.858708105Test accuracy:  0.806
+Epoch: 0165 cost = 4.073623370Test accuracy:  0.843
+Epoch: 0166 cost = 3.771834341Test accuracy:  0.824
+Epoch: 0167 cost = 2.961078080Test accuracy:  0.861
+Epoch: 0168 cost = 2.169507197Test accuracy:  0.852
+Epoch: 0169 cost = 1.916482381Test accuracy:  0.861
+Epoch: 0170 cost = 1.718619704Test accuracy:  0.87
+Epoch: 0171 cost = 2.171951169Test accuracy:  0.861
+Epoch: 0172 cost = 3.132238045Test accuracy:  0.843
+Epoch: 0173 cost = 2.272450224Test accuracy:  0.861
+Epoch: 0174 cost = 1.824934921Test accuracy:  0.843
+Epoch: 0175 cost = 2.437543544Test accuracy:  0.843
+Epoch: 0176 cost = 2.036345890Test accuracy:  0.843
+Epoch: 0177 cost = 1.712696361Test accuracy:  0.861
+Epoch: 0178 cost = 1.565838811Test accuracy:  0.852
+Epoch: 0179 cost = 1.527170489Test accuracy:  0.852
+Epoch: 0180 cost = 1.816835729Test accuracy:  0.852
+Epoch: 0181 cost = 2.439107403Test accuracy:  0.861
+Epoch: 0182 cost = 2.146633269Test accuracy:  0.833
+Epoch: 0183 cost = 2.159582225Test accuracy:  0.87
+Epoch: 0184 cost = 1.862238983Test accuracy:  0.852
+Epoch: 0185 cost = 4.550243543Test accuracy:  0.843
+Epoch: 0186 cost = 3.192198959Test accuracy:  0.833
+Epoch: 0187 cost = 2.047471829Test accuracy:  0.861
+Epoch: 0188 cost = 3.974143367Test accuracy:  0.778
+Epoch: 0189 cost = 4.312945366Test accuracy:  0.685
+Epoch: 0190 cost = 4.438774835Test accuracy:  0.833
+Epoch: 0191 cost = 2.212085171Test accuracy:  0.833
+Epoch: 0192 cost = 2.889727993Test accuracy:  0.833
+Epoch: 0193 cost = 1.930194240Test accuracy:  0.824
+Epoch: 0194 cost = 1.689956676Test accuracy:  0.852
+Epoch: 0195 cost = 1.650223624Test accuracy:  0.87
+Epoch: 0196 cost = 1.620865155Test accuracy:  0.861
+Epoch: 0197 cost = 1.387431570Test accuracy:  0.87
+Epoch: 0198 cost = 1.245534662Test accuracy:  0.861
+Epoch: 0199 cost = 1.208677980Test accuracy:  0.87
+Epoch: 0200 cost = 1.246380509Test accuracy:  0.861
+Epoch: 0201 cost = 1.326549416Test accuracy:  0.87
+Graph Saved! 
+Epoch: 0202 cost = 1.341087802Test accuracy:  0.861
+Epoch: 0203 cost = 1.301422352Test accuracy:  0.852
+Epoch: 0204 cost = 1.219607164Test accuracy:  0.861
+Epoch: 0205 cost = 1.162558022Test accuracy:  0.861
+Epoch: 0206 cost = 1.149391613Test accuracy:  0.861
+Epoch: 0207 cost = 1.188306328Test accuracy:  0.861
+Epoch: 0208 cost = 1.243638259Test accuracy:  0.861
+Epoch: 0209 cost = 1.300169343Test accuracy:  0.861
+Epoch: 0210 cost = 1.299162353Test accuracy:  0.861
+Epoch: 0211 cost = 1.234003273Test accuracy:  0.861
+Epoch: 0212 cost = 1.133667086Test accuracy:  0.861
+Epoch: 0213 cost = 1.075680913Test accuracy:  0.861
+Epoch: 0214 cost = 1.047683208Test accuracy:  0.861
+Epoch: 0215 cost = 1.069171325Test accuracy:  0.861
+Epoch: 0216 cost = 1.092635892Test accuracy:  0.861
+Epoch: 0217 cost = 1.236426893Test accuracy:  0.852
+Epoch: 0218 cost = 4.119593982Test accuracy:  0.843
+Epoch: 0219 cost = 2.642558861Test accuracy:  0.778
+Epoch: 0220 cost = 1.994405083Test accuracy:  0.852
+Epoch: 0221 cost = 1.679144993Test accuracy:  0.843
+Epoch: 0222 cost = 3.957114172Test accuracy:  0.843
+Epoch: 0223 cost = 2.862944245Test accuracy:  0.815
+Epoch: 0224 cost = 1.753260255Test accuracy:  0.861
+Epoch: 0225 cost = 3.865644607Test accuracy:  0.852
+Epoch: 0226 cost = 3.575116689Test accuracy:  0.861
+Epoch: 0227 cost = 2.302965348Test accuracy:  0.787
+Epoch: 0228 cost = 2.374901129Test accuracy:  0.843
+Epoch: 0229 cost = 1.758745733Test accuracy:  0.861
+Epoch: 0230 cost = 1.283701318Test accuracy:  0.87
+Epoch: 0231 cost = 1.375893093Test accuracy:  0.87
+Epoch: 0232 cost = 1.573972754Test accuracy:  0.861
+Epoch: 0233 cost = 1.590003412Test accuracy:  0.861
+Epoch: 0234 cost = 1.258608937Test accuracy:  0.861
+Epoch: 0235 cost = 1.123205158Test accuracy:  0.861
+Epoch: 0236 cost = 1.001053470Test accuracy:  0.87
+Epoch: 0237 cost = 0.992618550Test accuracy:  0.88
+Epoch: 0238 cost = 1.138804167Test accuracy:  0.88
+Epoch: 0239 cost = 1.229332956Test accuracy:  0.87
+Epoch: 0240 cost = 1.196830296Test accuracy:  0.861
+Epoch: 0241 cost = 0.885083016Test accuracy:  0.87
+Epoch: 0242 cost = 0.879119074Test accuracy:  0.88
+Epoch: 0243 cost = 0.975807237Test accuracy:  0.87
+Epoch: 0244 cost = 1.117872359Test accuracy:  0.861
+Epoch: 0245 cost = 1.203820287Test accuracy:  0.87
+Epoch: 0246 cost = 1.496326941Test accuracy:  0.861
+Epoch: 0247 cost = 1.557677026Test accuracy:  0.87
+Epoch: 0248 cost = 1.702287162Test accuracy:  0.87
+Epoch: 0249 cost = 1.456287060Test accuracy:  0.88
+Epoch: 0250 cost = 3.165958386Test accuracy:  0.759
+Epoch: 0251 cost = 5.087540887Test accuracy:  0.861
+Epoch: 0252 cost = 4.082441293Test accuracy:  0.87
+Epoch: 0253 cost = 4.186875906Test accuracy:  0.87
+Epoch: 0254 cost = 2.843667794Test accuracy:  0.861
+Epoch: 0255 cost = 1.774974427Test accuracy:  0.87
+Epoch: 0256 cost = 1.740309634Test accuracy:  0.88
+Epoch: 0257 cost = 1.302038680Test accuracy:  0.898
+Epoch: 0258 cost = 1.000181936Test accuracy:  0.898
+Epoch: 0259 cost = 1.036303167Test accuracy:  0.898
+Epoch: 0260 cost = 1.080160281Test accuracy:  0.889
+Epoch: 0261 cost = 1.225155486Test accuracy:  0.889
+Epoch: 0262 cost = 1.011946892Test accuracy:  0.889
+Epoch: 0263 cost = 0.855601968Test accuracy:  0.889
+Epoch: 0264 cost = 0.870844028Test accuracy:  0.889
+Epoch: 0265 cost = 0.923354926Test accuracy:  0.88
+Epoch: 0266 cost = 0.948951659Test accuracy:  0.88
+Epoch: 0267 cost = 1.000372488Test accuracy:  0.88
+Epoch: 0268 cost = 1.135531339Test accuracy:  0.88
+Epoch: 0269 cost = 1.500113323Test accuracy:  0.88
+Epoch: 0270 cost = 1.664801806Test accuracy:  0.889
+Epoch: 0271 cost = 1.358859960Test accuracy:  0.889
+Epoch: 0272 cost = 1.394900452Test accuracy:  0.861
+Epoch: 0273 cost = 1.336096525Test accuracy:  0.889
+Epoch: 0274 cost = 1.305586469Test accuracy:  0.87
+Epoch: 0275 cost = 1.764973668Test accuracy:  0.861
+Epoch: 0276 cost = 1.845909257Test accuracy:  0.861
+Epoch: 0277 cost = 1.399814921Test accuracy:  0.861
+Epoch: 0278 cost = 1.214116652Test accuracy:  0.87
+Epoch: 0279 cost = 0.905661403Test accuracy:  0.861
+Epoch: 0280 cost = 0.844857475Test accuracy:  0.87
+Epoch: 0281 cost = 0.896433656Test accuracy:  0.87
+Epoch: 0282 cost = 1.353619454Test accuracy:  0.898
+Epoch: 0283 cost = 1.632338689Test accuracy:  0.88
+Epoch: 0284 cost = 1.449073599Test accuracy:  0.87
+Epoch: 0285 cost = 1.257914968Test accuracy:  0.87
+Epoch: 0286 cost = 1.119107863Test accuracy:  0.87
+Epoch: 0287 cost = 1.119567497Test accuracy:  0.87
+Epoch: 0288 cost = 0.892260729Test accuracy:  0.88
+Epoch: 0289 cost = 1.119461804Test accuracy:  0.88
+Epoch: 0290 cost = 1.194081105Test accuracy:  0.852
+Epoch: 0291 cost = 0.945597902Test accuracy:  0.87
+Epoch: 0292 cost = 6.727438876Test accuracy:  0.796
+Epoch: 0293 cost = 7.861007533Test accuracy:  0.694
+Epoch: 0294 cost = 3.448208435Test accuracy:  0.852
+Epoch: 0295 cost = 1.783044059Test accuracy:  0.889
+Epoch: 0296 cost = 1.274825026Test accuracy:  0.843
+Epoch: 0297 cost = 1.616734463Test accuracy:  0.87
+Epoch: 0298 cost = 1.642111445Test accuracy:  0.852
+Epoch: 0299 cost = 1.451031377Test accuracy:  0.88
+Epoch: 0300 cost = 1.387552240Test accuracy:  0.87
+Epoch: 0301 cost = 1.188286861Test accuracy:  0.87
+Graph Saved! 
+Epoch: 0302 cost = 0.824151555Test accuracy:  0.861
+Epoch: 0303 cost = 0.799287371Test accuracy:  0.87
+Epoch: 0304 cost = 1.162436837Test accuracy:  0.889
+Epoch: 0305 cost = 1.299034255Test accuracy:  0.843
+Epoch: 0306 cost = 1.584571432Test accuracy:  0.87
+Epoch: 0307 cost = 0.962477903Test accuracy:  0.861
+Epoch: 0308 cost = 0.776796474Test accuracy:  0.87
+Epoch: 0309 cost = 0.769105172Test accuracy:  0.861
+Epoch: 0310 cost = 0.718207780Test accuracy:  0.87
+Epoch: 0311 cost = 0.892547276Test accuracy:  0.88
+Epoch: 0312 cost = 1.000643918Test accuracy:  0.898
+Epoch: 0313 cost = 1.236047100Test accuracy:  0.87
+Epoch: 0314 cost = 0.746049149Test accuracy:  0.889
+Epoch: 0315 cost = 0.666281897Test accuracy:  0.88
+Epoch: 0316 cost = 1.067582614Test accuracy:  0.889
+Epoch: 0317 cost = 1.139015740Test accuracy:  0.88
+Epoch: 0318 cost = 1.253808424Test accuracy:  0.88
+Epoch: 0319 cost = 0.955826898Test accuracy:  0.88
+Epoch: 0320 cost = 1.177620253Test accuracy:  0.852
+Epoch: 0321 cost = 1.149844460Test accuracy:  0.861
+Epoch: 0322 cost = 1.532047417Test accuracy:  0.806
+Epoch: 0323 cost = 4.125890072Test accuracy:  0.889
+Epoch: 0324 cost = 1.706846997Test accuracy:  0.861
+Epoch: 0325 cost = 2.713159141Test accuracy:  0.75
+Epoch: 0326 cost = 4.093336187Test accuracy:  0.87
+Epoch: 0327 cost = 1.549161257Test accuracy:  0.889
+Epoch: 0328 cost = 1.182125646Test accuracy:  0.87
+Epoch: 0329 cost = 1.290049598Test accuracy:  0.843
+Epoch: 0330 cost = 0.919662504Test accuracy:  0.843
+Epoch: 0331 cost = 1.239511132Test accuracy:  0.852
+Epoch: 0332 cost = 1.566851335Test accuracy:  0.87
+Epoch: 0333 cost = 1.645626599Test accuracy:  0.87
+Epoch: 0334 cost = 1.342874244Test accuracy:  0.852
+Epoch: 0335 cost = 1.084600659Test accuracy:  0.88
+Epoch: 0336 cost = 1.191062343Test accuracy:  0.88
+Epoch: 0337 cost = 1.752616132Test accuracy:  0.88
+Epoch: 0338 cost = 1.535010557Test accuracy:  0.861
+Epoch: 0339 cost = 1.184320019Test accuracy:  0.88
+Epoch: 0340 cost = 2.298196575Test accuracy:  0.87
+Epoch: 0341 cost = 1.150735282Test accuracy:  0.852
+Epoch: 0342 cost = 1.149480855Test accuracy:  0.889
+Epoch: 0343 cost = 1.507704748Test accuracy:  0.852
+Epoch: 0344 cost = 1.081238119Test accuracy:  0.889
+Epoch: 0345 cost = 2.970407384Test accuracy:  0.824
+Epoch: 0346 cost = 3.704171658Test accuracy:  0.88
+Epoch: 0347 cost = 2.248815650Test accuracy:  0.833
+Epoch: 0348 cost = 1.785292524Test accuracy:  0.898
+Epoch: 0349 cost = 1.481064041Test accuracy:  0.852
+Epoch: 0350 cost = 1.151691686Test accuracy:  0.87
+Epoch: 0351 cost = 1.075220009Test accuracy:  0.87
+Epoch: 0352 cost = 0.829008652Test accuracy:  0.87
+Epoch: 0353 cost = 0.634111948Test accuracy:  0.87
+Epoch: 0354 cost = 0.902528751Test accuracy:  0.889
+Epoch: 0355 cost = 1.317435748Test accuracy:  0.87
+Epoch: 0356 cost = 1.138396877Test accuracy:  0.88
+Epoch: 0357 cost = 0.816923054Test accuracy:  0.861
+Epoch: 0358 cost = 0.893617984Test accuracy:  0.889
+Epoch: 0359 cost = 1.271046168Test accuracy:  0.88
+Epoch: 0360 cost = 0.918511938Test accuracy:  0.861
+Epoch: 0361 cost = 0.625618775Test accuracy:  0.861
+Epoch: 0362 cost = 0.951164634Test accuracy:  0.898
+Epoch: 0363 cost = 1.105800190Test accuracy:  0.898
+Epoch: 0364 cost = 1.474638955Test accuracy:  0.87
+Epoch: 0365 cost = 4.631244805Test accuracy:  0.796
+Epoch: 0366 cost = 3.187103429Test accuracy:  0.75
+Epoch: 0367 cost = 5.832304461Test accuracy:  0.898
+Epoch: 0368 cost = 8.443857518Test accuracy:  0.833
+Epoch: 0369 cost = 5.684604119Test accuracy:  0.787
+Epoch: 0370 cost = 3.413040280Test accuracy:  0.843
+Epoch: 0371 cost = 1.963939976Test accuracy:  0.852
+Epoch: 0372 cost = 1.390676886Test accuracy:  0.898
+Epoch: 0373 cost = 1.019818964Test accuracy:  0.889
+Epoch: 0374 cost = 0.948272189Test accuracy:  0.889
+Epoch: 0375 cost = 0.677094729Test accuracy:  0.88
+Epoch: 0376 cost = 0.736855499Test accuracy:  0.88
+Epoch: 0377 cost = 0.827259872Test accuracy:  0.889
+Epoch: 0378 cost = 0.752125927Test accuracy:  0.889
+Epoch: 0379 cost = 0.600271943Test accuracy:  0.88
+Epoch: 0380 cost = 0.874919628Test accuracy:  0.898
+Epoch: 0381 cost = 1.167205144Test accuracy:  0.88
+Epoch: 0382 cost = 0.773313062Test accuracy:  0.861
+Epoch: 0383 cost = 0.687511093Test accuracy:  0.889
+Epoch: 0384 cost = 0.944369445Test accuracy:  0.889
+Epoch: 0385 cost = 0.995670902Test accuracy:  0.87
+Epoch: 0386 cost = 0.740455021Test accuracy:  0.87
+Epoch: 0387 cost = 0.585116865Test accuracy:  0.861
+Epoch: 0388 cost = 0.929067767Test accuracy:  0.889
+Epoch: 0389 cost = 1.497113209Test accuracy:  0.88
+Epoch: 0390 cost = 2.279868131Test accuracy:  0.907
+Epoch: 0391 cost = 1.217899893Test accuracy:  0.787
+Epoch: 0392 cost = 1.159424495Test accuracy:  0.861
+Epoch: 0393 cost = 0.688921788Test accuracy:  0.861
+Epoch: 0394 cost = 0.666226059Test accuracy:  0.889
+Epoch: 0395 cost = 0.500120202Test accuracy:  0.87
+Epoch: 0396 cost = 0.823784549Test accuracy:  0.861
+Epoch: 0397 cost = 1.141448845Test accuracy:  0.861
+Epoch: 0398 cost = 0.891651235Test accuracy:  0.861
+Epoch: 0399 cost = 1.253390595Test accuracy:  0.88
+Epoch: 0400 cost = 0.776079638Test accuracy:  0.833
+Epoch: 0401 cost = 0.863317750Test accuracy:  0.87
+Graph Saved! 
+Epoch: 0402 cost = 1.233567278Test accuracy:  0.87
+Epoch: 0403 cost = 1.250240275Test accuracy:  0.88
+Epoch: 0404 cost = 10.016866093Test accuracy:  0.694
+Epoch: 0405 cost = 16.415993690Test accuracy:  0.88
+Epoch: 0406 cost = 7.244325985Test accuracy:  0.889
+Epoch: 0407 cost = 2.746404214Test accuracy:  0.852
+Epoch: 0408 cost = 1.563407120Test accuracy:  0.87
+Epoch: 0409 cost = 1.066875631Test accuracy:  0.87
+Epoch: 0410 cost = 0.837384156Test accuracy:  0.861
+Epoch: 0411 cost = 0.702233772Test accuracy:  0.861
+Epoch: 0412 cost = 0.708676331Test accuracy:  0.87
+Epoch: 0413 cost = 0.655119469Test accuracy:  0.87
+Epoch: 0414 cost = 0.616305056Test accuracy:  0.88
+Epoch: 0415 cost = 0.621859584Test accuracy:  0.88
+Epoch: 0416 cost = 0.610823308Test accuracy:  0.88
+Epoch: 0417 cost = 0.586696594Test accuracy:  0.88
+Epoch: 0418 cost = 0.565194530Test accuracy:  0.889
+Epoch: 0419 cost = 0.555501541Test accuracy:  0.889
+Epoch: 0420 cost = 0.568746927Test accuracy:  0.889
+Epoch: 0421 cost = 0.634381063Test accuracy:  0.889
+Epoch: 0422 cost = 0.858554564Test accuracy:  0.889
+Epoch: 0423 cost = 1.160924201Test accuracy:  0.87
+Epoch: 0424 cost = 0.829638470Test accuracy:  0.861
+Epoch: 0425 cost = 0.550695547Test accuracy:  0.88
+Epoch: 0426 cost = 0.481728921Test accuracy:  0.87
+Epoch: 0427 cost = 0.762327326Test accuracy:  0.88
+Epoch: 0428 cost = 0.773372816Test accuracy:  0.88
+Epoch: 0429 cost = 1.097224944Test accuracy:  0.87
+Epoch: 0430 cost = 0.959729988Test accuracy:  0.861
+Epoch: 0431 cost = 0.599357202Test accuracy:  0.87
+Epoch: 0432 cost = 0.678359686Test accuracy:  0.87
+Epoch: 0433 cost = 1.282922085Test accuracy:  0.88
+Epoch: 0434 cost = 0.908153472Test accuracy:  0.88
+Epoch: 0435 cost = 0.797491647Test accuracy:  0.889
+Epoch: 0436 cost = 0.537239809Test accuracy:  0.907
+Epoch: 0437 cost = 0.425198492Test accuracy:  0.87
+Epoch: 0438 cost = 0.412858914Test accuracy:  0.87
+Epoch: 0439 cost = 0.828466732Test accuracy:  0.898
+Epoch: 0440 cost = 1.350891193Test accuracy:  0.861
+Epoch: 0441 cost = 0.932190342Test accuracy:  0.87
+Epoch: 0442 cost = 0.918316937Test accuracy:  0.88
+Epoch: 0443 cost = 0.898411999Test accuracy:  0.889
+Epoch: 0444 cost = 1.059063722Test accuracy:  0.87
+Epoch: 0445 cost = 0.774106737Test accuracy:  0.87
+Epoch: 0446 cost = 0.554851518Test accuracy:  0.87
+Epoch: 0447 cost = 0.464818194Test accuracy:  0.889
+Epoch: 0448 cost = 0.415817539Test accuracy:  0.87
+Epoch: 0449 cost = 0.695257534Test accuracy:  0.889
+Epoch: 0450 cost = 0.838203146Test accuracy:  0.907
+Epoch: 0451 cost = 0.922407100Test accuracy:  0.889
+Epoch: 0452 cost = 1.303176231Test accuracy:  0.889
+Epoch: 0453 cost = 1.043581990Test accuracy:  0.889
+Epoch: 0454 cost = 1.175576597Test accuracy:  0.88
+Epoch: 0455 cost = 2.455425363Test accuracy:  0.861
+Epoch: 0456 cost = 1.198073561Test accuracy:  0.861
+Epoch: 0457 cost = 0.807956303Test accuracy:  0.852
+Epoch: 0458 cost = 0.678432148Test accuracy:  0.852
+Epoch: 0459 cost = 0.606870467Test accuracy:  0.87
+Epoch: 0460 cost = 0.554768135Test accuracy:  0.852
+Epoch: 0461 cost = 0.652974104Test accuracy:  0.852
+Epoch: 0462 cost = 0.626059830Test accuracy:  0.87
+Epoch: 0463 cost = 0.750600673Test accuracy:  0.87
+Epoch: 0464 cost = 0.801350217Test accuracy:  0.87
+Epoch: 0465 cost = 0.621692890Test accuracy:  0.87
+Epoch: 0466 cost = 0.869482171Test accuracy:  0.87
+Epoch: 0467 cost = 1.082393158Test accuracy:  0.87
+Epoch: 0468 cost = 1.202342467Test accuracy:  0.87
+Epoch: 0469 cost = 0.943346874Test accuracy:  0.88
+Epoch: 0470 cost = 0.662614589Test accuracy:  0.861
+Epoch: 0471 cost = 0.687113793Test accuracy:  0.87
+Epoch: 0472 cost = 1.274718979Test accuracy:  0.861
+Epoch: 0473 cost = 0.989253641Test accuracy:  0.852
+Epoch: 0474 cost = 0.809824498Test accuracy:  0.852
+Epoch: 0475 cost = 0.737561775Test accuracy:  0.88
+Epoch: 0476 cost = 0.966796813Test accuracy:  0.861
+Epoch: 0477 cost = 0.834672028Test accuracy:  0.852
+Epoch: 0478 cost = 0.654048469Test accuracy:  0.87
+Epoch: 0479 cost = 0.476873510Test accuracy:  0.88
+Epoch: 0480 cost = 0.419943063Test accuracy:  0.87
+Epoch: 0481 cost = 0.432031673Test accuracy:  0.889
+Epoch: 0482 cost = 0.410072907Test accuracy:  0.88
+Epoch: 0483 cost = 0.374113288Test accuracy:  0.88
+Epoch: 0484 cost = 0.347255079Test accuracy:  0.88
+Epoch: 0485 cost = 0.358918584Test accuracy:  0.88
+Epoch: 0486 cost = 0.343355455Test accuracy:  0.889
+Epoch: 0487 cost = 0.330861843Test accuracy:  0.889
+Epoch: 0488 cost = 0.327753991Test accuracy:  0.88
+Epoch: 0489 cost = 0.758029189Test accuracy:  0.889
+Epoch: 0490 cost = 3.446611915Test accuracy:  0.88
+Epoch: 0491 cost = 1.423851680Test accuracy:  0.861
+Epoch: 0492 cost = 0.835848558Test accuracy:  0.87
+Epoch: 0493 cost = 0.608914709Test accuracy:  0.88
+Epoch: 0494 cost = 3.127673208Test accuracy:  0.759
+Epoch: 0495 cost = 17.702613549Test accuracy:  0.824
+Epoch: 0496 cost = 7.853314259Test accuracy:  0.63
+Epoch: 0497 cost = 9.107495286Test accuracy:  0.769
+Epoch: 0498 cost = 8.893983538Test accuracy:  0.417
+Epoch: 0499 cost = 11.204756628Test accuracy:  0.87
+Epoch: 0500 cost = 2.326885142Test accuracy:  0.852
+Epoch: 0501 cost = 1.564036489Test accuracy:  0.861
+Graph Saved! 
+Epoch: 0502 cost = 0.922590299Test accuracy:  0.87
+Epoch: 0503 cost = 0.876552609Test accuracy:  0.889
+Epoch: 0504 cost = 1.123829798Test accuracy:  0.88
+Epoch: 0505 cost = 0.813295515Test accuracy:  0.88
+Epoch: 0506 cost = 0.691397450Test accuracy:  0.889
+Epoch: 0507 cost = 0.542344690Test accuracy:  0.88
+Epoch: 0508 cost = 0.695716363Test accuracy:  0.88
+Epoch: 0509 cost = 1.189956115Test accuracy:  0.88
+Epoch: 0510 cost = 0.843218140Test accuracy:  0.87
+Epoch: 0511 cost = 0.834320091Test accuracy:  0.889
+Epoch: 0512 cost = 0.542649262Test accuracy:  0.88
+Epoch: 0513 cost = 0.582088987Test accuracy:  0.88
+Epoch: 0514 cost = 0.689206018Test accuracy:  0.88
+Epoch: 0515 cost = 0.893335077Test accuracy:  0.88
+Epoch: 0516 cost = 0.892087032Test accuracy:  0.898
+Epoch: 0517 cost = 0.911198128Test accuracy:  0.889
+Epoch: 0518 cost = 0.875760330Test accuracy:  0.889
+Epoch: 0519 cost = 0.592075654Test accuracy:  0.889
+Epoch: 0520 cost = 0.720638388Test accuracy:  0.87
+Epoch: 0521 cost = 0.638402425Test accuracy:  0.88
+Epoch: 0522 cost = 0.573951346Test accuracy:  0.88
+Epoch: 0523 cost = 0.551464248Test accuracy:  0.88
+Epoch: 0524 cost = 0.547005933Test accuracy:  0.88
+Epoch: 0525 cost = 0.790628004Test accuracy:  0.88
+Epoch: 0526 cost = 1.265347498Test accuracy:  0.833
+Epoch: 0527 cost = 1.197395230Test accuracy:  0.861
+Epoch: 0528 cost = 0.729807059Test accuracy:  0.87
+Epoch: 0529 cost = 0.764723488Test accuracy:  0.87
+Epoch: 0530 cost = 1.578419085Test accuracy:  0.852
+Epoch: 0531 cost = 1.865686877Test accuracy:  0.889
+Epoch: 0532 cost = 1.328277582Test accuracy:  0.852
+Epoch: 0533 cost = 3.344957032Test accuracy:  0.898
+Epoch: 0534 cost = 3.391638229Test accuracy:  0.796
+Epoch: 0535 cost = 13.640170964Test accuracy:  0.769
+Epoch: 0536 cost = 4.728422392Test accuracy:  0.713
+Epoch: 0537 cost = 4.991083102Test accuracy:  0.796
+Epoch: 0538 cost = 2.524950802Test accuracy:  0.87
+Epoch: 0539 cost = 1.463070883Test accuracy:  0.88
+Epoch: 0540 cost = 1.047152162Test accuracy:  0.898
+Epoch: 0541 cost = 0.827737153Test accuracy:  0.898
+Epoch: 0542 cost = 0.747382923Test accuracy:  0.889
+Epoch: 0543 cost = 0.646570689Test accuracy:  0.898
+Epoch: 0544 cost = 0.657140122Test accuracy:  0.898
+Epoch: 0545 cost = 0.584112067Test accuracy:  0.898
+Epoch: 0546 cost = 0.578313337Test accuracy:  0.898
+Epoch: 0547 cost = 0.564803761Test accuracy:  0.898
+Epoch: 0548 cost = 0.547804415Test accuracy:  0.898
+Epoch: 0549 cost = 0.539571949Test accuracy:  0.898
+Epoch: 0550 cost = 0.531675786Test accuracy:  0.898
+Epoch: 0551 cost = 0.521710031Test accuracy:  0.898
+Epoch: 0552 cost = 0.510000410Test accuracy:  0.898
+Epoch: 0553 cost = 0.497535419Test accuracy:  0.898
+Epoch: 0554 cost = 0.484978034Test accuracy:  0.898
+Epoch: 0555 cost = 0.471982291Test accuracy:  0.898
+Epoch: 0556 cost = 0.457360145Test accuracy:  0.898
+Epoch: 0557 cost = 0.438932729Test accuracy:  0.898
+Epoch: 0558 cost = 0.413576189Test accuracy:  0.898
+Epoch: 0559 cost = 0.383419628Test accuracy:  0.898
+Epoch: 0560 cost = 0.366530725Test accuracy:  0.898
+Epoch: 0561 cost = 0.363160952Test accuracy:  0.898
+Epoch: 0562 cost = 0.356401246Test accuracy:  0.898
+Epoch: 0563 cost = 0.346820933Test accuracy:  0.898
+Epoch: 0564 cost = 0.334018594Test accuracy:  0.898
+Epoch: 0565 cost = 0.317688347Test accuracy:  0.898
+Epoch: 0566 cost = 0.302725449Test accuracy:  0.898
+Epoch: 0567 cost = 0.298810228Test accuracy:  0.898
+Epoch: 0568 cost = 0.291971927Test accuracy:  0.898
+Epoch: 0569 cost = 0.285058869Test accuracy:  0.898
+Epoch: 0570 cost = 0.279850011Test accuracy:  0.898
+Epoch: 0571 cost = 0.275044174Test accuracy:  0.898
+Epoch: 0572 cost = 0.270037518Test accuracy:  0.889
+Epoch: 0573 cost = 0.265334080Test accuracy:  0.889
+Epoch: 0574 cost = 0.261213641Test accuracy:  0.889
+Epoch: 0575 cost = 0.257257891Test accuracy:  0.889
+Epoch: 0576 cost = 0.253375412Test accuracy:  0.889
+Epoch: 0577 cost = 0.249727766Test accuracy:  0.898
+Epoch: 0578 cost = 0.246299342Test accuracy:  0.898
+Epoch: 0579 cost = 0.242971030Test accuracy:  0.907
+Epoch: 0580 cost = 0.239735555Test accuracy:  0.907
+Epoch: 0581 cost = 0.236635382Test accuracy:  0.907
+Epoch: 0582 cost = 0.233658816Test accuracy:  0.907
+Epoch: 0583 cost = 0.230770205Test accuracy:  0.907
+Epoch: 0584 cost = 0.227956057Test accuracy:  0.907
+Epoch: 0585 cost = 0.225233120Test accuracy:  0.907
+Epoch: 0586 cost = 0.222603745Test accuracy:  0.907
+Epoch: 0587 cost = 0.220057539Test accuracy:  0.907
+Epoch: 0588 cost = 0.217585562Test accuracy:  0.907
+Epoch: 0589 cost = 0.215180712Test accuracy:  0.907
+Epoch: 0590 cost = 0.212837608Test accuracy:  0.907
+Epoch: 0591 cost = 0.210552603Test accuracy:  0.907
+Epoch: 0592 cost = 0.208325428Test accuracy:  0.907
+Epoch: 0593 cost = 0.206162414Test accuracy:  0.907
+Epoch: 0594 cost = 0.204070977Test accuracy:  0.907
+Epoch: 0595 cost = 0.202055237Test accuracy:  0.907
+Epoch: 0596 cost = 0.200084127Test accuracy:  0.907
+Epoch: 0597 cost = 0.198094280Test accuracy:  0.907
+Epoch: 0598 cost = 0.195982871Test accuracy:  0.907
+Epoch: 0599 cost = 0.193723241Test accuracy:  0.907
+Epoch: 0600 cost = 0.191532673Test accuracy:  0.907
+Epoch: 0601 cost = 0.189991892Test accuracy:  0.907
+Graph Saved! 
+Epoch: 0602 cost = 0.190335612Test accuracy:  0.907
+Epoch: 0603 cost = 0.196604899Test accuracy:  0.898
+Epoch: 0604 cost = 0.893496524Test accuracy:  0.833
+Epoch: 0605 cost = 29.649129958Test accuracy:  0.611
+Epoch: 0606 cost = 29.685854478Test accuracy:  0.759
+Epoch: 0607 cost = 25.563147285Test accuracy:  0.722
+Epoch: 0608 cost = 25.969527505Test accuracy:  0.611
+Epoch: 0609 cost = 24.311802431Test accuracy:  0.593
+Epoch: 0610 cost = 22.880037828Test accuracy:  0.806
+Epoch: 0611 cost = 21.746344826Test accuracy:  0.593
+Epoch: 0612 cost = 20.328157338Test accuracy:  0.611
+Epoch: 0613 cost = 18.541247368Test accuracy:  0.787
+Epoch: 0614 cost = 15.702913631Test accuracy:  0.648
+Epoch: 0615 cost = 13.922516043Test accuracy:  0.685
+Epoch: 0616 cost = 11.895576304Test accuracy:  0.676
+Epoch: 0617 cost = 11.336003087Test accuracy:  0.648
+Epoch: 0618 cost = 11.100049886Test accuracy:  0.639
+Epoch: 0619 cost = 11.367711284Test accuracy:  0.639
+Epoch: 0620 cost = 10.842320832Test accuracy:  0.639
+Epoch: 0621 cost = 9.890682567Test accuracy:  0.713
+Epoch: 0622 cost = 9.665884538Test accuracy:  0.63
+Epoch: 0623 cost = 9.527204687Test accuracy:  0.694
+Epoch: 0624 cost = 8.577375715Test accuracy:  0.667
+Epoch: 0625 cost = 9.652852167Test accuracy:  0.657
+Epoch: 0626 cost = 9.735925674Test accuracy:  0.769
+Epoch: 0627 cost = 9.150674690Test accuracy:  0.639
+Epoch: 0628 cost = 8.891873056Test accuracy:  0.657
+Epoch: 0629 cost = 8.291622509Test accuracy:  0.648
+Epoch: 0630 cost = 10.247445280Test accuracy:  0.676
+Epoch: 0631 cost = 8.388383605Test accuracy:  0.667
+Epoch: 0632 cost = 9.167784561Test accuracy:  0.667
+Epoch: 0633 cost = 7.964318579Test accuracy:  0.657
+Epoch: 0634 cost = 8.983094822Test accuracy:  0.667
+Epoch: 0635 cost = 8.739905184Test accuracy:  0.667
+Epoch: 0636 cost = 13.051130555Test accuracy:  0.759
+Epoch: 0637 cost = 9.847472798Test accuracy:  0.704
+Epoch: 0638 cost = 8.257735881Test accuracy:  0.648
+Epoch: 0639 cost = 7.891693722Test accuracy:  0.63
+Epoch: 0640 cost = 7.736697544Test accuracy:  0.648
+Epoch: 0641 cost = 7.455868114Test accuracy:  0.685
+Epoch: 0642 cost = 7.264282530Test accuracy:  0.667
+Epoch: 0643 cost = 7.098679326Test accuracy:  0.75
+Epoch: 0644 cost = 7.366682985Test accuracy:  0.648
+Epoch: 0645 cost = 7.652442672Test accuracy:  0.676
+Epoch: 0646 cost = 7.074702133Test accuracy:  0.741
+Epoch: 0647 cost = 7.012653524Test accuracy:  0.722
+Epoch: 0648 cost = 7.351337866Test accuracy:  0.806
+Epoch: 0649 cost = 7.520661831Test accuracy:  0.713
+Epoch: 0650 cost = 6.702102184Test accuracy:  0.731
+Epoch: 0651 cost = 6.847132856Test accuracy:  0.759
+Epoch: 0652 cost = 6.813999631Test accuracy:  0.713
+Epoch: 0653 cost = 6.876666329Test accuracy:  0.787
+Epoch: 0654 cost = 6.473477277Test accuracy:  0.694
+Epoch: 0655 cost = 6.998314164Test accuracy:  0.806
+Epoch: 0656 cost = 7.075298266Test accuracy:  0.685
+Epoch: 0657 cost = 7.390975129Test accuracy:  0.648
+Epoch: 0658 cost = 6.979868672Test accuracy:  0.815
+Epoch: 0659 cost = 6.382202799Test accuracy:  0.713
+Epoch: 0660 cost = 6.755527280Test accuracy:  0.796
+Epoch: 0661 cost = 6.732416110Test accuracy:  0.648
+Epoch: 0662 cost = 6.822574009Test accuracy:  0.769
+Epoch: 0663 cost = 6.411221266Test accuracy:  0.75
+Epoch: 0664 cost = 8.173584114Test accuracy:  0.787
+Epoch: 0665 cost = 6.788502780Test accuracy:  0.657
+Epoch: 0666 cost = 7.963714686Test accuracy:  0.806
+Epoch: 0667 cost = 6.498601545Test accuracy:  0.778
+Epoch: 0668 cost = 5.964649027Test accuracy:  0.722
+Epoch: 0669 cost = 6.779929074Test accuracy:  0.778
+Epoch: 0670 cost = 7.459020051Test accuracy:  0.713
+Epoch: 0671 cost = 12.532779694Test accuracy:  0.759
+Epoch: 0672 cost = 11.343061360Test accuracy:  0.722
+Epoch: 0673 cost = 10.970238642Test accuracy:  0.556
+Epoch: 0674 cost = 16.829928658Test accuracy:  0.676
+Epoch: 0675 cost = 10.916846189Test accuracy:  0.657
+Epoch: 0676 cost = 8.444975983Test accuracy:  0.657
+Epoch: 0677 cost = 10.327406666Test accuracy:  0.667
+Epoch: 0678 cost = 9.985650843Test accuracy:  0.639
+Epoch: 0679 cost = 9.018548489Test accuracy:  0.657
+Epoch: 0680 cost = 8.527836019Test accuracy:  0.694
+Epoch: 0681 cost = 8.063875523Test accuracy:  0.704
+Epoch: 0682 cost = 8.585264488Test accuracy:  0.657
+Epoch: 0683 cost = 7.921969717Test accuracy:  0.741
+Epoch: 0684 cost = 6.828701258Test accuracy:  0.769
+Epoch: 0685 cost = 6.687650876Test accuracy:  0.787
+Epoch: 0686 cost = 7.359989296Test accuracy:  0.722
+Epoch: 0687 cost = 7.908220790Test accuracy:  0.657
+Epoch: 0688 cost = 6.925899592Test accuracy:  0.667
+Epoch: 0689 cost = 8.524203951Test accuracy:  0.667
+Epoch: 0690 cost = 8.344549396Test accuracy:  0.657
+Epoch: 0691 cost = 8.638473641Test accuracy:  0.657
+Epoch: 0692 cost = 8.981683688Test accuracy:  0.667
+Epoch: 0693 cost = 9.392005357Test accuracy:  0.648
+Epoch: 0694 cost = 9.583341425Test accuracy:  0.731
+Epoch: 0695 cost = 7.984540853Test accuracy:  0.704
+Epoch: 0696 cost = 6.889663046Test accuracy:  0.778
+Epoch: 0697 cost = 6.251071236Test accuracy:  0.731
+Epoch: 0698 cost = 6.215441639Test accuracy:  0.722
+Epoch: 0699 cost = 6.919075836Test accuracy:  0.667
+Epoch: 0700 cost = 9.146518794Test accuracy:  0.667
+Epoch: 0701 cost = 9.779990673Test accuracy:  0.667
+Graph Saved! 
+Epoch: 0702 cost = 11.158077587Test accuracy:  0.583
+Epoch: 0703 cost = 9.849126859Test accuracy:  0.685
+Epoch: 0704 cost = 7.835816210Test accuracy:  0.694
+Epoch: 0705 cost = 7.003781124Test accuracy:  0.75
+Epoch: 0706 cost = 6.330431331Test accuracy:  0.796
+Epoch: 0707 cost = 7.327511094Test accuracy:  0.741
+Epoch: 0708 cost = 7.015409014Test accuracy:  0.667
+Epoch: 0709 cost = 7.387933688Test accuracy:  0.741
+Epoch: 0710 cost = 6.395491513Test accuracy:  0.667
+Epoch: 0711 cost = 7.058257883Test accuracy:  0.667
+Epoch: 0712 cost = 7.807793401Test accuracy:  0.787
+Epoch: 0713 cost = 6.296884819Test accuracy:  0.824
+Epoch: 0714 cost = 6.290240483Test accuracy:  0.778
+Epoch: 0715 cost = 5.635126114Test accuracy:  0.731
+Epoch: 0716 cost = 5.983051387Test accuracy:  0.704
+Epoch: 0717 cost = 6.968150616Test accuracy:  0.667
+Epoch: 0718 cost = 8.396109408Test accuracy:  0.657
+Epoch: 0719 cost = 7.600750273Test accuracy:  0.741
+Epoch: 0720 cost = 7.143448981Test accuracy:  0.667
+Epoch: 0721 cost = 7.791551763Test accuracy:  0.731
+Epoch: 0722 cost = 6.827139941Test accuracy:  0.676
+Epoch: 0723 cost = 7.212508895Test accuracy:  0.676
+Epoch: 0724 cost = 7.403051376Test accuracy:  0.769
+Epoch: 0725 cost = 6.062721794Test accuracy:  0.796
+Epoch: 0726 cost = 5.517840851Test accuracy:  0.787
+Epoch: 0727 cost = 5.468055259Test accuracy:  0.722
+Epoch: 0728 cost = 5.423100580Test accuracy:  0.787
+Epoch: 0729 cost = 5.957799565Test accuracy:  0.676
+Epoch: 0730 cost = 7.256493178Test accuracy:  0.787
+Epoch: 0731 cost = 5.904279004Test accuracy:  0.676
+Epoch: 0732 cost = 7.043957060Test accuracy:  0.676
+Epoch: 0733 cost = 7.838953322Test accuracy:  0.667
+Epoch: 0734 cost = 7.832912727Test accuracy:  0.713
+Epoch: 0735 cost = 6.962203633Test accuracy:  0.667
+Epoch: 0736 cost = 8.171383338Test accuracy:  0.769
+Epoch: 0737 cost = 5.982920538Test accuracy:  0.796
+Epoch: 0738 cost = 5.264306789Test accuracy:  0.796
+Epoch: 0739 cost = 5.078330961Test accuracy:  0.787
+Epoch: 0740 cost = 4.860197132Test accuracy:  0.796
+Epoch: 0741 cost = 4.836308880Test accuracy:  0.796
+Epoch: 0742 cost = 4.926440510Test accuracy:  0.787
+Epoch: 0743 cost = 5.268450087Test accuracy:  0.796
+Epoch: 0744 cost = 5.604076461Test accuracy:  0.778
+Epoch: 0745 cost = 6.194666321Test accuracy:  0.731
+Epoch: 0746 cost = 7.505523248Test accuracy:  0.667
+Epoch: 0747 cost = 8.973013141Test accuracy:  0.685
+Epoch: 0748 cost = 12.724849051Test accuracy:  0.657
+Epoch: 0749 cost = 11.497544115Test accuracy:  0.676
+Epoch: 0750 cost = 8.359136625Test accuracy:  0.676
+Epoch: 0751 cost = 7.418322000Test accuracy:  0.667
+Epoch: 0752 cost = 7.366160198Test accuracy:  0.787
+Epoch: 0753 cost = 6.236144619Test accuracy:  0.731
+Epoch: 0754 cost = 5.752357158Test accuracy:  0.769
+Epoch: 0755 cost = 5.230256048Test accuracy:  0.787
+Epoch: 0756 cost = 4.506027915Test accuracy:  0.796
+Epoch: 0757 cost = 4.276480799Test accuracy:  0.787
+Epoch: 0758 cost = 4.121786676Test accuracy:  0.787
+Epoch: 0759 cost = 4.052410462Test accuracy:  0.787
+Epoch: 0760 cost = 4.279662284Test accuracy:  0.731
+Epoch: 0761 cost = 7.730347373Test accuracy:  0.676
+Epoch: 0762 cost = 7.501622742Test accuracy:  0.667
+Epoch: 0763 cost = 7.118331909Test accuracy:  0.731
+Epoch: 0764 cost = 7.356178002Test accuracy:  0.722
+Epoch: 0765 cost = 6.492492199Test accuracy:  0.731
+Epoch: 0766 cost = 4.914551621Test accuracy:  0.796
+Epoch: 0767 cost = 4.051409125Test accuracy:  0.796
+Epoch: 0768 cost = 3.969997211Test accuracy:  0.806
+Epoch: 0769 cost = 3.440475637Test accuracy:  0.796
+Epoch: 0770 cost = 3.327141507Test accuracy:  0.815
+Epoch: 0771 cost = 3.365871251Test accuracy:  0.806
+Epoch: 0772 cost = 4.495315834Test accuracy:  0.806
+Epoch: 0773 cost = 3.652299946Test accuracy:  0.824
+Epoch: 0774 cost = 4.518433972Test accuracy:  0.778
+Epoch: 0775 cost = 3.643621087Test accuracy:  0.815
+Epoch: 0776 cost = 3.373992877Test accuracy:  0.806
+Epoch: 0777 cost = 3.275224182Test accuracy:  0.796
+Epoch: 0778 cost = 2.891587975Test accuracy:  0.815
+Epoch: 0779 cost = 2.991622513Test accuracy:  0.806
+Epoch: 0780 cost = 2.274465691Test accuracy:  0.806
+Epoch: 0781 cost = 2.780716740Test accuracy:  0.787
+Epoch: 0782 cost = 2.861232949Test accuracy:  0.796
+Epoch: 0783 cost = 3.808516616Test accuracy:  0.787
+Epoch: 0784 cost = 3.074240010Test accuracy:  0.843
+Epoch: 0785 cost = 3.330655789Test accuracy:  0.806
+Epoch: 0786 cost = 2.599792621Test accuracy:  0.787
+Epoch: 0787 cost = 2.735658180Test accuracy:  0.787
+Epoch: 0788 cost = 2.086608069Test accuracy:  0.787
+Epoch: 0789 cost = 2.989700640Test accuracy:  0.759
+Epoch: 0790 cost = 3.084086138Test accuracy:  0.759
+Epoch: 0791 cost = 2.960690347Test accuracy:  0.778
+Epoch: 0792 cost = 2.094846495Test accuracy:  0.769
+Epoch: 0793 cost = 2.967416469Test accuracy:  0.759
+Epoch: 0794 cost = 2.735767505Test accuracy:  0.769
+Epoch: 0795 cost = 4.378655594Test accuracy:  0.824
+Epoch: 0796 cost = 2.646781493Test accuracy:  0.806
+---------------------------------------------------------------------------
+KeyboardInterrupt                         Traceback (most recent call last)
+<ipython-input-16-b8dd15c61ecc> in <module>
+----> 1 m1.training()
+
+<ipython-input-10-9ab786f574f3> in training(self)
+    196                 batch_y = self.tr_labels[start:end]
+    197 
+--> 198                 _, c = self.session.run([self.optimizer, self.loss_f], feed_dict={self.x: batch_x, self.y : batch_y})
+    199                 avg_cost += c / total_batch
+    200 
+
+~\Miniconda3\lib\site-packages\tensorflow\python\client\session.py in run(self, fetches, feed_dict, options, run_metadata)
+    927     try:
+    928       result = self._run(None, fetches, feed_dict, options_ptr,
+--> 929                          run_metadata_ptr)
+    930       if run_metadata:
+    931         proto_data = tf_session.TF_GetBuffer(run_metadata_ptr)
+
+~\Miniconda3\lib\site-packages\tensorflow\python\client\session.py in _run(self, handle, fetches, feed_dict, options, run_metadata)
+   1150     if final_fetches or final_targets or (handle and feed_dict_tensor):
+   1151       results = self._do_run(handle, final_targets, final_fetches,
+-> 1152                              feed_dict_tensor, options, run_metadata)
+   1153     else:
+   1154       results = []
+
+~\Miniconda3\lib\site-packages\tensorflow\python\client\session.py in _do_run(self, handle, target_list, fetch_list, feed_dict, options, run_metadata)
+   1326     if handle is None:
+   1327       return self._do_call(_run_fn, feeds, fetches, targets, options,
+-> 1328                            run_metadata)
+   1329     else:
+   1330       return self._do_call(_prun_fn, handle, feeds, fetches)
+
+~\Miniconda3\lib\site-packages\tensorflow\python\client\session.py in _do_call(self, fn, *args)
+   1332   def _do_call(self, fn, *args):
+   1333     try:
+-> 1334       return fn(*args)
+   1335     except errors.OpError as e:
+   1336       message = compat.as_text(e.message)
+
+~\Miniconda3\lib\site-packages\tensorflow\python\client\session.py in _run_fn(feed_dict, fetch_list, target_list, options, run_metadata)
+   1317       self._extend_graph()
+   1318       return self._call_tf_sessionrun(
+-> 1319           options, feed_dict, fetch_list, target_list, run_metadata)
+   1320 
+   1321     def _prun_fn(handle, feed_dict, fetch_list):
+
+~\Miniconda3\lib\site-packages\tensorflow\python\client\session.py in _call_tf_sessionrun(self, options, feed_dict, fetch_list, target_list, run_metadata)
+   1405     return tf_session.TF_SessionRun_wrapper(
+   1406         self._session, options, feed_dict, fetch_list, target_list,
+-> 1407         run_metadata)
+   1408 
+   1409   def _call_tf_sessionprun(self, handle, feed_dict, fetch_list):
+
+KeyboardInterrupt: 
+
+m1.graph_setting()
+m1.restore_graph(600)
+INFO:tensorflow:Restoring parameters from ./rnn_graph_save_5/cuav_rnn.ckpt-600
+wav_file_path_test = 'C://slice_wav_data/testing/'
+test_file_list = os.listdir(wav_file_path_test)
+print(test_file_list)
+['car_116.wav', 'car_118.wav', 'car_120.wav', 'car_1944.wav', 'car_2242.wav', 'car_2542.wav', 'drone_122.wav', 'drone_128.wav', 'drone_222.wav', 'drone_722.wav', 'drone_822.wav', 'drone_922.wav', 'other_027.wav', 'other_035.wav', 'other_40.wav', 'other_423.wav', 'other_425.wav', 'other_429.wav', 'person_1741.wav', 'person_1941.wav', 'person_2141.wav', 'person_615.wav', 'person_633.wav', 'person_641.wav']
+test_label_list = []
+for file in test_file_list:
+    test_label_list.append(file.split('_')[0])
+print(test_label_list)
+['car', 'car', 'car', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'other', 'other', 'other', 'other', 'other', 'other', 'person', 'person', 'person', 'person', 'person', 'person']
+result_list = []
+for file in test_file_list:
+    temp_tf = m1.predict(wav_file_path_test + file)
+    result_list.append(temp_tf)
+C://slice_wav_data/testing/car_116.wav
+(58, 21, 80)
+[2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+ 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2]
+others 0.0
+person 0.0
+car 1.0
+drone 0.0
+[(58, 'car'), (0, 'person'), (0, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_118.wav
+(58, 21, 80)
+[2 2 2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+ 2 2 2 2 2 2 2 2 2 1 2 1 1 2 1 1 1 3 3 3 3]
+others 0.0
+person 0.1206896551724138
+car 0.8103448275862069
+drone 0.06896551724137931
+[(47, 'car'), (7, 'person'), (4, 'drone'), (0, 'others')]
+
+C://slice_wav_data/testing/car_120.wav
+(58, 21, 80)
+[0 0 0 0 0 0 0 0 0 0 0 1 0 2 2 1 1 1 1 1 1 1 1 1 0 0 0 0 1 1 1 1 1 1 1 1 1
+ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.27586206896551724
+person 0.6896551724137931
+car 0.034482758620689655
+drone 0.0
+[(40, 'person'), (16, 'others'), (2, 'car'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_1944.wav
+(58, 21, 80)
+[2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2 2 2 2 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 1 2 2 2 2 2 2 2]
+others 0.25862068965517243
+person 0.034482758620689655
+car 0.7068965517241379
+drone 0.0
+[(41, 'car'), (15, 'others'), (2, 'person'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_2242.wav
+(58, 21, 80)
+[2 2 2 2 2 2 2 2 2 2 2 2 2 0 2 0 0 3 0 3 3 3 3 2 2 2 2 2 2 1 1 1 1 3 2 1 2
+ 1 1 1 1 2 2 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2]
+others 0.06896551724137931
+person 0.1724137931034483
+car 0.6551724137931034
+drone 0.10344827586206896
+[(38, 'car'), (10, 'person'), (6, 'drone'), (4, 'others')]
+
+C://slice_wav_data/testing/car_2542.wav
+(58, 21, 80)
+[1 1 2 2 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 3 3
+ 0 1 2 2 2 2 2 2 2 2 0 0 0 0 0 0 0 0 0 0 0]
+others 0.20689655172413793
+person 0.06896551724137931
+car 0.6896551724137931
+drone 0.034482758620689655
+[(40, 'car'), (12, 'others'), (4, 'person'), (2, 'drone')]
+
+C://slice_wav_data/testing/drone_122.wav
+(58, 21, 80)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+ 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(58, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_128.wav
+(58, 21, 80)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+ 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(58, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_222.wav
+(58, 21, 80)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+ 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(58, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_722.wav
+(58, 21, 80)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+ 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(58, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_822.wav
+(58, 21, 80)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+ 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(58, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_922.wav
+(58, 21, 80)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+ 3 3 3 3 3 3 3 3 3 3 3 3 3 0 3 3 3 3 3 3 3]
+others 0.017241379310344827
+person 0.0
+car 0.0
+drone 0.9827586206896551
+[(57, 'drone'), (1, 'others'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/other_027.wav
+(58, 21, 80)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 0 3 3 3 3 3 3 3 3 0 0 3 3 0 3 0 3 3 3 3 3 3 3 3
+ 3 3 3 3 3 3 3 3 3 3 3 3 1 1 3 1 1 0 3 3 0]
+others 0.1206896551724138
+person 0.06896551724137931
+car 0.0
+drone 0.8103448275862069
+[(47, 'drone'), (7, 'others'), (4, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/other_035.wav
+(58, 21, 80)
+[2 2 2 2 2 2 2 2 2 2 2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 0.7931034482758621
+person 0.0
+car 0.20689655172413793
+drone 0.0
+[(46, 'others'), (12, 'car'), (0, 'person'), (0, 'drone')]
+
+C://slice_wav_data/testing/other_40.wav
+(58, 21, 80)
+[3 3 0 0 0 3 3 3 3 1 3 3 3 3 3 3 3 3 0 3 3 0 0 0 0 0 0 0 0 3 3 3 3 1 3 3 3
+ 3 3 3 3 3 3 3 3 0 0 3 3 3 0 0 0 0 3 3 3 3]
+others 0.3103448275862069
+person 0.034482758620689655
+car 0.0
+drone 0.6551724137931034
+[(38, 'drone'), (18, 'others'), (2, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/other_423.wav
+(58, 21, 80)
+[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 1.0
+person 0.0
+car 0.0
+drone 0.0
+[(58, 'others'), (0, 'person'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/other_425.wav
+(58, 21, 80)
+[3 3 3 3 3 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 0.896551724137931
+person 0.0
+car 0.0
+drone 0.10344827586206896
+[(52, 'others'), (6, 'drone'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/other_429.wav
+(58, 21, 80)
+[3 3 3 3 3 3 3 3 3 0 0 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 0.8275862068965517
+person 0.0
+car 0.0
+drone 0.1724137931034483
+[(48, 'others'), (10, 'drone'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/person_1741.wav
+(58, 21, 80)
+[1 1 1 1 1 1 1 1 1 1 1 0 0 1 0 0 2 2 2 0 2 0 0 1 1 1 1 0 1 1 0 1 0 0 1 1 1
+ 1 0 0 2 0 0 1 0 0 2 2 2 2 2 2 2 2 2 0 0 0]
+others 0.3448275862068966
+person 0.41379310344827586
+car 0.2413793103448276
+drone 0.0
+[(24, 'person'), (20, 'others'), (14, 'car'), (0, 'drone')]
+
+C://slice_wav_data/testing/person_1941.wav
+(58, 21, 80)
+[1 1 1 1 0 1 1 1 0 1 1 1 0 1 0 2 0 0 0 0 2 2 2 2 2 2 2 2 2 0 0 0 2 2 2 2 2
+ 2 2 2 2 2 2 2 1 3 3 0 0 0 0 0 0 0 0 0 0 2]
+others 0.3620689655172414
+person 0.20689655172413793
+car 0.39655172413793105
+drone 0.034482758620689655
+[(23, 'car'), (21, 'others'), (12, 'person'), (2, 'drone')]
+
+C://slice_wav_data/testing/person_2141.wav
+(58, 21, 80)
+[2 2 2 2 2 0 0 2 1 2 2 2 2 2 2 2 2 1 1 1 2 0 0 0 0 0 0 0 0 0 0 2 2 2 2 2 0
+ 0 0 2 0 2 2 0 0 0 0 0 2 0 0 0 0 0 0 0 0 0]
+others 0.5172413793103449
+person 0.06896551724137931
+car 0.41379310344827586
+drone 0.0
+[(30, 'others'), (24, 'car'), (4, 'person'), (0, 'drone')]
+
+C://slice_wav_data/testing/person_615.wav
+(58, 21, 80)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(58, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_633.wav
+(58, 21, 80)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(58, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_641.wav
+(58, 21, 80)
+[3 3 3 3 1 1 1 2 2 2 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 0.8620689655172413
+car 0.06896551724137931
+drone 0.06896551724137931
+[(50, 'person'), (4, 'drone'), (4, 'car'), (0, 'others')]
+
+result_list
+['car',
+ 'car',
+ 'person',
+ 'car',
+ 'car',
+ 'car',
+ 'drone',
+ 'drone',
+ 'drone',
+ 'drone',
+ 'drone',
+ 'drone',
+ 'drone',
+ 'others',
+ 'drone',
+ 'others',
+ 'others',
+ 'others',
+ 'person',
+ 'car',
+ 'others',
+ 'person',
+ 'person',
+ 'person']
+true_count = 0
+for i in range(len(result_list)):
+    if result_list[i] == test_label_list[i] or result_list[i][:-1] == test_label_list[i]:
+        true_count += 1
+true_count/(len(result_list))
+0.7916666666666666
+total_result = []
+for i in range(0,601,100):
+    m1.graph_setting()
+    m1.restore_graph(1100+i)
+    result_temp = []
+    for file in test_file_list:
+        temp_ = m1.predict(wav_file_path_test + file)
+        result_temp.append(temp_)
+    total_result.append(result_temp) 
+    
+
+WARNING: The TensorFlow contrib module will not be included in TensorFlow 2.0.
+For more information, please see:
+  * https://github.com/tensorflow/community/blob/master/rfcs/20180907-contrib-sunset.md
+  * https://github.com/tensorflow/addons
+If you depend on functionality not listed there, please file an issue.
+
+WARNING:tensorflow:From C:\Users\kvlks\Miniconda3\lib\site-packages\tensorflow\python\framework\op_def_library.py:263: colocate_with (from tensorflow.python.framework.ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Colocations handled automatically by placer.
+WARNING:tensorflow:From <ipython-input-11-ebbedabf4408>:136: LSTMCell.__init__ (from tensorflow.python.ops.rnn_cell_impl) is deprecated and will be removed in a future version.
+Instructions for updating:
+This class is equivalent as tf.keras.layers.LSTMCell, and will be replaced by that in Tensorflow 2.0.
+WARNING:tensorflow:From <ipython-input-11-ebbedabf4408>:137: MultiRNNCell.__init__ (from tensorflow.python.ops.rnn_cell_impl) is deprecated and will be removed in a future version.
+Instructions for updating:
+This class is equivalent as tf.keras.layers.StackedRNNCells, and will be replaced by that in Tensorflow 2.0.
+WARNING:tensorflow:At least two cells provided to MultiRNNCell are the same object and will share weights.
+WARNING:tensorflow:From <ipython-input-11-ebbedabf4408>:138: dynamic_rnn (from tensorflow.python.ops.rnn) is deprecated and will be removed in a future version.
+Instructions for updating:
+Please use `keras.layers.RNN(cell)`, which is equivalent to this API
+WARNING:tensorflow:From C:\Users\kvlks\Miniconda3\lib\site-packages\tensorflow\python\ops\array_grad.py:425: to_int32 (from tensorflow.python.ops.math_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.cast instead.
+C:\Users\kvlks\Miniconda3\lib\site-packages\tensorflow\python\ops\gradients_impl.py:110: UserWarning: Converting sparse IndexedSlices to a dense Tensor of unknown shape. This may consume a large amount of memory.
+  "Converting sparse IndexedSlices to a dense Tensor of unknown shape. "
+WARNING:tensorflow:From C:\Users\kvlks\Miniconda3\lib\site-packages\tensorflow\python\training\saver.py:1266: checkpoint_exists (from tensorflow.python.training.checkpoint_management) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use standard file APIs to check for files with this prefix.
+INFO:tensorflow:Restoring parameters from ./rnn_graph_save_4/cuav_rnn.ckpt-1100
+C://slice_wav_data/testing/car_116.wav
+(22, 41, 40)
+[2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2]
+others 0.0
+person 0.0
+car 1.0
+drone 0.0
+[(22, 'car'), (0, 'person'), (0, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_118.wav
+(22, 41, 40)
+[0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 1 1 1 3]
+others 0.7272727272727273
+person 0.22727272727272727
+car 0.0
+drone 0.045454545454545456
+[(16, 'others'), (5, 'person'), (1, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/car_120.wav
+(22, 41, 40)
+[2 2 2 2 2 2 2 2 0 0 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.09090909090909091
+person 0.5454545454545454
+car 0.36363636363636365
+drone 0.0
+[(12, 'person'), (8, 'car'), (2, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_1944.wav
+(22, 41, 40)
+[2 2 2 2 0 2 0 0 0 0 1 2 2 2 2 0 0 0 0 0 0 0]
+others 0.5454545454545454
+person 0.045454545454545456
+car 0.4090909090909091
+drone 0.0
+[(12, 'others'), (9, 'car'), (1, 'person'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_2242.wav
+(22, 41, 40)
+[2 2 2 2 2 2 2 2 2 2 0 2 2 3 3 3 3 3 3 3 3 2]
+others 0.045454545454545456
+person 0.0
+car 0.5909090909090909
+drone 0.36363636363636365
+[(13, 'car'), (8, 'drone'), (1, 'others'), (0, 'person')]
+
+C://slice_wav_data/testing/car_2542.wav
+(22, 41, 40)
+[3 3 3 3 2 2 2 2 2 2 2 2 2 2 0 0 0 0 0 0 0 0]
+others 0.36363636363636365
+person 0.0
+car 0.45454545454545453
+drone 0.18181818181818182
+[(10, 'car'), (8, 'others'), (4, 'drone'), (0, 'person')]
+
+C://slice_wav_data/testing/drone_122.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 0 3 3 3]
+others 0.045454545454545456
+person 0.0
+car 0.0
+drone 0.9545454545454546
+[(21, 'drone'), (1, 'others'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_128.wav
+(22, 41, 40)
+[3 3 3 3 3 0 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.045454545454545456
+person 0.0
+car 0.0
+drone 0.9545454545454546
+[(21, 'drone'), (1, 'others'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_222.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 0 3 3 3 3 3 3 3 3 0 0 3 3]
+others 0.13636363636363635
+person 0.0
+car 0.0
+drone 0.8636363636363636
+[(19, 'drone'), (3, 'others'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_722.wav
+(22, 41, 40)
+[3 3 3 0 0 0 3 3 0 0 0 3 3 3 3 3 3 3 0 0 0 0]
+others 0.45454545454545453
+person 0.0
+car 0.0
+drone 0.5454545454545454
+[(12, 'drone'), (10, 'others'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_822.wav
+(22, 41, 40)
+[3 3 3 0 0 0 3 3 3 3 3 3 3 3 0 0 0 0 0 0 0 0]
+others 0.5
+person 0.0
+car 0.0
+drone 0.5
+[(11, 'others'), (11, 'drone'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_922.wav
+(22, 41, 40)
+[0 3 3 3 3 3 3 3 0 0 0 0 0 0 0 0 3 3 3 3 0 3]
+others 0.45454545454545453
+person 0.0
+car 0.0
+drone 0.5454545454545454
+[(12, 'drone'), (10, 'others'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/other_027.wav
+(22, 41, 40)
+[3 3 3 0 0 0 0 0 0 0 0 0 0 0 3 3 0 0 1 0 0 1]
+others 0.6818181818181818
+person 0.09090909090909091
+car 0.0
+drone 0.22727272727272727
+[(15, 'others'), (5, 'drone'), (2, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/other_035.wav
+(22, 41, 40)
+[0 0 2 2 2 2 0 2 2 0 0 0 0 0 0 0 0 0 0 1 0 0]
+others 0.6818181818181818
+person 0.045454545454545456
+car 0.2727272727272727
+drone 0.0
+[(15, 'others'), (6, 'car'), (1, 'person'), (0, 'drone')]
+
+C://slice_wav_data/testing/other_40.wav
+(22, 41, 40)
+[0 0 1 1 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 1 0 0]
+others 0.7727272727272727
+person 0.22727272727272727
+car 0.0
+drone 0.0
+[(17, 'others'), (5, 'person'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/other_423.wav
+(22, 41, 40)
+[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 1.0
+person 0.0
+car 0.0
+drone 0.0
+[(22, 'others'), (0, 'person'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/other_425.wav
+(22, 41, 40)
+[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 1.0
+person 0.0
+car 0.0
+drone 0.0
+[(22, 'others'), (0, 'person'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/other_429.wav
+(22, 41, 40)
+[3 3 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 0.8636363636363636
+person 0.0
+car 0.0
+drone 0.13636363636363635
+[(19, 'others'), (3, 'drone'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/person_1741.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0]
+others 0.045454545454545456
+person 0.9545454545454546
+car 0.0
+drone 0.0
+[(21, 'person'), (1, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_1941.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 2 1 1 2 0 1 1 1 1 1 0]
+others 0.09090909090909091
+person 0.8181818181818182
+car 0.09090909090909091
+drone 0.0
+[(18, 'person'), (2, 'others'), (2, 'car'), (0, 'drone')]
+
+C://slice_wav_data/testing/person_2141.wav
+(22, 41, 40)
+[2 1 1 0 0 1 1 1 1 1 0 0 2 0 2 2 2 0 0 0 0 0]
+others 0.45454545454545453
+person 0.3181818181818182
+car 0.22727272727272727
+drone 0.0
+[(10, 'others'), (7, 'person'), (5, 'car'), (0, 'drone')]
+
+C://slice_wav_data/testing/person_615.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(22, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_633.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 0.9545454545454546
+car 0.045454545454545456
+drone 0.0
+[(21, 'person'), (1, 'car'), (0, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/person_641.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1]
+others 0.045454545454545456
+person 0.9545454545454546
+car 0.0
+drone 0.0
+[(21, 'person'), (1, 'others'), (0, 'drone'), (0, 'car')]
+
+INFO:tensorflow:Restoring parameters from ./rnn_graph_save_4/cuav_rnn.ckpt-1200
+C://slice_wav_data/testing/car_116.wav
+(22, 41, 40)
+[2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2]
+others 0.0
+person 0.0
+car 1.0
+drone 0.0
+[(22, 'car'), (0, 'person'), (0, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_118.wav
+(22, 41, 40)
+[1 0 0 3 3 3 0 1 1 1 0 1 1 2 0 2 0 1 1 1 1 1]
+others 0.2727272727272727
+person 0.5
+car 0.09090909090909091
+drone 0.13636363636363635
+[(11, 'person'), (6, 'others'), (3, 'drone'), (2, 'car')]
+
+C://slice_wav_data/testing/car_120.wav
+(22, 41, 40)
+[2 2 2 2 2 2 2 2 0 0 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.09090909090909091
+person 0.5454545454545454
+car 0.36363636363636365
+drone 0.0
+[(12, 'person'), (8, 'car'), (2, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_1944.wav
+(22, 41, 40)
+[2 2 2 2 2 2 0 0 0 1 1 2 2 2 0 0 0 0 0 0 0 2]
+others 0.45454545454545453
+person 0.09090909090909091
+car 0.45454545454545453
+drone 0.0
+[(10, 'others'), (10, 'car'), (2, 'person'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_2242.wav
+(22, 41, 40)
+[2 2 2 2 2 2 2 2 2 2 0 2 2 3 3 3 3 3 3 2 2 2]
+others 0.045454545454545456
+person 0.0
+car 0.6818181818181818
+drone 0.2727272727272727
+[(15, 'car'), (6, 'drone'), (1, 'others'), (0, 'person')]
+
+C://slice_wav_data/testing/car_2542.wav
+(22, 41, 40)
+[3 3 3 3 2 2 2 2 2 2 2 2 2 2 0 0 2 2 2 0 0 0]
+others 0.22727272727272727
+person 0.0
+car 0.5909090909090909
+drone 0.18181818181818182
+[(13, 'car'), (5, 'others'), (4, 'drone'), (0, 'person')]
+
+C://slice_wav_data/testing/drone_122.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_128.wav
+(22, 41, 40)
+[3 3 3 3 3 0 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.045454545454545456
+person 0.0
+car 0.0
+drone 0.9545454545454546
+[(21, 'drone'), (1, 'others'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_222.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_722.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_822.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_922.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/other_027.wav
+(22, 41, 40)
+[3 3 3 3 3 3 0 0 0 0 0 0 0 0 3 3 3 3 1 3 3 1]
+others 0.36363636363636365
+person 0.09090909090909091
+car 0.0
+drone 0.5454545454545454
+[(12, 'drone'), (8, 'others'), (2, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/other_035.wav
+(22, 41, 40)
+[0 0 0 2 2 0 0 2 0 0 0 0 0 0 0 0 0 0 0 1 0 0]
+others 0.8181818181818182
+person 0.045454545454545456
+car 0.13636363636363635
+drone 0.0
+[(18, 'others'), (3, 'car'), (1, 'person'), (0, 'drone')]
+
+C://slice_wav_data/testing/other_40.wav
+(22, 41, 40)
+[3 1 1 1 2 1 1 1 2 2 2 0 2 2 2 0 0 1 1 1 1 1]
+others 0.13636363636363635
+person 0.5
+car 0.3181818181818182
+drone 0.045454545454545456
+[(11, 'person'), (7, 'car'), (3, 'others'), (1, 'drone')]
+
+C://slice_wav_data/testing/other_423.wav
+(22, 41, 40)
+[0 0 0 0 0 0 0 3 0 3 3 0 0 0 0 0 0 0 0 0 0 0]
+others 0.8636363636363636
+person 0.0
+car 0.0
+drone 0.13636363636363635
+[(19, 'others'), (3, 'drone'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/other_425.wav
+(22, 41, 40)
+[3 3 3 0 0 0 0 3 3 0 3 0 0 0 0 0 0 0 0 0 0 0]
+others 0.7272727272727273
+person 0.0
+car 0.0
+drone 0.2727272727272727
+[(16, 'others'), (6, 'drone'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/other_429.wav
+(22, 41, 40)
+[3 0 0 0 3 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 0.8636363636363636
+person 0.0
+car 0.0
+drone 0.13636363636363635
+[(19, 'others'), (3, 'drone'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/person_1741.wav
+(22, 41, 40)
+[1 1 1 1 1 2 1 1 2 1 1 1 1 1 1 1 1 1 2 1 2 2]
+others 0.0
+person 0.7727272727272727
+car 0.22727272727272727
+drone 0.0
+[(17, 'person'), (5, 'car'), (0, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/person_1941.wav
+(22, 41, 40)
+[2 1 1 1 1 1 1 2 1 2 1 2 2 2 2 2 2 2 2 2 2 2]
+others 0.0
+person 0.36363636363636365
+car 0.6363636363636364
+drone 0.0
+[(14, 'car'), (8, 'person'), (0, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/person_2141.wav
+(22, 41, 40)
+[2 2 2 2 2 2 2 2 2 2 2 2 2 0 2 2 2 2 0 0 0 0]
+others 0.22727272727272727
+person 0.0
+car 0.7727272727272727
+drone 0.0
+[(17, 'car'), (5, 'others'), (0, 'person'), (0, 'drone')]
+
+C://slice_wav_data/testing/person_615.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(22, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_633.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(22, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_641.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(22, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+INFO:tensorflow:Restoring parameters from ./rnn_graph_save_4/cuav_rnn.ckpt-1300
+C://slice_wav_data/testing/car_116.wav
+(22, 41, 40)
+[2 2 2 2 2 2 2 0 2 2 2 2 2 2 2 2 2 2 2 2 2 2]
+others 0.045454545454545456
+person 0.0
+car 0.9545454545454546
+drone 0.0
+[(21, 'car'), (1, 'others'), (0, 'person'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_118.wav
+(22, 41, 40)
+[1 0 0 0 0 0 0 0 0 1 0 1 0 0 0 0 0 1 1 1 1 1]
+others 0.6363636363636364
+person 0.36363636363636365
+car 0.0
+drone 0.0
+[(14, 'others'), (8, 'person'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/car_120.wav
+(22, 41, 40)
+[2 2 2 2 2 2 2 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.09090909090909091
+person 0.5909090909090909
+car 0.3181818181818182
+drone 0.0
+[(13, 'person'), (7, 'car'), (2, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_1944.wav
+(22, 41, 40)
+[2 2 2 2 2 2 0 0 0 3 3 2 2 0 1 0 0 0 0 0 0 0]
+others 0.5
+person 0.045454545454545456
+car 0.36363636363636365
+drone 0.09090909090909091
+[(11, 'others'), (8, 'car'), (2, 'drone'), (1, 'person')]
+
+C://slice_wav_data/testing/car_2242.wav
+(22, 41, 40)
+[2 2 2 2 2 2 2 2 2 2 0 2 2 3 3 3 3 3 3 3 2 2]
+others 0.045454545454545456
+person 0.0
+car 0.6363636363636364
+drone 0.3181818181818182
+[(14, 'car'), (7, 'drone'), (1, 'others'), (0, 'person')]
+
+C://slice_wav_data/testing/car_2542.wav
+(22, 41, 40)
+[3 3 3 3 2 2 2 2 2 2 2 2 2 0 0 0 0 2 0 0 0 0]
+others 0.36363636363636365
+person 0.0
+car 0.45454545454545453
+drone 0.18181818181818182
+[(10, 'car'), (8, 'others'), (4, 'drone'), (0, 'person')]
+
+C://slice_wav_data/testing/drone_122.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_128.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_222.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 0 3 3]
+others 0.045454545454545456
+person 0.0
+car 0.0
+drone 0.9545454545454546
+[(21, 'drone'), (1, 'others'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_722.wav
+(22, 41, 40)
+[3 3 3 3 3 0 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.045454545454545456
+person 0.0
+car 0.0
+drone 0.9545454545454546
+[(21, 'drone'), (1, 'others'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_822.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 0 0 0 3 0]
+others 0.18181818181818182
+person 0.0
+car 0.0
+drone 0.8181818181818182
+[(18, 'drone'), (4, 'others'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_922.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 0 3 0 0 3 0 3 3 3 3 0 3]
+others 0.22727272727272727
+person 0.0
+car 0.0
+drone 0.7727272727272727
+[(17, 'drone'), (5, 'others'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/other_027.wav
+(22, 41, 40)
+[3 3 3 0 3 0 0 0 0 0 0 0 0 0 3 3 3 3 3 3 3 1]
+others 0.45454545454545453
+person 0.045454545454545456
+car 0.0
+drone 0.5
+[(11, 'drone'), (10, 'others'), (1, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/other_035.wav
+(22, 41, 40)
+[0 0 0 2 2 0 0 2 0 1 0 0 0 0 0 0 0 0 1 1 1 0]
+others 0.6818181818181818
+person 0.18181818181818182
+car 0.13636363636363635
+drone 0.0
+[(15, 'others'), (4, 'person'), (3, 'car'), (0, 'drone')]
+
+C://slice_wav_data/testing/other_40.wav
+(22, 41, 40)
+[0 0 1 1 1 1 0 1 0 0 0 0 0 0 0 1 0 0 0 1 1 0]
+others 0.6363636363636364
+person 0.36363636363636365
+car 0.0
+drone 0.0
+[(14, 'others'), (8, 'person'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/other_423.wav
+(22, 41, 40)
+[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 1.0
+person 0.0
+car 0.0
+drone 0.0
+[(22, 'others'), (0, 'person'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/other_425.wav
+(22, 41, 40)
+[0 3 0 0 0 0 0 0 3 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 0.9090909090909091
+person 0.0
+car 0.0
+drone 0.09090909090909091
+[(20, 'others'), (2, 'drone'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/other_429.wav
+(22, 41, 40)
+[3 3 3 3 3 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 0.7272727272727273
+person 0.0
+car 0.0
+drone 0.2727272727272727
+[(16, 'others'), (6, 'drone'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/person_1741.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(22, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_1941.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(22, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_2141.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 2 2 2 1 1 2 2 2 0 0 0]
+others 0.13636363636363635
+person 0.5909090909090909
+car 0.2727272727272727
+drone 0.0
+[(13, 'person'), (6, 'car'), (3, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/person_615.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(22, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_633.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(22, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_641.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1]
+others 0.045454545454545456
+person 0.9545454545454546
+car 0.0
+drone 0.0
+[(21, 'person'), (1, 'others'), (0, 'drone'), (0, 'car')]
+
+INFO:tensorflow:Restoring parameters from ./rnn_graph_save_4/cuav_rnn.ckpt-1400
+C://slice_wav_data/testing/car_116.wav
+(22, 41, 40)
+[2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2]
+others 0.0
+person 0.0
+car 1.0
+drone 0.0
+[(22, 'car'), (0, 'person'), (0, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_118.wav
+(22, 41, 40)
+[0 0 0 3 3 3 0 0 0 0 0 1 1 0 0 1 1 1 1 1 1 3]
+others 0.45454545454545453
+person 0.36363636363636365
+car 0.0
+drone 0.18181818181818182
+[(10, 'others'), (8, 'person'), (4, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/car_120.wav
+(22, 41, 40)
+[2 2 2 2 0 0 2 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.18181818181818182
+person 0.5909090909090909
+car 0.22727272727272727
+drone 0.0
+[(13, 'person'), (5, 'car'), (4, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_1944.wav
+(22, 41, 40)
+[2 2 2 2 2 2 0 0 0 1 2 2 2 2 0 2 0 0 0 0 0 1]
+others 0.4090909090909091
+person 0.09090909090909091
+car 0.5
+drone 0.0
+[(11, 'car'), (9, 'others'), (2, 'person'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_2242.wav
+(22, 41, 40)
+[2 2 2 2 2 2 2 2 2 2 2 2 2 2 3 3 3 3 3 3 3 2]
+others 0.0
+person 0.0
+car 0.6818181818181818
+drone 0.3181818181818182
+[(15, 'car'), (7, 'drone'), (0, 'person'), (0, 'others')]
+
+C://slice_wav_data/testing/car_2542.wav
+(22, 41, 40)
+[3 3 3 3 2 2 2 2 2 2 2 2 2 0 0 0 0 0 0 0 0 0]
+others 0.4090909090909091
+person 0.0
+car 0.4090909090909091
+drone 0.18181818181818182
+[(9, 'others'), (9, 'car'), (4, 'drone'), (0, 'person')]
+
+C://slice_wav_data/testing/drone_122.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_128.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_222.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_722.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_822.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_922.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 0 0 3 3 3 3 3 3 3 3]
+others 0.09090909090909091
+person 0.0
+car 0.0
+drone 0.9090909090909091
+[(20, 'drone'), (2, 'others'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/other_027.wav
+(22, 41, 40)
+[3 3 3 3 3 3 0 0 0 0 0 0 0 1 1 3 3 3 1 3 1 1]
+others 0.3181818181818182
+person 0.22727272727272727
+car 0.0
+drone 0.45454545454545453
+[(10, 'drone'), (7, 'others'), (5, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/other_035.wav
+(22, 41, 40)
+[0 0 2 2 2 2 0 2 0 1 0 0 0 0 0 0 0 0 1 0 0 0]
+others 0.6818181818181818
+person 0.09090909090909091
+car 0.22727272727272727
+drone 0.0
+[(15, 'others'), (5, 'car'), (2, 'person'), (0, 'drone')]
+
+C://slice_wav_data/testing/other_40.wav
+(22, 41, 40)
+[0 3 1 1 1 1 1 1 0 0 1 0 1 0 0 1 0 0 0 1 1 0]
+others 0.45454545454545453
+person 0.5
+car 0.0
+drone 0.045454545454545456
+[(11, 'person'), (10, 'others'), (1, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/other_423.wav
+(22, 41, 40)
+[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 1.0
+person 0.0
+car 0.0
+drone 0.0
+[(22, 'others'), (0, 'person'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/other_425.wav
+(22, 41, 40)
+[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 1.0
+person 0.0
+car 0.0
+drone 0.0
+[(22, 'others'), (0, 'person'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/other_429.wav
+(22, 41, 40)
+[0 3 3 3 3 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 0.7727272727272727
+person 0.0
+car 0.0
+drone 0.22727272727272727
+[(17, 'others'), (5, 'drone'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/person_1741.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(22, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_1941.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 2]
+others 0.0
+person 0.9090909090909091
+car 0.09090909090909091
+drone 0.0
+[(20, 'person'), (2, 'car'), (0, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/person_2141.wav
+(22, 41, 40)
+[1 1 1 2 1 1 1 1 1 1 2 2 2 0 2 2 2 2 2 0 0 0]
+others 0.18181818181818182
+person 0.4090909090909091
+car 0.4090909090909091
+drone 0.0
+[(9, 'person'), (9, 'car'), (4, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/person_615.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(22, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_633.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(22, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_641.wav
+(22, 41, 40)
+[2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 0.9545454545454546
+car 0.045454545454545456
+drone 0.0
+[(21, 'person'), (1, 'car'), (0, 'others'), (0, 'drone')]
+
+INFO:tensorflow:Restoring parameters from ./rnn_graph_save_4/cuav_rnn.ckpt-1500
+C://slice_wav_data/testing/car_116.wav
+(22, 41, 40)
+[2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2]
+others 0.0
+person 0.0
+car 1.0
+drone 0.0
+[(22, 'car'), (0, 'person'), (0, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_118.wav
+(22, 41, 40)
+[0 0 0 3 3 3 0 0 0 0 0 1 1 0 0 1 1 1 1 1 1 3]
+others 0.45454545454545453
+person 0.36363636363636365
+car 0.0
+drone 0.18181818181818182
+[(10, 'others'), (8, 'person'), (4, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/car_120.wav
+(22, 41, 40)
+[2 2 2 2 0 2 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.18181818181818182
+person 0.5909090909090909
+car 0.22727272727272727
+drone 0.0
+[(13, 'person'), (5, 'car'), (4, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_1944.wav
+(22, 41, 40)
+[2 2 2 2 2 2 2 0 0 1 2 2 2 2 0 0 0 0 0 0 0 1]
+others 0.4090909090909091
+person 0.09090909090909091
+car 0.5
+drone 0.0
+[(11, 'car'), (9, 'others'), (2, 'person'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_2242.wav
+(22, 41, 40)
+[2 2 2 2 2 2 2 2 2 2 2 2 2 2 3 3 3 3 3 3 2 2]
+others 0.0
+person 0.0
+car 0.7272727272727273
+drone 0.2727272727272727
+[(16, 'car'), (6, 'drone'), (0, 'person'), (0, 'others')]
+
+C://slice_wav_data/testing/car_2542.wav
+(22, 41, 40)
+[3 3 3 3 2 2 2 2 2 2 2 2 2 0 0 0 0 2 0 0 0 0]
+others 0.36363636363636365
+person 0.0
+car 0.45454545454545453
+drone 0.18181818181818182
+[(10, 'car'), (8, 'others'), (4, 'drone'), (0, 'person')]
+
+C://slice_wav_data/testing/drone_122.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_128.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 0 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.045454545454545456
+person 0.0
+car 0.0
+drone 0.9545454545454546
+[(21, 'drone'), (1, 'others'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_222.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_722.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_822.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_922.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 0 0 3 3 3 3 3 3 3 3]
+others 0.09090909090909091
+person 0.0
+car 0.0
+drone 0.9090909090909091
+[(20, 'drone'), (2, 'others'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/other_027.wav
+(22, 41, 40)
+[3 3 3 3 3 3 0 0 0 0 0 0 0 1 1 3 3 3 1 3 1 1]
+others 0.3181818181818182
+person 0.22727272727272727
+car 0.0
+drone 0.45454545454545453
+[(10, 'drone'), (7, 'others'), (5, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/other_035.wav
+(22, 41, 40)
+[0 0 2 2 2 2 0 2 0 1 0 0 0 0 0 0 0 0 1 1 0 0]
+others 0.6363636363636364
+person 0.13636363636363635
+car 0.22727272727272727
+drone 0.0
+[(14, 'others'), (5, 'car'), (3, 'person'), (0, 'drone')]
+
+C://slice_wav_data/testing/other_40.wav
+(22, 41, 40)
+[0 3 0 1 1 1 1 1 0 0 1 0 1 0 0 1 0 0 0 0 1 0]
+others 0.5454545454545454
+person 0.4090909090909091
+car 0.0
+drone 0.045454545454545456
+[(12, 'others'), (9, 'person'), (1, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/other_423.wav
+(22, 41, 40)
+[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 1.0
+person 0.0
+car 0.0
+drone 0.0
+[(22, 'others'), (0, 'person'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/other_425.wav
+(22, 41, 40)
+[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 1.0
+person 0.0
+car 0.0
+drone 0.0
+[(22, 'others'), (0, 'person'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/other_429.wav
+(22, 41, 40)
+[0 3 3 3 3 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 0.7727272727272727
+person 0.0
+car 0.0
+drone 0.22727272727272727
+[(17, 'others'), (5, 'drone'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/person_1741.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(22, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_1941.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1]
+others 0.0
+person 0.9545454545454546
+car 0.045454545454545456
+drone 0.0
+[(21, 'person'), (1, 'car'), (0, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/person_2141.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 2 2 2 0 2 2 2 2 0 0 0 0]
+others 0.22727272727272727
+person 0.45454545454545453
+car 0.3181818181818182
+drone 0.0
+[(10, 'person'), (7, 'car'), (5, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/person_615.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(22, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_633.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(22, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_641.wav
+(22, 41, 40)
+[2 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 0.9090909090909091
+car 0.09090909090909091
+drone 0.0
+[(20, 'person'), (2, 'car'), (0, 'others'), (0, 'drone')]
+
+INFO:tensorflow:Restoring parameters from ./rnn_graph_save_4/cuav_rnn.ckpt-1600
+C://slice_wav_data/testing/car_116.wav
+(22, 41, 40)
+[2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2]
+others 0.0
+person 0.0
+car 1.0
+drone 0.0
+[(22, 'car'), (0, 'person'), (0, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_118.wav
+(22, 41, 40)
+[0 0 0 3 3 3 0 0 0 0 0 1 1 1 0 1 1 1 1 1 1 3]
+others 0.4090909090909091
+person 0.4090909090909091
+car 0.0
+drone 0.18181818181818182
+[(9, 'person'), (9, 'others'), (4, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/car_120.wav
+(22, 41, 40)
+[2 2 2 2 0 2 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.18181818181818182
+person 0.5909090909090909
+car 0.22727272727272727
+drone 0.0
+[(13, 'person'), (5, 'car'), (4, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_1944.wav
+(22, 41, 40)
+[2 2 2 2 2 2 2 0 0 1 2 2 2 2 0 0 0 0 0 0 0 1]
+others 0.4090909090909091
+person 0.09090909090909091
+car 0.5
+drone 0.0
+[(11, 'car'), (9, 'others'), (2, 'person'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_2242.wav
+(22, 41, 40)
+[2 2 2 2 2 2 2 2 2 2 2 2 2 2 3 3 3 3 3 3 2 2]
+others 0.0
+person 0.0
+car 0.7272727272727273
+drone 0.2727272727272727
+[(16, 'car'), (6, 'drone'), (0, 'person'), (0, 'others')]
+
+C://slice_wav_data/testing/car_2542.wav
+(22, 41, 40)
+[3 3 3 3 2 2 2 2 2 2 2 2 2 0 0 0 0 2 0 0 0 0]
+others 0.36363636363636365
+person 0.0
+car 0.45454545454545453
+drone 0.18181818181818182
+[(10, 'car'), (8, 'others'), (4, 'drone'), (0, 'person')]
+
+C://slice_wav_data/testing/drone_122.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_128.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 0 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.045454545454545456
+person 0.0
+car 0.0
+drone 0.9545454545454546
+[(21, 'drone'), (1, 'others'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_222.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_722.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_822.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 0 3 3 3]
+others 0.045454545454545456
+person 0.0
+car 0.0
+drone 0.9545454545454546
+[(21, 'drone'), (1, 'others'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_922.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 0 0 3 3 3 3 3 3 3 3]
+others 0.09090909090909091
+person 0.0
+car 0.0
+drone 0.9090909090909091
+[(20, 'drone'), (2, 'others'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/other_027.wav
+(22, 41, 40)
+[3 3 3 0 3 3 0 0 0 0 0 0 0 1 0 3 3 3 1 1 1 0]
+others 0.45454545454545453
+person 0.18181818181818182
+car 0.0
+drone 0.36363636363636365
+[(10, 'others'), (8, 'drone'), (4, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/other_035.wav
+(22, 41, 40)
+[0 0 0 2 2 2 0 2 0 1 0 0 0 0 0 0 0 0 1 1 0 0]
+others 0.6818181818181818
+person 0.13636363636363635
+car 0.18181818181818182
+drone 0.0
+[(15, 'others'), (4, 'car'), (3, 'person'), (0, 'drone')]
+
+C://slice_wav_data/testing/other_40.wav
+(22, 41, 40)
+[0 3 1 1 1 1 3 1 1 0 1 0 1 0 0 1 0 0 0 0 1 0]
+others 0.45454545454545453
+person 0.45454545454545453
+car 0.0
+drone 0.09090909090909091
+[(10, 'person'), (10, 'others'), (2, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/other_423.wav
+(22, 41, 40)
+[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 1.0
+person 0.0
+car 0.0
+drone 0.0
+[(22, 'others'), (0, 'person'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/other_425.wav
+(22, 41, 40)
+[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 1.0
+person 0.0
+car 0.0
+drone 0.0
+[(22, 'others'), (0, 'person'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/other_429.wav
+(22, 41, 40)
+[0 3 3 3 3 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 0.7727272727272727
+person 0.0
+car 0.0
+drone 0.22727272727272727
+[(17, 'others'), (5, 'drone'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/person_1741.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(22, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_1941.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1]
+others 0.0
+person 0.9545454545454546
+car 0.045454545454545456
+drone 0.0
+[(21, 'person'), (1, 'car'), (0, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/person_2141.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 0 1 2 0 1 2 2 0 0 0 0 0]
+others 0.3181818181818182
+person 0.5454545454545454
+car 0.13636363636363635
+drone 0.0
+[(12, 'person'), (7, 'others'), (3, 'car'), (0, 'drone')]
+
+C://slice_wav_data/testing/person_615.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(22, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_633.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(22, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_641.wav
+(22, 41, 40)
+[2 2 1 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 0.8636363636363636
+car 0.13636363636363635
+drone 0.0
+[(19, 'person'), (3, 'car'), (0, 'others'), (0, 'drone')]
+
+INFO:tensorflow:Restoring parameters from ./rnn_graph_save_4/cuav_rnn.ckpt-1700
+C://slice_wav_data/testing/car_116.wav
+(22, 41, 40)
+[2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2]
+others 0.0
+person 0.0
+car 1.0
+drone 0.0
+[(22, 'car'), (0, 'person'), (0, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_118.wav
+(22, 41, 40)
+[0 0 0 3 3 3 0 0 0 0 0 1 1 1 0 1 1 1 1 1 1 3]
+others 0.4090909090909091
+person 0.4090909090909091
+car 0.0
+drone 0.18181818181818182
+[(9, 'person'), (9, 'others'), (4, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/car_120.wav
+(22, 41, 40)
+[2 2 2 2 0 0 2 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.18181818181818182
+person 0.5909090909090909
+car 0.22727272727272727
+drone 0.0
+[(13, 'person'), (5, 'car'), (4, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_1944.wav
+(22, 41, 40)
+[2 2 2 2 2 2 2 0 0 1 2 2 2 2 0 0 0 0 0 0 0 0]
+others 0.45454545454545453
+person 0.045454545454545456
+car 0.5
+drone 0.0
+[(11, 'car'), (10, 'others'), (1, 'person'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_2242.wav
+(22, 41, 40)
+[2 2 2 2 2 2 2 2 2 2 2 2 2 2 3 3 3 3 3 3 2 2]
+others 0.0
+person 0.0
+car 0.7272727272727273
+drone 0.2727272727272727
+[(16, 'car'), (6, 'drone'), (0, 'person'), (0, 'others')]
+
+C://slice_wav_data/testing/car_2542.wav
+(22, 41, 40)
+[3 3 3 3 2 2 2 2 2 2 2 2 2 0 0 0 2 2 0 0 0 0]
+others 0.3181818181818182
+person 0.0
+car 0.5
+drone 0.18181818181818182
+[(11, 'car'), (7, 'others'), (4, 'drone'), (0, 'person')]
+
+C://slice_wav_data/testing/drone_122.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_128.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 0 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.045454545454545456
+person 0.0
+car 0.0
+drone 0.9545454545454546
+[(21, 'drone'), (1, 'others'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_222.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_722.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(22, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_822.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 0 3 3 3]
+others 0.045454545454545456
+person 0.0
+car 0.0
+drone 0.9545454545454546
+[(21, 'drone'), (1, 'others'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_922.wav
+(22, 41, 40)
+[3 3 3 3 3 3 3 3 3 3 3 3 0 0 3 3 3 3 3 3 3 3]
+others 0.09090909090909091
+person 0.0
+car 0.0
+drone 0.9090909090909091
+[(20, 'drone'), (2, 'others'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/other_027.wav
+(22, 41, 40)
+[3 3 3 0 0 3 0 0 0 0 0 0 0 1 0 3 3 3 1 1 1 0]
+others 0.5
+person 0.18181818181818182
+car 0.0
+drone 0.3181818181818182
+[(11, 'others'), (7, 'drone'), (4, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/other_035.wav
+(22, 41, 40)
+[0 0 0 2 2 2 0 2 0 1 0 0 0 0 0 0 0 0 1 0 0 0]
+others 0.7272727272727273
+person 0.09090909090909091
+car 0.18181818181818182
+drone 0.0
+[(16, 'others'), (4, 'car'), (2, 'person'), (0, 'drone')]
+
+C://slice_wav_data/testing/other_40.wav
+(22, 41, 40)
+[3 3 3 1 1 1 3 1 1 1 1 0 0 0 0 1 3 0 0 1 1 0]
+others 0.3181818181818182
+person 0.45454545454545453
+car 0.0
+drone 0.22727272727272727
+[(10, 'person'), (7, 'others'), (5, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/other_423.wav
+(22, 41, 40)
+[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 1.0
+person 0.0
+car 0.0
+drone 0.0
+[(22, 'others'), (0, 'person'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/other_425.wav
+(22, 41, 40)
+[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 1.0
+person 0.0
+car 0.0
+drone 0.0
+[(22, 'others'), (0, 'person'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/other_429.wav
+(22, 41, 40)
+[3 3 3 3 3 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+others 0.7272727272727273
+person 0.0
+car 0.0
+drone 0.2727272727272727
+[(16, 'others'), (6, 'drone'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/person_1741.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(22, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_1941.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1]
+others 0.0
+person 0.9545454545454546
+car 0.045454545454545456
+drone 0.0
+[(21, 'person'), (1, 'car'), (0, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/person_2141.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 0 1 0 0 2 2 2 0 0 0 0 0]
+others 0.36363636363636365
+person 0.5
+car 0.13636363636363635
+drone 0.0
+[(11, 'person'), (8, 'others'), (3, 'car'), (0, 'drone')]
+
+C://slice_wav_data/testing/person_615.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(22, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_633.wav
+(22, 41, 40)
+[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(22, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+C://slice_wav_data/testing/person_641.wav
+(22, 41, 40)
+[2 2 1 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+others 0.0
+person 0.8636363636363636
+car 0.13636363636363635
+drone 0.0
+[(19, 'person'), (3, 'car'), (0, 'others'), (0, 'drone')]
+
+total_result_np = np.array(total_result)
+total_result_np.shape
+(7, 24)
+total_result_np
+array([['car', 'others', 'person', 'others', 'car', 'car', 'drone',
+        'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others',
+        'others', 'others', 'others', 'others', 'person', 'person',
+        'others', 'person', 'person', 'person'],
+       ['car', 'person', 'person', 'others', 'car', 'car', 'drone',
+        'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others',
+        'person', 'others', 'others', 'others', 'person', 'car', 'car',
+        'person', 'person', 'person'],
+       ['car', 'others', 'person', 'others', 'car', 'car', 'drone',
+        'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others',
+        'others', 'others', 'others', 'others', 'person', 'person',
+        'person', 'person', 'person', 'person'],
+       ['car', 'others', 'person', 'car', 'car', 'others', 'drone',
+        'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others',
+        'person', 'others', 'others', 'others', 'person', 'person',
+        'person', 'person', 'person', 'person'],
+       ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone',
+        'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others',
+        'others', 'others', 'others', 'person', 'person', 'person',
+        'person', 'person', 'person'],
+       ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone',
+        'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person',
+        'others', 'others', 'others', 'person', 'person', 'person',
+        'person', 'person', 'person'],
+       ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone',
+        'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person',
+        'others', 'others', 'others', 'person', 'person', 'person',
+        'person', 'person', 'person']], dtype='<U6')
+total_dict = [{'others': 0, 'person': 0, 'car': 0, 'drone': 0,} for _ in range(len(result_list))]
+print(total_dict)
+for one_result in (total_result):
+    for i, label in enumerate(one_result):
+        print(i, one_result)
+        total_dict[i][label] += 1
+        
+[{'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}, {'others': 0, 'person': 0, 'car': 0, 'drone': 0}]
+0 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+1 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+2 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+3 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+4 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+5 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+6 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+7 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+8 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+9 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+10 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+11 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+12 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+13 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+14 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+15 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+16 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+17 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+18 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+19 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+20 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+21 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+22 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+23 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'others', 'drone', 'others', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'others', 'person', 'person', 'person']
+0 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+1 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+2 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+3 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+4 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+5 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+6 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+7 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+8 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+9 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+10 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+11 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+12 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+13 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+14 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+15 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+16 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+17 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+18 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+19 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+20 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+21 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+22 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+23 ['car', 'person', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'car', 'car', 'person', 'person', 'person']
+0 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+1 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+2 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+3 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+4 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+5 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+6 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+7 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+8 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+9 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+10 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+11 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+12 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+13 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+14 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+15 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+16 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+17 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+18 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+19 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+20 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+21 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+22 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+23 ['car', 'others', 'person', 'others', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+0 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+1 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+2 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+3 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+4 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+5 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+6 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+7 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+8 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+9 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+10 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+11 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+12 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+13 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+14 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+15 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+16 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+17 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+18 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+19 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+20 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+21 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+22 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+23 ['car', 'others', 'person', 'car', 'car', 'others', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+0 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+1 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+2 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+3 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+4 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+5 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+6 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+7 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+8 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+9 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+10 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+11 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+12 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+13 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+14 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+15 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+16 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+17 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+18 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+19 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+20 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+21 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+22 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+23 ['car', 'others', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+0 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+1 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+2 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+3 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+4 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+5 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+6 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+7 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+8 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+9 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+10 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+11 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+12 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+13 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+14 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+15 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+16 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+17 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+18 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+19 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+20 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+21 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+22 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+23 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+0 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+1 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+2 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+3 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+4 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+5 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+6 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+7 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+8 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+9 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+10 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+11 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+12 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+13 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+14 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+15 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+16 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+17 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+18 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+19 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+20 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+21 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+22 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+23 ['car', 'person', 'person', 'car', 'car', 'car', 'drone', 'drone', 'drone', 'drone', 'drone', 'drone', 'others', 'others', 'person', 'others', 'others', 'others', 'person', 'person', 'person', 'person', 'person', 'person']
+total_dict
+[{'others': 0, 'person': 0, 'car': 7, 'drone': 0},
+ {'others': 4, 'person': 3, 'car': 0, 'drone': 0},
+ {'others': 0, 'person': 7, 'car': 0, 'drone': 0},
+ {'others': 3, 'person': 0, 'car': 4, 'drone': 0},
+ {'others': 0, 'person': 0, 'car': 7, 'drone': 0},
+ {'others': 1, 'person': 0, 'car': 6, 'drone': 0},
+ {'others': 0, 'person': 0, 'car': 0, 'drone': 7},
+ {'others': 0, 'person': 0, 'car': 0, 'drone': 7},
+ {'others': 0, 'person': 0, 'car': 0, 'drone': 7},
+ {'others': 0, 'person': 0, 'car': 0, 'drone': 7},
+ {'others': 1, 'person': 0, 'car': 0, 'drone': 6},
+ {'others': 0, 'person': 0, 'car': 0, 'drone': 7},
+ {'others': 3, 'person': 0, 'car': 0, 'drone': 4},
+ {'others': 7, 'person': 0, 'car': 0, 'drone': 0},
+ {'others': 3, 'person': 4, 'car': 0, 'drone': 0},
+ {'others': 7, 'person': 0, 'car': 0, 'drone': 0},
+ {'others': 7, 'person': 0, 'car': 0, 'drone': 0},
+ {'others': 7, 'person': 0, 'car': 0, 'drone': 0},
+ {'others': 0, 'person': 7, 'car': 0, 'drone': 0},
+ {'others': 0, 'person': 6, 'car': 1, 'drone': 0},
+ {'others': 1, 'person': 5, 'car': 1, 'drone': 0},
+ {'others': 0, 'person': 7, 'car': 0, 'drone': 0},
+ {'others': 0, 'person': 7, 'car': 0, 'drone': 0},
+ {'others': 0, 'person': 7, 'car': 0, 'drone': 0}]
+sorted_total_dict = []
+for one_dict in total_dict:
+    t = list(zip(list(one_dict.values()), list(one_dict.keys())))
+    t.sort(reverse=True)
+    sorted_total_dict.append(t)
+sorted_total_dict
+[[(7, 'car'), (0, 'person'), (0, 'others'), (0, 'drone')],
+ [(4, 'others'), (3, 'person'), (0, 'drone'), (0, 'car')],
+ [(7, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')],
+ [(4, 'car'), (3, 'others'), (0, 'person'), (0, 'drone')],
+ [(7, 'car'), (0, 'person'), (0, 'others'), (0, 'drone')],
+ [(6, 'car'), (1, 'others'), (0, 'person'), (0, 'drone')],
+ [(7, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')],
+ [(7, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')],
+ [(7, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')],
+ [(7, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')],
+ [(6, 'drone'), (1, 'others'), (0, 'person'), (0, 'car')],
+ [(7, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')],
+ [(4, 'drone'), (3, 'others'), (0, 'person'), (0, 'car')],
+ [(7, 'others'), (0, 'person'), (0, 'drone'), (0, 'car')],
+ [(4, 'person'), (3, 'others'), (0, 'drone'), (0, 'car')],
+ [(7, 'others'), (0, 'person'), (0, 'drone'), (0, 'car')],
+ [(7, 'others'), (0, 'person'), (0, 'drone'), (0, 'car')],
+ [(7, 'others'), (0, 'person'), (0, 'drone'), (0, 'car')],
+ [(7, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')],
+ [(6, 'person'), (1, 'car'), (0, 'others'), (0, 'drone')],
+ [(5, 'person'), (1, 'others'), (1, 'car'), (0, 'drone')],
+ [(7, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')],
+ [(7, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')],
+ [(7, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]]
+count = 0
+for i, labels in enumerate(sorted_total_dict):
+    print(result_list[i])
+    if labels[0][1] == result_list[i] or labels[0][1] == result_list[i][:-1]:
+        count+=1
+car
+person
+person
+car
+car
+car
+drone
+drone
+drone
+drone
+drone
+drone
+others
+others
+person
+others
+others
+others
+person
+person
+person
+person
+person
+person
+count/len(result_list)
+0.9166666666666666
+?
+?

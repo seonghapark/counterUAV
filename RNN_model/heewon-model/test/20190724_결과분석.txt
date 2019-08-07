@@ -1,0 +1,585 @@
+Jupyter Notebook
+RNN-Model-wav-2
+Last Checkpoint: 5시간 전
+(autosaved)
+Current Kernel Logo
+Python 3 
+File
+Edit
+View
+Insert
+Cell
+Kernel
+Help
+
+import glob
+import os
+import random
+import librosa
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from tensorflow.python.ops import rnn, rnn_cell
+import numpy as np
+%matplotlib inline
+plt.style.use('ggplot')
+def windows(data, window_size):
+    start = 0
+    while start < len(data):
+        yield start, start + window_size
+        start += (window_size / 2)
+?
+# 각 33개 input, 각 6개 label
+        
+def extract_features(file_path, file_label, file_ext="*.wav",bands = 20, frames = 41):
+    window_size = 512 * (frames - 1)
+    mfccs = []
+    log_specgrams = []
+    features = []
+    labels = []
+    sound_clip, s = librosa.load(file_path)
+    #print(type(sound_clip))
+    if file_label=='other':
+        label_code = 0
+    elif file_label=='person':
+        label_code = 1
+    elif file_label=='car':
+        label_code = 2
+    elif file_label=='drone':
+        label_code = 3
+        
+        
+    #print(file_label, label_code)
+    for (start,end) in windows(sound_clip,window_size):
+        start = int(start)
+        end = int(end)
+        if(len(sound_clip[start:end]) == window_size):
+            signal = sound_clip[start:end]
+            
+            melspec = librosa.feature.melspectrogram(signal, n_mels = bands)
+            logspec = librosa.amplitude_to_db(melspec)
+            logspec = logspec.T.flatten()[:, np.newaxis].T
+            #print(1, logspec.shape)
+            log_specgrams.append(logspec)
+            
+            mfcc = librosa.feature.mfcc(y=signal, sr=s, n_mfcc = bands).T.flatten()[:, np.newaxis].T
+            mfccs.append(mfcc)
+            #print(2, mfcc.shape)
+            features = np.hstack((mfccs, log_specgrams))
+            labels.append(label_code)         
+    features = np.asarray(features).reshape(len(mfccs), frames, bands*2)
+    #print(features.shape)
+    return np.array(features), np.array(labels,dtype = np.int)
+?
+def extract_features_for_predict(file_path, bands = 20, frames = 41):
+    window_size = 512 * (frames - 1)
+    mfccs = []
+    log_specgrams = []
+    features = []
+    sound_clip, s = librosa.load(file_path)
+    
+    for (start,end) in windows(sound_clip,window_size):
+        start = int(start)
+        end = int(end)
+        if(len(sound_clip[start:end]) == window_size):
+            signal = sound_clip[start:end]
+            
+            melspec = librosa.feature.melspectrogram(signal, n_mels = bands)
+            logspec = librosa.amplitude_to_db(melspec)
+            logspec = logspec.T.flatten()[:, np.newaxis].T
+            log_specgrams.append(logspec)
+            
+            mfcc = librosa.feature.mfcc(y=signal, sr=s, n_mfcc = bands).T.flatten()[:, np.newaxis].T
+            mfccs.append(mfcc)
+            features = np.hstack((mfccs, log_specgrams))      
+            
+    features = np.asarray(features).reshape(len(mfccs), frames, bands*2)
+    #print(features.shape)
+    return np.array(features)
+?
+def one_hot_encode(labels):
+    n_labels = len(labels)
+    n_unique_labels = len(np.unique(labels))
+    one_hot_encode = np.zeros((n_labels,n_unique_labels))
+    one_hot_encode[np.arange(n_labels), labels] = 1
+    return one_hot_encode
+file_list_training
+wav_file_path_training = 'C://slice_wav_data/training/'
+file_list_training = os.listdir(wav_file_path_training)
+?
+tr_features = []
+tr_labels = []
+for f in file_list_training:
+    file_label = f.split("_")[0]
+    #if file_label=='person' or file_label=='car': ## 2개씩만 하는 코드
+     #   continue
+    features_temp, labels_temp = extract_features(wav_file_path_training + f, file_label)
+    for tr_f in features_temp:
+        tr_features.append(tr_f)
+    for tr_l in labels_temp:
+        tr_labels.append(tr_l)
+    
+?
+tmp = [[x,y] for x,y in zip(tr_features, tr_labels)]
+random.shuffle(tmp)
+tr_features = [n[0] for n in tmp]
+tr_labels = [n[1] for n in tmp]
+?
+?
+wav_file_path_test = 'C://slice_wav_data/testing/'
+file_list_test = os.listdir(wav_file_path_test)
+?
+ts_features = []
+ts_labels = []
+for f in file_list_test:
+    file_label = f.split("_")[0]
+    #if file_label=='person' or file_label=='car': ## 2개씩만 하는 코드
+     #   continue
+    features_temp, labels_temp = extract_features(wav_file_path_test + f, file_label)
+    for ts_f in features_temp:
+        ts_features.append(ts_f)
+    for ts_l in labels_temp:
+        ts_labels.append(ts_l)
+    
+tr_labels = one_hot_encode(tr_labels)
+ts_labels = one_hot_encode(ts_labels)
+?
+tr_features = np.array(tr_features)
+tr_labels = np.array(tr_labels)
+?
+ts_features = np.array(ts_features)
+ts_labels = np.array(ts_labels)
+temp_arr = np.array(tr_features)
+temp_arr.shape
+(1188, 41, 40)
+bels) #mfcc를 통해 1188개 트레이닝 데이터, 216개 테스팅 데이터로 변환
+temp_arr.shape
+temp_arr = np.array(ts_labels) #mfcc를 통해 1188개 트레이닝 데이터, 216개 테스팅 데이터로 변환
+temp_arr.shape
+(216, 4)
+tf.reset_default_graph()
+?
+learning_rate = 0.0004
+training_iters = 20000
+batch_size = 54 #1188과 216의 최대공약수는 54
+display_step = 200
+?
+# Network Parameters
+n_input = 40
+n_steps = 41
+n_hidden = 40
+n_classes = 4
+?
+#앞에거는 hidden *2, 뒤에거는 n_input + n_hidden
+?
+x = tf.placeholder("float", [None, n_steps, n_input])
+y = tf.placeholder("float", [None, n_classes])
+?
+weight = tf.Variable(tf.random_normal([n_hidden, n_classes]))
+bias = tf.Variable(tf.random_normal([n_classes]))
+WARNING:tensorflow:From C:\Users\kvlks\Miniconda3\lib\site-packages\tensorflow\python\framework\op_def_library.py:263: colocate_with (from tensorflow.python.framework.ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Colocations handled automatically by placer.
+def RNN(x, weight, bias):
+    cell = rnn_cell.LSTMCell(n_hidden,state_is_tuple = True)
+    cell = rnn_cell.MultiRNNCell([cell] * 8, state_is_tuple=True)
+    output, state = tf.nn.dynamic_rnn(cell, x, dtype = tf.float32)
+    print(1, output)
+    output = tf.transpose(output, [1, 0, 2])
+    print(1, output)
+    last = tf.gather(output, int(output.get_shape()[0]) - 1)
+    print(output.get_shape())
+    print(1, last)
+    return tf.nn.softmax(tf.matmul(last, weight) + bias)
+prediction
+prediction = RNN(x, weight, bias)
+print(prediction)
+?
+#prediction_str = tf.argmax(prediction)
+?
+# Define loss and optimizer
+loss_f = -tf.reduce_sum(y * tf.log(prediction))
+optimizer = tf.train.AdamOptimizer(learning_rate = learning_rate).minimize(loss_f)
+?
+# Evaluate model
+correct_pred = tf.equal(tf.argmax(prediction,1), tf.argmax(y,1))
+accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+?
+# Initializing the variables
+init = tf.global_variables_initializer()
+WARNING:tensorflow:From <ipython-input-7-1f170cd6f0b8>:2: LSTMCell.__init__ (from tensorflow.python.ops.rnn_cell_impl) is deprecated and will be removed in a future version.
+Instructions for updating:
+This class is equivalent as tf.keras.layers.LSTMCell, and will be replaced by that in Tensorflow 2.0.
+WARNING:tensorflow:From <ipython-input-7-1f170cd6f0b8>:3: MultiRNNCell.__init__ (from tensorflow.python.ops.rnn_cell_impl) is deprecated and will be removed in a future version.
+Instructions for updating:
+This class is equivalent as tf.keras.layers.StackedRNNCells, and will be replaced by that in Tensorflow 2.0.
+WARNING:tensorflow:At least two cells provided to MultiRNNCell are the same object and will share weights.
+WARNING:tensorflow:From <ipython-input-7-1f170cd6f0b8>:4: dynamic_rnn (from tensorflow.python.ops.rnn) is deprecated and will be removed in a future version.
+Instructions for updating:
+Please use `keras.layers.RNN(cell)`, which is equivalent to this API
+1 Tensor("rnn/transpose_1:0", shape=(?, 41, 40), dtype=float32)
+1 Tensor("transpose:0", shape=(41, ?, 40), dtype=float32)
+(41, ?, 40)
+1 Tensor("GatherV2:0", shape=(?, 40), dtype=float32)
+Tensor("Softmax:0", shape=(?, 4), dtype=float32)
+WARNING:tensorflow:From C:\Users\kvlks\Miniconda3\lib\site-packages\tensorflow\python\ops\array_grad.py:425: to_int32 (from tensorflow.python.ops.math_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.cast instead.
+C:\Users\kvlks\Miniconda3\lib\site-packages\tensorflow\python\ops\gradients_impl.py:110: UserWarning: Converting sparse IndexedSlices to a dense Tensor of unknown shape. This may consume a large amount of memory.
+  "Converting sparse IndexedSlices to a dense Tensor of unknown shape. "
+session = tf.Session()
+session.run(init)
+    
+training_epochs = 10000
+for epoch in range(training_epochs):
+    avg_cost = 0
+    total_batch = int(len(tr_features) / batch_size)
+ 
+    for i in range(total_batch):
+        start = ((i+1) * batch_size) - batch_size
+        end = ((i+1) * batch_size)
+        batch_x = tr_features[start:end]
+        batch_y = tr_labels[start:end]
+                
+        _, c = session.run([optimizer, loss_f], feed_dict={x: batch_x, y : batch_y})
+        avg_cost += c / total_batch
+ 
+    print('Epoch:', '%04d' % (epoch + 1), 'cost =', '{:.9f}'.format(avg_cost), end='')
+    print('Test accuracy: ',round(session.run(accuracy, feed_dict={x: ts_features, y: ts_labels}) , 3))
+print('Learning Finished!')
+    
+Epoch: 0001 cost = 75.543587078Test accuracy:  0.236
+Epoch: 0002 cost = 73.099528573Test accuracy:  0.181
+Epoch: 0003 cost = 67.993127649Test accuracy:  0.514
+Epoch: 0004 cost = 63.954855139Test accuracy:  0.495
+---------------------------------------------------------------------------
+KeyboardInterrupt                         Traceback (most recent call last)
+<ipython-input-10-01479d94cb5a> in <module>
+     13         batch_y = tr_labels[start:end]
+     14 
+---> 15         _, c = session.run([optimizer, loss_f], feed_dict={x: batch_x, y : batch_y})
+     16         avg_cost += c / total_batch
+     17 
+
+~\Miniconda3\lib\site-packages\tensorflow\python\client\session.py in run(self, fetches, feed_dict, options, run_metadata)
+    927     try:
+    928       result = self._run(None, fetches, feed_dict, options_ptr,
+--> 929                          run_metadata_ptr)
+    930       if run_metadata:
+    931         proto_data = tf_session.TF_GetBuffer(run_metadata_ptr)
+
+~\Miniconda3\lib\site-packages\tensorflow\python\client\session.py in _run(self, handle, fetches, feed_dict, options, run_metadata)
+   1150     if final_fetches or final_targets or (handle and feed_dict_tensor):
+   1151       results = self._do_run(handle, final_targets, final_fetches,
+-> 1152                              feed_dict_tensor, options, run_metadata)
+   1153     else:
+   1154       results = []
+
+~\Miniconda3\lib\site-packages\tensorflow\python\client\session.py in _do_run(self, handle, target_list, fetch_list, feed_dict, options, run_metadata)
+   1326     if handle is None:
+   1327       return self._do_call(_run_fn, feeds, fetches, targets, options,
+-> 1328                            run_metadata)
+   1329     else:
+   1330       return self._do_call(_prun_fn, handle, feeds, fetches)
+
+~\Miniconda3\lib\site-packages\tensorflow\python\client\session.py in _do_call(self, fn, *args)
+   1332   def _do_call(self, fn, *args):
+   1333     try:
+-> 1334       return fn(*args)
+   1335     except errors.OpError as e:
+   1336       message = compat.as_text(e.message)
+
+~\Miniconda3\lib\site-packages\tensorflow\python\client\session.py in _run_fn(feed_dict, fetch_list, target_list, options, run_metadata)
+   1317       self._extend_graph()
+   1318       return self._call_tf_sessionrun(
+-> 1319           options, feed_dict, fetch_list, target_list, run_metadata)
+   1320 
+   1321     def _prun_fn(handle, feed_dict, fetch_list):
+
+~\Miniconda3\lib\site-packages\tensorflow\python\client\session.py in _call_tf_sessionrun(self, options, feed_dict, fetch_list, target_list, run_metadata)
+   1405     return tf_session.TF_SessionRun_wrapper(
+   1406         self._session, options, feed_dict, fetch_list, target_list,
+-> 1407         run_metadata)
+   1408 
+   1409   def _call_tf_sessionprun(self, handle, feed_dict, fetch_list):
+
+KeyboardInterrupt: 
+
+saver = tf.train.Saver()
+saver.save(session, './cuav_rnn.ckpt')
+print('Graph Saved! ')
+1
+def predict(file_source):
+2
+    print(file_source)
+3
+    data_to_predict = extract_features_for_predict(file_source)
+4
+    print(data_to_predict.shape)
+5
+    prediction_str = tf.argmax(prediction, 1)
+6
+    result_list = session.run(prediction_str, feed_dict={x: data_to_predict})
+7
+    print(result_list)
+8
+    result_list = list(result_list)
+9
+    label_count = {'others': 0, 'person': 0, 'car': 0, 'drone': 0,}
+10
+   
+11
+    total = 0
+12
+    for i, key in enumerate(list(label_count.keys())):
+13
+        label_count[key] = (result_list.count(i))
+14
+        print(key, int(label_count[key])/data_to_predict.shape[0])
+15
+    
+16
+    t = list(zip(list(label_count.values()), list(label_count.keys())))
+17
+    t.sort(reverse=True)
+18
+    print(t)
+19
+    print("")
+20
+        
+21
+    #for i in range(data_to_predict.shape[0]):
+22
+        #temp_output = session.run(prediction, feed_dict={x: data_to_predict[i]})
+23
+        #print(temp_output)
+24
+        
+25
+    
+ + 
+wav_file_path_test = 'C://slice_wav_data/testing/'
+test_file_list = os.listdir(wav_file_path_test)
+sample_test_file = wav_file_path_test + test_file_list[0]
+for file in test_file_list:
+    predict(wav_file_path_test + file)
+C://slice_wav_data/testing/car_116.wav
+(9, 41, 40)
+[2 2 2 2 2 2 2 2 2]
+others 0.0
+person 0.0
+car 1.0
+drone 0.0
+[(9, 'car'), (0, 'person'), (0, 'others'), (0, 'drone')]
+
+C://slice_wav_data/testing/car_118.wav
+(9, 41, 40)
+[3 3 2 2 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.2222222222222222
+drone 0.7777777777777778
+[(7, 'drone'), (2, 'car'), (0, 'person'), (0, 'others')]
+
+C://slice_wav_data/testing/car_120.wav
+(9, 41, 40)
+[2 2 2 2 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.4444444444444444
+drone 0.5555555555555556
+[(5, 'drone'), (4, 'car'), (0, 'person'), (0, 'others')]
+
+C://slice_wav_data/testing/car_1944.wav
+(9, 41, 40)
+[2 2 2 2 3 0 2 2 2]
+others 0.1111111111111111
+person 0.0
+car 0.7777777777777778
+drone 0.1111111111111111
+[(7, 'car'), (1, 'others'), (1, 'drone'), (0, 'person')]
+
+C://slice_wav_data/testing/car_2242.wav
+(9, 41, 40)
+[2 2 2 2 2 3 0 1 1]
+others 0.1111111111111111
+person 0.2222222222222222
+car 0.5555555555555556
+drone 0.1111111111111111
+[(5, 'car'), (2, 'person'), (1, 'others'), (1, 'drone')]
+
+C://slice_wav_data/testing/car_2542.wav
+(9, 41, 40)
+[3 1 1 3 3 0 2 0 0]
+others 0.3333333333333333
+person 0.2222222222222222
+car 0.1111111111111111
+drone 0.3333333333333333
+[(3, 'others'), (3, 'drone'), (2, 'person'), (1, 'car')]
+
+C://slice_wav_data/testing/drone_122.wav
+(9, 41, 40)
+[3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(9, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_128.wav
+(9, 41, 40)
+[1 3 3 3 3 0 0 0 0]
+others 0.4444444444444444
+person 0.1111111111111111
+car 0.0
+drone 0.4444444444444444
+[(4, 'others'), (4, 'drone'), (1, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_222.wav
+(9, 41, 40)
+[3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(9, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_722.wav
+(9, 41, 40)
+[3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(9, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_822.wav
+(9, 41, 40)
+[3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(9, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/drone_922.wav
+(9, 41, 40)
+[3 3 3 3 3 3 3 2 3]
+others 0.0
+person 0.0
+car 0.1111111111111111
+drone 0.8888888888888888
+[(8, 'drone'), (1, 'car'), (0, 'person'), (0, 'others')]
+
+C://slice_wav_data/testing/other_027.wav
+(9, 41, 40)
+[3 3 0 0 3 0 0 3 3]
+others 0.4444444444444444
+person 0.0
+car 0.0
+drone 0.5555555555555556
+[(5, 'drone'), (4, 'others'), (0, 'person'), (0, 'car')]
+
+C://slice_wav_data/testing/other_035.wav
+(9, 41, 40)
+[2 2 2 1 1 1 1 3 1]
+others 0.0
+person 0.5555555555555556
+car 0.3333333333333333
+drone 0.1111111111111111
+[(5, 'person'), (3, 'car'), (1, 'drone'), (0, 'others')]
+
+C://slice_wav_data/testing/other_40.wav
+(9, 41, 40)
+[3 2 2 2 2 2 2 2 2]
+others 0.0
+person 0.0
+car 0.8888888888888888
+drone 0.1111111111111111
+[(8, 'car'), (1, 'drone'), (0, 'person'), (0, 'others')]
+
+C://slice_wav_data/testing/other_423.wav
+(9, 41, 40)
+[3 3 3 3 3 3 3 3 3]
+others 0.0
+person 0.0
+car 0.0
+drone 1.0
+[(9, 'drone'), (0, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/other_425.wav
+(9, 41, 40)
+[2 3 3 0 0 3 3 3 3]
+others 0.2222222222222222
+person 0.0
+car 0.1111111111111111
+drone 0.6666666666666666
+[(6, 'drone'), (2, 'others'), (1, 'car'), (0, 'person')]
+
+C://slice_wav_data/testing/other_429.wav
+(9, 41, 40)
+[3 0 0 2 2 0 3 3 3]
+others 0.3333333333333333
+person 0.0
+car 0.2222222222222222
+drone 0.4444444444444444
+[(4, 'drone'), (3, 'others'), (2, 'car'), (0, 'person')]
+
+C://slice_wav_data/testing/person_1741.wav
+(9, 41, 40)
+[1 1 1 1 1 1 3 1 1]
+others 0.0
+person 0.8888888888888888
+car 0.0
+drone 0.1111111111111111
+[(8, 'person'), (1, 'drone'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/person_1941.wav
+(9, 41, 40)
+[3 1 1 1 1 1 1 1 3]
+others 0.0
+person 0.7777777777777778
+car 0.0
+drone 0.2222222222222222
+[(7, 'person'), (2, 'drone'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/person_2141.wav
+(9, 41, 40)
+[1 1 1 3 3 2 2 2 2]
+others 0.0
+person 0.3333333333333333
+car 0.4444444444444444
+drone 0.2222222222222222
+[(4, 'car'), (3, 'person'), (2, 'drone'), (0, 'others')]
+
+C://slice_wav_data/testing/person_615.wav
+(9, 41, 40)
+[3 1 3 1 1 3 3 3 1]
+others 0.0
+person 0.4444444444444444
+car 0.0
+drone 0.5555555555555556
+[(5, 'drone'), (4, 'person'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/person_633.wav
+(9, 41, 40)
+[3 1 1 1 1 1 1 1 1]
+others 0.0
+person 0.8888888888888888
+car 0.0
+drone 0.1111111111111111
+[(8, 'person'), (1, 'drone'), (0, 'others'), (0, 'car')]
+
+C://slice_wav_data/testing/person_641.wav
+(9, 41, 40)
+[1 1 1 1 1 1 1 1 1]
+others 0.0
+person 1.0
+car 0.0
+drone 0.0
+[(9, 'person'), (0, 'others'), (0, 'drone'), (0, 'car')]
+
+?
+?
+?
+?
