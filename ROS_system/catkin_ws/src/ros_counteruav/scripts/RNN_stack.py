@@ -62,6 +62,8 @@ def callback(msg):
     mess = Y[1].astype(float)
     mess = mess.tolist()
     print(len(mess))
+    sec5.extend(mess)
+    sec = sec + 1
     if sec == 5:
         print('send', time)
         message.wavdata = sec5
@@ -71,8 +73,6 @@ def callback(msg):
         sec5 = sec5[len(mess)+1:]
     else:
         print('not send', time)
-        sec = sec + 1
-        sec5.extend(mess)
 
     print(len(sec5))
     time = time + 1

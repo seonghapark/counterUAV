@@ -54,6 +54,8 @@ add_message_files(
   FILES
   fakedata.msg
   result.msg
+  wav.msg
+  objectinfo.msg
 )
 
 ## Generate services in the 'srv' folder

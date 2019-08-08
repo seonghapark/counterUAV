@@ -52,12 +52,13 @@ def talker():
     #pub = rospy.Publisher('chatter', String, queue_size=10)
     pub = rospy.Publisher('chatter', fakedata, queue_size=10)
     rospy.init_node('fake_data_sender', anonymous=True)
-    rate = rospy.Rate(1) # 10hz
+    rate = rospy.Rate(0.8) # 10hz
     # read file
     #pwd = os.getcwd() # current working folder
-    wd = '/home/project/counterUAV/raw_data/'
+    #wd = '/home/project/counterUAV/raw_data/'
     #file_name = pwd+ '/' +sys.argv[1]
     #file_name = '/home/project/counterUAV/raw_data/20181114_135427_binary.txt'
+    file_name = '/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/raw_data/'
     file_name = sys.argv[1]
     message = fakedata()
     file = open(file_name, "rb")
