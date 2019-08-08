@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 from flask import Flask,Response
 import rospy
-from ros_counteruav.msg import result
+from ros_counteruav.msg import result, objectinfo
 from threading import Thread
 import io
 import random
@@ -31,6 +31,8 @@ result_time = []
 result_data = []
 q_result_data = queue.Queue()
 q_result_time = queue.Queue()
+final_object = ""
+final_time
 
 class ros_service(Thread):
     def __init__(self,plotter) :
@@ -49,11 +51,18 @@ class ros_service(Thread):
         # self.plot.set(self.result_time, self.result_data)
         print('FINISH callback')
         #return Response(status=400)
+    
+    def final_callback(self, msg):
+        global final_object
+        global final_time
+        final_object = msg.who
+        final_time = msg.time
 
     def listener(self):
         #print('listener START')
         rospy.init_node('visualizer_receiver', anonymous=True)
         rospy.Subscriber('analyzed_data', result, self.callback)
+        rospy.Subscriber('final_result', objectinfo, self.final_callback)
         print('BEFORE spin')
         rospy.spin()
         print('AFTER spin')
@@ -200,8 +209,11 @@ class web_service(Thread):
         print('run')
         global app
         app.run(host='localhost',port='8080')
+
 @app.route('/')
 def show_graph():
+    global final_object
+    global final_time
     return '''
     <html>
     <head>
@@ -210,6 +222,8 @@ def show_graph():
     </head>
     <body>
         <img src="/plot" alt="Image Placeholder" >
+        <h1>Detected Object'''+ final_object+ '''</h1><br>
+        <h1>Detected Time'''+final_time+'''</h1><br>
     </body>
 </html>'''
 
@@ -223,27 +237,6 @@ def plot_png():
     FigureCanvas(fig).print_figure(output)
     #return render_template('show_graph.html', )
     return Response(output.getvalue(), mimetype='image/png')
-        # else:
-        #     time.sleep(1)
-    #fig = create_figure()
-    #FigureCanvas(fig).print_png(output)    
-    # output = io.BytesIO()
-    # canvas = FigureCanvas(plot.get_fig())
-    # canvas.print_figure('app', dpi=150)
-    # return Response(canvas.getvalue(), mimetype='image/png')
-
-def create_figure():
-    fig = Figure()
-    axis = fig.add_subplot(1, 1, 1)
-    xs = range(100)
-    ys = [random.randint(1, 50) for x in xs]
-    axis.plot(xs, ys)
-    return fig
-
-@app.route("/hello/")
-def hello():                           
-    return "<h1>Hello World!</h1>"
-
 
 if __name__=='__main__':
     plot = colorgraph_handler()

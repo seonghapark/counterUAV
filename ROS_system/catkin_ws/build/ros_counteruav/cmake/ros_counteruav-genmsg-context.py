@@ -1,6 +1,6 @@
 # generated from genmsg/cmake/pkg-genmsg.context.in
 
-messages_str = "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/fakedata.msg;/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/result.msg"
+messages_str = "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/fakedata.msg;/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/result.msg;/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/wav.msg;/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/objectinfo.msg"
 services_str = ""
 pkg_name = "ros_counteruav"
 dependencies_str = "std_msgs"

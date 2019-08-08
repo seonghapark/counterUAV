@@ -2,9 +2,14 @@
 <html>
     <head>
         <title> Plot</title>
-        <meta content="5" url="http://127.0.0.1:8080" http-equiv="refresh">
+        <meta content="1" http-equiv="refresh">
+        <script language="javascript">
+            setTimeout("history.go(0);", 1000);
+        </script>
     </head>
     <body>
-        <img src="/plot" alt="Image Placeholder" width="100" height="100">
+        <iframe src="http://localhost:8080">
+        <img src="http://localhost:8080/plot" alt="Image Placeholder">
+        </iframe>
     </body>
 </html>

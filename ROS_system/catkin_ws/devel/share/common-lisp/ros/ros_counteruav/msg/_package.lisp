@@ -3,7 +3,11 @@
   (:export
    "<FAKEDATA>"
    "FAKEDATA"
+   "<OBJECTINFO>"
+   "OBJECTINFO"
    "<RESULT>"
    "RESULT"
+   "<WAV>"
+   "WAV"
   ))
 

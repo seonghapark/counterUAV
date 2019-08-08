@@ -1,6 +1,6 @@
 # generated from genmsg/cmake/pkg-genmsg.cmake.em
 
-message(STATUS "ros_counteruav: 2 messages, 0 services")
+message(STATUS "ros_counteruav: 4 messages, 0 services")
 
 set(MSG_I_FLAGS "-Iros_counteruav:/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg;-Istd_msgs:/opt/ros/melodic/share/std_msgs/cmake/../msg")
 
@@ -27,6 +27,16 @@ add_custom_target(_ros_counteruav_generate_messages_check_deps_${_filename}
   COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "ros_counteruav" "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/result.msg" ""
 )
 
+get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/wav.msg" NAME_WE)
+add_custom_target(_ros_counteruav_generate_messages_check_deps_${_filename}
+  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "ros_counteruav" "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/wav.msg" ""
+)
+
+get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/objectinfo.msg" NAME_WE)
+add_custom_target(_ros_counteruav_generate_messages_check_deps_${_filename}
+  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "ros_counteruav" "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/objectinfo.msg" ""
+)
+
 #
 #  langs = gencpp;geneus;genlisp;gennodejs;genpy
 #
@@ -41,6 +51,18 @@ _generate_msg_cpp(ros_counteruav
 )
 _generate_msg_cpp(ros_counteruav
   "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/result.msg"
+  "${MSG_I_FLAGS}"
+  ""
+  ${CATKIN_DEVEL_PREFIX}/${gencpp_INSTALL_DIR}/ros_counteruav
+)
+_generate_msg_cpp(ros_counteruav
+  "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/wav.msg"
+  "${MSG_I_FLAGS}"
+  ""
+  ${CATKIN_DEVEL_PREFIX}/${gencpp_INSTALL_DIR}/ros_counteruav
+)
+_generate_msg_cpp(ros_counteruav
+  "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/objectinfo.msg"
   "${MSG_I_FLAGS}"
   ""
   ${CATKIN_DEVEL_PREFIX}/${gencpp_INSTALL_DIR}/ros_counteruav
@@ -64,6 +86,10 @@ get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/
 add_dependencies(ros_counteruav_generate_messages_cpp _ros_counteruav_generate_messages_check_deps_${_filename})
 get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/result.msg" NAME_WE)
 add_dependencies(ros_counteruav_generate_messages_cpp _ros_counteruav_generate_messages_check_deps_${_filename})
+get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/wav.msg" NAME_WE)
+add_dependencies(ros_counteruav_generate_messages_cpp _ros_counteruav_generate_messages_check_deps_${_filename})
+get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/objectinfo.msg" NAME_WE)
+add_dependencies(ros_counteruav_generate_messages_cpp _ros_counteruav_generate_messages_check_deps_${_filename})
 
 # target for backward compatibility
 add_custom_target(ros_counteruav_gencpp)
@@ -82,6 +108,18 @@ _generate_msg_eus(ros_counteruav
 )
 _generate_msg_eus(ros_counteruav
   "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/result.msg"
+  "${MSG_I_FLAGS}"
+  ""
+  ${CATKIN_DEVEL_PREFIX}/${geneus_INSTALL_DIR}/ros_counteruav
+)
+_generate_msg_eus(ros_counteruav
+  "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/wav.msg"
+  "${MSG_I_FLAGS}"
+  ""
+  ${CATKIN_DEVEL_PREFIX}/${geneus_INSTALL_DIR}/ros_counteruav
+)
+_generate_msg_eus(ros_counteruav
+  "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/objectinfo.msg"
   "${MSG_I_FLAGS}"
   ""
   ${CATKIN_DEVEL_PREFIX}/${geneus_INSTALL_DIR}/ros_counteruav
@@ -105,6 +143,10 @@ get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/
 add_dependencies(ros_counteruav_generate_messages_eus _ros_counteruav_generate_messages_check_deps_${_filename})
 get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/result.msg" NAME_WE)
 add_dependencies(ros_counteruav_generate_messages_eus _ros_counteruav_generate_messages_check_deps_${_filename})
+get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/wav.msg" NAME_WE)
+add_dependencies(ros_counteruav_generate_messages_eus _ros_counteruav_generate_messages_check_deps_${_filename})
+get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/objectinfo.msg" NAME_WE)
+add_dependencies(ros_counteruav_generate_messages_eus _ros_counteruav_generate_messages_check_deps_${_filename})
 
 # target for backward compatibility
 add_custom_target(ros_counteruav_geneus)
@@ -123,6 +165,18 @@ _generate_msg_lisp(ros_counteruav
 )
 _generate_msg_lisp(ros_counteruav
   "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/result.msg"
+  "${MSG_I_FLAGS}"
+  ""
+  ${CATKIN_DEVEL_PREFIX}/${genlisp_INSTALL_DIR}/ros_counteruav
+)
+_generate_msg_lisp(ros_counteruav
+  "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/wav.msg"
+  "${MSG_I_FLAGS}"
+  ""
+  ${CATKIN_DEVEL_PREFIX}/${genlisp_INSTALL_DIR}/ros_counteruav
+)
+_generate_msg_lisp(ros_counteruav
+  "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/objectinfo.msg"
   "${MSG_I_FLAGS}"
   ""
   ${CATKIN_DEVEL_PREFIX}/${genlisp_INSTALL_DIR}/ros_counteruav
@@ -146,6 +200,10 @@ get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/
 add_dependencies(ros_counteruav_generate_messages_lisp _ros_counteruav_generate_messages_check_deps_${_filename})
 get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/result.msg" NAME_WE)
 add_dependencies(ros_counteruav_generate_messages_lisp _ros_counteruav_generate_messages_check_deps_${_filename})
+get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/wav.msg" NAME_WE)
+add_dependencies(ros_counteruav_generate_messages_lisp _ros_counteruav_generate_messages_check_deps_${_filename})
+get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/objectinfo.msg" NAME_WE)
+add_dependencies(ros_counteruav_generate_messages_lisp _ros_counteruav_generate_messages_check_deps_${_filename})
 
 # target for backward compatibility
 add_custom_target(ros_counteruav_genlisp)
@@ -164,6 +222,18 @@ _generate_msg_nodejs(ros_counteruav
 )
 _generate_msg_nodejs(ros_counteruav
   "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/result.msg"
+  "${MSG_I_FLAGS}"
+  ""
+  ${CATKIN_DEVEL_PREFIX}/${gennodejs_INSTALL_DIR}/ros_counteruav
+)
+_generate_msg_nodejs(ros_counteruav
+  "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/wav.msg"
+  "${MSG_I_FLAGS}"
+  ""
+  ${CATKIN_DEVEL_PREFIX}/${gennodejs_INSTALL_DIR}/ros_counteruav
+)
+_generate_msg_nodejs(ros_counteruav
+  "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/objectinfo.msg"
   "${MSG_I_FLAGS}"
   ""
   ${CATKIN_DEVEL_PREFIX}/${gennodejs_INSTALL_DIR}/ros_counteruav
@@ -187,6 +257,10 @@ get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/
 add_dependencies(ros_counteruav_generate_messages_nodejs _ros_counteruav_generate_messages_check_deps_${_filename})
 get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/result.msg" NAME_WE)
 add_dependencies(ros_counteruav_generate_messages_nodejs _ros_counteruav_generate_messages_check_deps_${_filename})
+get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/wav.msg" NAME_WE)
+add_dependencies(ros_counteruav_generate_messages_nodejs _ros_counteruav_generate_messages_check_deps_${_filename})
+get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/objectinfo.msg" NAME_WE)
+add_dependencies(ros_counteruav_generate_messages_nodejs _ros_counteruav_generate_messages_check_deps_${_filename})
 
 # target for backward compatibility
 add_custom_target(ros_counteruav_gennodejs)
@@ -209,6 +283,18 @@ _generate_msg_py(ros_counteruav
   ""
   ${CATKIN_DEVEL_PREFIX}/${genpy_INSTALL_DIR}/ros_counteruav
 )
+_generate_msg_py(ros_counteruav
+  "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/wav.msg"
+  "${MSG_I_FLAGS}"
+  ""
+  ${CATKIN_DEVEL_PREFIX}/${genpy_INSTALL_DIR}/ros_counteruav
+)
+_generate_msg_py(ros_counteruav
+  "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/objectinfo.msg"
+  "${MSG_I_FLAGS}"
+  ""
+  ${CATKIN_DEVEL_PREFIX}/${genpy_INSTALL_DIR}/ros_counteruav
+)
 
 ### Generating Services
 
@@ -227,6 +313,10 @@ add_dependencies(ros_counteruav_generate_messages ros_counteruav_generate_messag
 get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/fakedata.msg" NAME_WE)
 add_dependencies(ros_counteruav_generate_messages_py _ros_counteruav_generate_messages_check_deps_${_filename})
 get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/result.msg" NAME_WE)
+add_dependencies(ros_counteruav_generate_messages_py _ros_counteruav_generate_messages_check_deps_${_filename})
+get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/wav.msg" NAME_WE)
+add_dependencies(ros_counteruav_generate_messages_py _ros_counteruav_generate_messages_check_deps_${_filename})
+get_filename_component(_filename "/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/msg/objectinfo.msg" NAME_WE)
 add_dependencies(ros_counteruav_generate_messages_py _ros_counteruav_generate_messages_check_deps_${_filename})
 
 # target for backward compatibility
