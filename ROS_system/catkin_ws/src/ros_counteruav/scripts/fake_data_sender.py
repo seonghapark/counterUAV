@@ -76,21 +76,23 @@ def talker():
     try:
         # divide input
         while not rospy.is_shutdown():             
-            #max = int(len(message.data)//11025)
             
             if i+j <= max : 
                 i = i+1 
             else :
                 break
-            raw.data = data[i*(5862*2):(i+1)*(5862*2)+1]
+            if max<(i+1)*(5862*2)+1 :
+                raw.data = data[i*(5862*2):(i+1)*(5862*2)+1]
+            else :
+                raw.data = data[i*(5862*2):len(data)]
+            
             if i == 256 :
                 j = i + j
                 i = 0
             raw.num = i
-            #rabbitmq.publish(raw)
+
             rospy.loginfo("max"+str(max)+" time"+str(i+j)+":"+str(rospy.get_time()))
             pub.publish(raw)
-            #pub.publish(raw.data)
             
             rate.sleep()
 

@@ -89,7 +89,7 @@ class colorgraph_handler(Thread):
     def __init__(self):
         Thread.__init__(self)
         ## constants for frame
-        self.n = int(5512/50)  # Samples per a ramp up-time
+        self.n = int(5862/50)  # Samples per a ramp up-time
         # self.n = int(5512/50)
         # self.zpad = 8 * (self.n / 2)  # the number of data in 0.08 seconds?
         #self.zpad = 468 * 2
@@ -171,7 +171,7 @@ class colorgraph_handler(Thread):
 
     def draw_graph(self):
         print('draw_graph START')
-        print(self.q_result_time)
+        #print(self.q_result_time)
         # ani = animation.FuncAnimation(self.fig, self.animate, init_func=self.animate_init, interval=1000)#, frames=self.set_t, repeat=False)
         # ani = animation.FuncAnimation(self.fig, self.animate, interval=1000, frames=range(0,5))
         ani = animation.FuncAnimation(self.fig, self.animate, interval=1000, blit=False)
@@ -222,8 +222,6 @@ def show_graph():
     </head>
     <body>
         <img src="/plot" alt="Image Placeholder" >
-        <h1>Detected Object'''+ final_object+ '''</h1><br>
-        <h1>Detected Time'''+final_time+'''</h1><br>
     </body>
 </html>'''
 
