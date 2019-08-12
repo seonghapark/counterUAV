@@ -24,10 +24,12 @@ struct fakedata_
   typedef fakedata_<ContainerAllocator> Type;
 
   fakedata_()
-    : data()  {
+    : data()
+    , num(0)  {
     }
   fakedata_(const ContainerAllocator& _alloc)
-    : data(_alloc)  {
+    : data(_alloc)
+    , num(0)  {
   (void)_alloc;
     }
 
@@ -35,6 +37,9 @@ struct fakedata_
 
    typedef std::vector<uint8_t, typename ContainerAllocator::template rebind<uint8_t>::other >  _data_type;
   _data_type data;
+
+   typedef uint8_t _num_type;
+  _num_type num;
 
 
 
@@ -114,12 +119,12 @@ struct MD5Sum< ::ros_counteruav::fakedata_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "f43a8e1b362b75baa741461b46adc7e0";
+    return "779cd9dc2f41ba0741e7ebbe961855fd";
   }
 
   static const char* value(const ::ros_counteruav::fakedata_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0xf43a8e1b362b75baULL;
-  static const uint64_t static_value2 = 0xa741461b46adc7e0ULL;
+  static const uint64_t static_value1 = 0x779cd9dc2f41ba07ULL;
+  static const uint64_t static_value2 = 0x41e7ebbe961855fdULL;
 };
 
 template<class ContainerAllocator>
@@ -139,6 +144,7 @@ struct Definition< ::ros_counteruav::fakedata_<ContainerAllocator> >
   static const char* value()
   {
     return "uint8[] data\n"
+"uint8   num\n"
 ;
   }
 
@@ -158,6 +164,7 @@ namespace serialization
     template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
     {
       stream.next(m.data);
+      stream.next(m.num);
     }
 
     ROS_DECLARE_ALLINONE_SERIALIZER
@@ -182,6 +189,8 @@ struct Printer< ::ros_counteruav::fakedata_<ContainerAllocator> >
       s << indent << "  data[" << i << "]: ";
       Printer<uint8_t>::stream(s, indent + "  ", v.data[i]);
     }
+    s << indent << "num: ";
+    Printer<uint8_t>::stream(s, indent + "  ", v.num);
   }
 };
 

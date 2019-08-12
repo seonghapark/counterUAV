@@ -7,12 +7,13 @@ import struct
 
 
 class fakedata(genpy.Message):
-  _md5sum = "f43a8e1b362b75baa741461b46adc7e0"
+  _md5sum = "779cd9dc2f41ba0741e7ebbe961855fd"
   _type = "ros_counteruav/fakedata"
   _has_header = False #flag to mark the presence of a Header object
-  _full_text = """uint8[] data"""
-  __slots__ = ['data']
-  _slot_types = ['uint8[]']
+  _full_text = """uint8[] data
+uint8   num"""
+  __slots__ = ['data','num']
+  _slot_types = ['uint8[]','uint8']
 
   def __init__(self, *args, **kwds):
     """
@@ -22,7 +23,7 @@ class fakedata(genpy.Message):
     changes.  You cannot mix in-order arguments and keyword arguments.
 
     The available fields are:
-       data
+       data,num
 
     :param args: complete set of field values, in .msg order
     :param kwds: use keyword arguments corresponding to message field names
@@ -33,8 +34,11 @@ class fakedata(genpy.Message):
       #message fields cannot be None, assign default values for those that are
       if self.data is None:
         self.data = b''
+      if self.num is None:
+        self.num = 0
     else:
       self.data = b''
+      self.num = 0
 
   def _get_types(self):
     """
@@ -55,6 +59,7 @@ class fakedata(genpy.Message):
         buff.write(struct.pack('<I%sB'%length, length, *_x))
       else:
         buff.write(struct.pack('<I%ss'%length, length, _x))
+      buff.write(_get_struct_B().pack(self.num))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -71,6 +76,9 @@ class fakedata(genpy.Message):
       start = end
       end += length
       self.data = str[start:end]
+      start = end
+      end += 1
+      (self.num,) = _get_struct_B().unpack(str[start:end])
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e) #most likely buffer underfill
@@ -90,6 +98,7 @@ class fakedata(genpy.Message):
         buff.write(struct.pack('<I%sB'%length, length, *_x))
       else:
         buff.write(struct.pack('<I%ss'%length, length, _x))
+      buff.write(_get_struct_B().pack(self.num))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -107,6 +116,9 @@ class fakedata(genpy.Message):
       start = end
       end += length
       self.data = str[start:end]
+      start = end
+      end += 1
+      (self.num,) = _get_struct_B().unpack(str[start:end])
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e) #most likely buffer underfill
@@ -115,3 +127,9 @@ _struct_I = genpy.struct_I
 def _get_struct_I():
     global _struct_I
     return _struct_I
+_struct_B = None
+def _get_struct_B():
+    global _struct_B
+    if _struct_B is None:
+        _struct_B = struct.Struct("<B")
+    return _struct_B

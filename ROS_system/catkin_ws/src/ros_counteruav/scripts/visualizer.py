@@ -32,7 +32,7 @@ result_data = []
 q_result_data = queue.Queue()
 q_result_time = queue.Queue()
 final_object = ""
-final_time
+final_time =0
 
 class ros_service(Thread):
     def __init__(self,plotter) :
@@ -93,7 +93,7 @@ class colorgraph_handler(Thread):
         # self.n = int(5512/50)
         # self.zpad = 8 * (self.n / 2)  # the number of data in 0.08 seconds?
         #self.zpad = 468 * 2
-        self.zpad = 468 * 2
+        self.zpad = 468 
         # self.lfm = [2260E6, 2590E6]  # Radar frequency sweep range
         self.lfm = [2400E6, 2500E6]
         self.max_detect = 3E8/(2*(self.lfm[1]-self.lfm[0]))*self.n/2 # Max detection distance according to the radar frequency

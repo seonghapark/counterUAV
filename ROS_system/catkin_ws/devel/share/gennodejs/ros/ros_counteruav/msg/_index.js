@@ -1,14 +1,14 @@
 
 "use strict";
 
-let objectinfo = require('./objectinfo.js');
-let fakedata = require('./fakedata.js');
-let result = require('./result.js');
 let wav = require('./wav.js');
+let result = require('./result.js');
+let fakedata = require('./fakedata.js');
+let objectinfo = require('./objectinfo.js');
 
 module.exports = {
-  objectinfo: objectinfo,
-  fakedata: fakedata,
-  result: result,
   wav: wav,
+  result: result,
+  fakedata: fakedata,
+  objectinfo: objectinfo,
 };

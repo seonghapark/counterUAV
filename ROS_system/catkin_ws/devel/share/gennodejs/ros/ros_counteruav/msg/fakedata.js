@@ -19,6 +19,7 @@ class fakedata {
     if (initObj === null) {
       // initObj === null is a special case for deserialization where we don't initialize fields
       this.data = null;
+      this.num = null;
     }
     else {
       if (initObj.hasOwnProperty('data')) {
@@ -27,6 +28,12 @@ class fakedata {
       else {
         this.data = [];
       }
+      if (initObj.hasOwnProperty('num')) {
+        this.num = initObj.num
+      }
+      else {
+        this.num = 0;
+      }
     }
   }
 
@@ -34,6 +41,8 @@ class fakedata {
     // Serializes a message object of type fakedata
     // Serialize message field [data]
     bufferOffset = _arraySerializer.uint8(obj.data, buffer, bufferOffset, null);
+    // Serialize message field [num]
+    bufferOffset = _serializer.uint8(obj.num, buffer, bufferOffset);
     return bufferOffset;
   }
 
@@ -43,13 +52,15 @@ class fakedata {
     let data = new fakedata(null);
     // Deserialize message field [data]
     data.data = _arrayDeserializer.uint8(buffer, bufferOffset, null)
+    // Deserialize message field [num]
+    data.num = _deserializer.uint8(buffer, bufferOffset);
     return data;
   }
 
   static getMessageSize(object) {
     let length = 0;
     length += object.data.length;
-    return length + 4;
+    return length + 5;
   }
 
   static datatype() {
@@ -59,13 +70,14 @@ class fakedata {
 
   static md5sum() {
     //Returns md5sum for a message object
-    return 'f43a8e1b362b75baa741461b46adc7e0';
+    return '779cd9dc2f41ba0741e7ebbe961855fd';
   }
 
   static messageDefinition() {
     // Returns full string definition for message
     return `
     uint8[] data
+    uint8   num
     `;
   }
 
@@ -80,6 +92,13 @@ class fakedata {
     }
     else {
       resolved.data = []
+    }
+
+    if (msg.num !== undefined) {
+      resolved.num = msg.num;
+    }
+    else {
+      resolved.num = 0
     }
 
     return resolved;

@@ -107,7 +107,7 @@ class ifft_handler():
     def __init__(self):
         self.opp = 0
                 #self.fs = 44100  # Sampling rate
-        self.fs = 11724
+        self.fs = 5862
         self.Tp = 0.020   # Radar ramp up-time
         self.n = int(self.Tp*self.fs)   # Samples per ramp up-time
         self.fsif = np.zeros([10000,self.n], dtype=np.int16)  # Zero array for further data storage
@@ -179,8 +179,8 @@ class ifft_handler():
         max_real = real_value.max()
         result_data = real_value - max_real
 
-        result_time = result_time[:1000]
-        result_data = result_data[:1000]
+        result_time = result_time[:100]
+        result_data = result_data[:100]
 
                 # print(result_time.dtype, result_data.dtype)
         return result_time, result_data
