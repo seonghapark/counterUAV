@@ -7,14 +7,15 @@ import struct
 
 
 class result(genpy.Message):
-  _md5sum = "27432271eaeca018008ff2d4a194b77d"
+  _md5sum = "b63e34e765078eeb693def0570c34795"
   _type = "ros_counteruav/result"
   _has_header = False #flag to mark the presence of a Header object
   _full_text = """uint8[] data
 uint8[] time
+uint64 num
 """
-  __slots__ = ['data','time']
-  _slot_types = ['uint8[]','uint8[]']
+  __slots__ = ['data','time','num']
+  _slot_types = ['uint8[]','uint8[]','uint64']
 
   def __init__(self, *args, **kwds):
     """
@@ -24,7 +25,7 @@ uint8[] time
     changes.  You cannot mix in-order arguments and keyword arguments.
 
     The available fields are:
-       data,time
+       data,time,num
 
     :param args: complete set of field values, in .msg order
     :param kwds: use keyword arguments corresponding to message field names
@@ -37,9 +38,12 @@ uint8[] time
         self.data = b''
       if self.time is None:
         self.time = b''
+      if self.num is None:
+        self.num = 0
     else:
       self.data = b''
       self.time = b''
+      self.num = 0
 
   def _get_types(self):
     """
@@ -67,6 +71,7 @@ uint8[] time
         buff.write(struct.pack('<I%sB'%length, length, *_x))
       else:
         buff.write(struct.pack('<I%ss'%length, length, _x))
+      buff.write(_get_struct_Q().pack(self.num))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -89,6 +94,9 @@ uint8[] time
       start = end
       end += length
       self.time = str[start:end]
+      start = end
+      end += 8
+      (self.num,) = _get_struct_Q().unpack(str[start:end])
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e) #most likely buffer underfill
@@ -115,6 +123,7 @@ uint8[] time
         buff.write(struct.pack('<I%sB'%length, length, *_x))
       else:
         buff.write(struct.pack('<I%ss'%length, length, _x))
+      buff.write(_get_struct_Q().pack(self.num))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -138,6 +147,9 @@ uint8[] time
       start = end
       end += length
       self.time = str[start:end]
+      start = end
+      end += 8
+      (self.num,) = _get_struct_Q().unpack(str[start:end])
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e) #most likely buffer underfill
@@ -146,3 +158,9 @@ _struct_I = genpy.struct_I
 def _get_struct_I():
     global _struct_I
     return _struct_I
+_struct_Q = None
+def _get_struct_Q():
+    global _struct_Q
+    if _struct_Q is None:
+        _struct_Q = struct.Struct("<Q")
+    return _struct_Q

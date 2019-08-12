@@ -51,7 +51,7 @@ def talker():
     #pub = rospy.Publisher('chatter', String, queue_size=10)
     pub = rospy.Publisher('chatter', fakedata, queue_size=10)
     rospy.init_node('fake_data_sender', anonymous=True)
-    rate = rospy.Rate(1) # 10hz
+    rate = rospy.Rate(100) # 10hz
     # read file
     #pwd = os.getcwd() # current working folder
     #wd = '/home/project/counterUAV/raw_data/'
@@ -71,27 +71,23 @@ def talker():
     
     max = 0
     i = 0
-    j = 0
     max = int(len(data)//(5862*2))
     try:
         # divide input
         while not rospy.is_shutdown():             
             
-            if i+j <= max : 
+            if i < max-1 : 
                 i = i+1 
             else :
                 break
-            if max<(i+1)*(5862*2)+1 :
+            if i<max-1 :
                 raw.data = data[i*(5862*2):(i+1)*(5862*2)+1]
             else :
                 raw.data = data[i*(5862*2):len(data)]
             
-            if i == 256 :
-                j = i + j
-                i = 0
             raw.num = i
 
-            rospy.loginfo("max"+str(max)+" time"+str(i+j)+":"+str(rospy.get_time()))
+            rospy.loginfo("max"+str(max)+" time"+str(i)+":"+str(rospy.get_time()))
             pub.publish(raw)
             
             rate.sleep()

@@ -25,11 +25,13 @@ struct result_
 
   result_()
     : data()
-    , time()  {
+    , time()
+    , num(0)  {
     }
   result_(const ContainerAllocator& _alloc)
     : data(_alloc)
-    , time(_alloc)  {
+    , time(_alloc)
+    , num(0)  {
   (void)_alloc;
     }
 
@@ -40,6 +42,9 @@ struct result_
 
    typedef std::vector<uint8_t, typename ContainerAllocator::template rebind<uint8_t>::other >  _time_type;
   _time_type time;
+
+   typedef uint64_t _num_type;
+  _num_type num;
 
 
 
@@ -119,12 +124,12 @@ struct MD5Sum< ::ros_counteruav::result_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "27432271eaeca018008ff2d4a194b77d";
+    return "b63e34e765078eeb693def0570c34795";
   }
 
   static const char* value(const ::ros_counteruav::result_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0x27432271eaeca018ULL;
-  static const uint64_t static_value2 = 0x008ff2d4a194b77dULL;
+  static const uint64_t static_value1 = 0xb63e34e765078eebULL;
+  static const uint64_t static_value2 = 0x693def0570c34795ULL;
 };
 
 template<class ContainerAllocator>
@@ -145,6 +150,7 @@ struct Definition< ::ros_counteruav::result_<ContainerAllocator> >
   {
     return "uint8[] data\n"
 "uint8[] time\n"
+"uint64 num\n"
 ;
   }
 
@@ -165,6 +171,7 @@ namespace serialization
     {
       stream.next(m.data);
       stream.next(m.time);
+      stream.next(m.num);
     }
 
     ROS_DECLARE_ALLINONE_SERIALIZER
@@ -195,6 +202,8 @@ struct Printer< ::ros_counteruav::result_<ContainerAllocator> >
       s << indent << "  time[" << i << "]: ";
       Printer<uint8_t>::stream(s, indent + "  ", v.time[i]);
     }
+    s << indent << "num: ";
+    Printer<uint64_t>::stream(s, indent + "  ", v.num);
   }
 };
 

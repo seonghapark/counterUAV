@@ -1,7 +1,5 @@
 #! /usr/bin/env python3
 
-
-
 import rospy
 from ros_counteruav.msg import fakedata
 #from std_msgs.msg import String

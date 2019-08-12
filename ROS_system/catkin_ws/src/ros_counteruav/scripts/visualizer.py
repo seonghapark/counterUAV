@@ -177,6 +177,7 @@ class colorgraph_handler(Thread):
         ani = animation.FuncAnimation(self.fig, self.animate, interval=1000, blit=False)
         plt.show()
         print('draw_graph FINISH')
+        rospy.loginfo()
 
     def run(self) :
         try:

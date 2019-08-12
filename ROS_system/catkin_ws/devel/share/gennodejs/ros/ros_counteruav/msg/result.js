@@ -20,6 +20,7 @@ class result {
       // initObj === null is a special case for deserialization where we don't initialize fields
       this.data = null;
       this.time = null;
+      this.num = null;
     }
     else {
       if (initObj.hasOwnProperty('data')) {
@@ -34,6 +35,12 @@ class result {
       else {
         this.time = [];
       }
+      if (initObj.hasOwnProperty('num')) {
+        this.num = initObj.num
+      }
+      else {
+        this.num = 0;
+      }
     }
   }
 
@@ -43,6 +50,8 @@ class result {
     bufferOffset = _arraySerializer.uint8(obj.data, buffer, bufferOffset, null);
     // Serialize message field [time]
     bufferOffset = _arraySerializer.uint8(obj.time, buffer, bufferOffset, null);
+    // Serialize message field [num]
+    bufferOffset = _serializer.uint64(obj.num, buffer, bufferOffset);
     return bufferOffset;
   }
 
@@ -54,6 +63,8 @@ class result {
     data.data = _arrayDeserializer.uint8(buffer, bufferOffset, null)
     // Deserialize message field [time]
     data.time = _arrayDeserializer.uint8(buffer, bufferOffset, null)
+    // Deserialize message field [num]
+    data.num = _deserializer.uint64(buffer, bufferOffset);
     return data;
   }
 
@@ -61,7 +72,7 @@ class result {
     let length = 0;
     length += object.data.length;
     length += object.time.length;
-    return length + 8;
+    return length + 16;
   }
 
   static datatype() {
@@ -71,7 +82,7 @@ class result {
 
   static md5sum() {
     //Returns md5sum for a message object
-    return '27432271eaeca018008ff2d4a194b77d';
+    return 'b63e34e765078eeb693def0570c34795';
   }
 
   static messageDefinition() {
@@ -79,6 +90,7 @@ class result {
     return `
     uint8[] data
     uint8[] time
+    uint64 num
     
     `;
   }
@@ -101,6 +113,13 @@ class result {
     }
     else {
       resolved.time = []
+    }
+
+    if (msg.num !== undefined) {
+      resolved.num = msg.num;
+    }
+    else {
+      resolved.num = 0
     }
 
     return resolved;

@@ -3,4 +3,6 @@
           DATA
           TIME-VAL
           TIME
+          NUM-VAL
+          NUM
 ))
