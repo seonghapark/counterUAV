@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-#/usr/bin/env python
 # Software License Agreement (BSD License)
 #
 # Copyright (c) 2008, Willow Garage, Inc.
@@ -61,26 +60,38 @@ def talker():
     file_name = '/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/raw_data/'
     file_name = sys.argv[1]
     message = fakedata()
+    raw = fakedata()
     file = open(file_name, "rb")
     
     #read_line = file.readline()
-    message.data = file.readline()
+    #message.data = file.read()
     #data = bytearray()
+    #data = file.read()
+    data = file.read()  
+    
+    max = 0
     i = 0
+    j = 0
+    max = int(len(data)//(5862*2))
     try:
         # divide input
-        while not rospy.is_shutdown():
+        while not rospy.is_shutdown():             
             #max = int(len(message.data)//11025)
-            max = int(len(message.data)//(5862*4+1))
-            if i < max : 
+            
+            if i+j <= max : 
                 i = i+1 
             else :
                 break
-            #raw = message.data[i*11025:(i+1)*11025]
-            raw = message.data[i*(5862*4+1):(i+1)*(5862*4+1)]
+            raw.data = data[i*(5862*2):(i+1)*(5862*2)+1]
+            if i == 256 :
+                j = i + j
+                i = 0
+            raw.num = i
             #rabbitmq.publish(raw)
-            rospy.loginfo(raw)
+            rospy.loginfo("max"+str(max)+" time"+str(i+j)+":"+str(rospy.get_time()))
             pub.publish(raw)
+            #pub.publish(raw.data)
+            
             rate.sleep()
 
     except (KeyboardInterrupt, Exception) as ex:
