@@ -42,7 +42,11 @@ class fakedata {
     // Serialize message field [data]
     bufferOffset = _arraySerializer.uint8(obj.data, buffer, bufferOffset, null);
     // Serialize message field [num]
+<<<<<<< Updated upstream
     bufferOffset = _serializer.uint64(obj.num, buffer, bufferOffset);
+=======
+    bufferOffset = _serializer.uint8(obj.num, buffer, bufferOffset);
+>>>>>>> Stashed changes
     return bufferOffset;
   }
 
@@ -53,14 +57,22 @@ class fakedata {
     // Deserialize message field [data]
     data.data = _arrayDeserializer.uint8(buffer, bufferOffset, null)
     // Deserialize message field [num]
+<<<<<<< Updated upstream
     data.num = _deserializer.uint64(buffer, bufferOffset);
+=======
+    data.num = _deserializer.uint8(buffer, bufferOffset);
+>>>>>>> Stashed changes
     return data;
   }
 
   static getMessageSize(object) {
     let length = 0;
     length += object.data.length;
+<<<<<<< Updated upstream
     return length + 12;
+=======
+    return length + 5;
+>>>>>>> Stashed changes
   }
 
   static datatype() {
@@ -70,14 +82,22 @@ class fakedata {
 
   static md5sum() {
     //Returns md5sum for a message object
+<<<<<<< Updated upstream
     return '8a9dfb9a2c533f9dbe4573a54646cd9a';
+=======
+    return '779cd9dc2f41ba0741e7ebbe961855fd';
+>>>>>>> Stashed changes
   }
 
   static messageDefinition() {
     // Returns full string definition for message
     return `
     uint8[] data
+<<<<<<< Updated upstream
     uint64   num
+=======
+    uint8 num
+>>>>>>> Stashed changes
     `;
   }
 
