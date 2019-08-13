@@ -44,4 +44,6 @@ byte array를 쓰고 싶어요<br>
 
 
 # 최종 실행 코드 경로
->counterUAV/ROS_system/catkin_ws/src/ros_counteruav/scripts/ 
+>counterUAV/ROS_system/catkin_ws/src/ros_counteruav/scripts/
+
+>위의 경로의 readme에 코드 설명
