@@ -8,7 +8,7 @@ from ros_counteruav.msg import wav
 
 sec = 0
 time = 1
-sec5 = []
+stack5 = []
 
 def parse(raw_data):
     data = bytearray(raw_data)
@@ -44,7 +44,7 @@ time = 0#global error
 def callback(msg):
     global sec
     global time
-    global sec5
+    global stack5
 
     datalist = []
     synclist = []
@@ -62,25 +62,25 @@ def callback(msg):
     mess = Y[1].astype(float)
     mess = mess.tolist()
     print(len(mess))
-    sec5.extend(mess)
+    stack5.extend(mess)
     sec = sec + 1
     if sec == 5:
         print('send', time)
-        message.wavdata = sec5
+        message.wavdata = stack5
         message.time = time
         pub.publish(message)
         sec = sec - 1
-        sec5 = sec5[len(mess)+1:]
+        stack5 = stack5[len(mess)+1:]
     else:
         print('not send', time)
 
-    print(len(sec5))
+    print(len(stack5))
     time = time + 1
     print(time)
 
 def RNN_stack():
     rospy.init_node('RNN_stack', anonymous=True)
-    rospy.Subscriber('chatter', fakedata, callback)
+    rospy.Subscriber('msg_for_analyzer', fakedata, callback)
     print('RNN_stack ready')
     rospy.spin()
 

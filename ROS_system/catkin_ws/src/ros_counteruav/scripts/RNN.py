@@ -278,20 +278,70 @@ class CUAV_Model:
         saver.restore(self.session, save_file)
         
 ###########################################################
+file_num = 7#0 to 23 0은 rnn_label.txt파일 첫번째 파일을 뜻
+true = 0
+fals = 0
+def estimate(who, when):
+    global true
+    global fals
+    time_list = np.load('time_list.npy', allow_pickle=True)#[[파일 하나],[[start, finish],..],..]
+    label_list = np.load('label_list.npy', allow_pickle=True)#[person,person,car,dron,..]
+    answer = label_list[file_num]
+    i = 0
+    while i < len(time_list[file_num]):
+        start = time_list[file_num][i][0]
+        finis = time_list[file_num][i][1]
+        #print('start: ' ,start)
+        #print('finis: ', finis)
+        if when <= time_list[file_num][-1][1]:
+            if when >= start and when <= finis:#answer
+                print('answer: ',answer)
+                if answer == who:
+                    print('O')
+                    true += 1
+                else:
+                    print('X')
+                    fals += 1
+                break
+            elif when > finis:
+                i += 1
+            else:
+                print('answer: others')
+                if 'other'== who or 'others'==who:
+                    print('O')
+                    true += 1
+                else:
+                    print('X')
+                    fals += 1
+                break
+        else:
+            print('time finished')
+            break
 
-def RNN():
+def RNN(time):
     global model
+    global true
+    global fals
     who = model.predict("/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/scripts/RNN.wav")
     print(who)
-    print(who[0][1])
+    print(time)
+    print("predic: ",who[0][1])
+    estimate(who[0][1],time)
+    print('acc : {}'.format((true)/(true+fals)*100))
+    pub = rospy.Publisher('final_result',objectinfo,queue_size=1)
+    message = objectinfo()
+    message.who = who[0][1]
+    message.time = time
+    pub.publish(message)
 
 def callback(msg):
     audio = np.array(msg.wavdata)
+    time = msg.time
     print(audio)
     print(len(audio))
     librosa.output.write_wav('/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/scripts/RNN.wav', audio, 5862, norm=False)
     print('create wav file')
-    RNN()
+    RNN(time)
 
 def RNN_node():
     rospy.init_node('RNN_node', anonymous=True)
@@ -302,5 +352,5 @@ def RNN_node():
 if __name__ == '__main__':
     model = CUAV_Model()
     model.graph_setting()
-    model.restore_graph(1100)
+    model.restore_graph(3200)
     RNN_node()
