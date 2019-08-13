@@ -41,3 +41,9 @@ byte array를 쓰고 싶어요<br>
 5. message.some_int = read_line // 메시지에 데이터 저장 testdata.msg 안에 uint8[] <변수명> 요거 적어주면 된다.<br>
 6. rospy.Subscriber('radar_send', testdata, callback) // subscriber <br>
 링크를 클릭해 보심 더 빠릅니다.
+
+
+# 최종 실행 코드 경로
+>counterUAV/ROS_system/catkin_ws/src/ros_counteruav/scripts/
+
+>위의 경로의 readme에 코드 설명
