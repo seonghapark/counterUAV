@@ -51,12 +51,11 @@ def talker():
     #pub = rospy.Publisher('chatter', String, queue_size=10)
     pub = rospy.Publisher('chatter', fakedata, queue_size=10)
     rospy.init_node('fake_data_sender', anonymous=True)
-    rate = rospy.Rate(100) # 10hz
+    rate = rospy.Rate(1) # 1hz
     # read file
     #pwd = os.getcwd() # current working folder
     #wd = '/home/project/counterUAV/raw_data/'
     #file_name = pwd+ '/' +sys.argv[1]
-    #file_name = '/home/project/counterUAV/raw_data/20181114_135427_binary.txt'
     #file_name = '/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/raw_data/'
     file_name = sys.argv[1]
     message = fakedata()
@@ -69,25 +68,25 @@ def talker():
     #data = file.read()
     data = file.read()  
     
-    max = 0
+    max_num = 0
     i = 0
-    max = int(len(data)//(5862*2))
+    max_num = int(len(data)//(5862*2))
     try:
         # divide input
         while not rospy.is_shutdown():             
             
-            if i < max-1 : 
+            if i < max_num-1 : 
                 i = i+1 
             else :
                 break
-            if i<max-1 :
+            if i<max_num-1 :
                 raw.data = data[i*(5862*2):(i+1)*(5862*2)+1]
             else :
                 raw.data = data[i*(5862*2):len(data)]
             
             raw.num = i
 
-            rospy.loginfo("max"+str(max)+" time"+str(i)+":"+str(rospy.get_time()))
+            rospy.loginfo("max_num : "+str(max_num)+" time"+str(i)+":"+str(rospy.get_time()))
             pub.publish(raw)
             
             rate.sleep()
