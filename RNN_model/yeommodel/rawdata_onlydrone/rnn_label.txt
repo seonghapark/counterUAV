@@ -1,0 +1,7 @@
+20181009_3_110458_binary.txt: w/ a drone , w/o reflection tape *(1~9, 36~47, 62~87, 106~115)*<br>
+20181009_3_110901_binary.txt: w/ a drone , w/o reflection tape *(36~43, 46~49, 68~76)*<br>
+20181009_3_111450_binary.txt: w/ a drone , w/ reflection tape *(15~22, 44~49)*<br>
+20181009_3_111734_binary.txt: w/ a drone , w/ reflection tape *(27~37, 42~50, 71~80, 100~110)*<br>
+20181016_3_142025_binary.txt: from 35 second, w/ a drone (DJI Phantom), w/ reflection tape *(11~16, 16~21, 39~52, 68~74, 78~84)*<br>
+20181016_3_142531_binary.txt: w/ a drone (DJI Phantom), w/o reflection tape *(22~27, 80~84)*<br>
+20181114_3_142450_binary.txt: w/ a drone ~30m *(18~23, 44~46, 65~70, 86~96, 128~136, 159~165, 234~236)*<br>
