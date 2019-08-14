@@ -1,0 +1,2 @@
+뒤데이터
+training 33 testing 6
