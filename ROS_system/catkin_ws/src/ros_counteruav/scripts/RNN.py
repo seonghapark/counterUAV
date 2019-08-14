@@ -278,7 +278,7 @@ class CUAV_Model:
         saver.restore(self.session, save_file)
         
 ###########################################################
-file_num = 7#0 to 23 0은 rnn_label.txt파일 첫번째 파일을 뜻
+file_num = 1#0 to 23 0은 rnn_label.txt파일 첫번째 파일을 뜻
 true = 0
 fals = 0
 def estimate(who, when):
@@ -288,7 +288,7 @@ def estimate(who, when):
     label_list = np.load('label_list.npy', allow_pickle=True)#[person,person,car,dron,..]
     answer = label_list[file_num]
     i = 0
-    while i < len(time_list[file_num]):
+    while i <= len(time_list[file_num]):
         start = time_list[file_num][i][0]
         finis = time_list[file_num][i][1]
         #print('start: ' ,start)
