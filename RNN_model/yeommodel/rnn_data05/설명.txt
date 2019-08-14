@@ -1,0 +1,2 @@
+person car drone other 전부다 이어 붙힌 파일
+어짜피 frame을 9개로 나누니까 굳이 5초로 자를 필요가 없다는 가정 하에 실험
