@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# coding: utf-8
+
 import glob
 import os
 import random
@@ -7,18 +10,23 @@ import tensorflow as tf
 from tensorflow.python.ops import rnn, rnn_cell
 import numpy as np
 
+
+# In[2]:
+
+
 class CUAV_Model:
     
     def __init__(self):
         self.n_hidden = 40
-        self.total_label_count =  {'others': [0,0], 'person': [0, 0], 'car': [0, 0], 'drone': [0, 0]} #True / False
+        #self.total_label_count =  {'other': [0, 0], 'others': [0, 0], 'person': [0, 0], 'car': [0, 0], 'drone': [0, 0]} #True / False
+        self.total_label_count =  {'other': [0, 0], 'person': [0, 0], 'car': [0, 0], 'drone': [0, 0]} #True / False
         pass
 
     def windows(self, data, window_size):
         start = 0
         while start < len(data):
             yield start, start + window_size
-            start += (window_size / 2)
+            start += (window_size / 2) #윈도우를 더 겹쳐서 밀음
 
     # 각 33개 input, 각 6개 label
 
@@ -40,11 +48,12 @@ class CUAV_Model:
             label_code = 3
 
         #print(file_label, label_code)
-        for (start,end) in self.windows(sound_clip,window_size):
+        for (start,end) in self.windows(sound_clip, window_size):
             start = int(start)
             end = int(end)
             if(len(sound_clip[start:end]) == window_size):
                 signal = sound_clip[start:end]
+
                 melspec = librosa.feature.melspectrogram(signal, n_mels = bands)
                 logspec = librosa.amplitude_to_db(melspec)
                 logspec = logspec.T.flatten()[:, np.newaxis].T
@@ -55,7 +64,7 @@ class CUAV_Model:
                 mfccs.append(mfcc)
                 #print(2, mfcc.shape)
                 features = np.hstack((mfccs, log_specgrams))
-                labels.append(label_code)
+                labels.append(label_code)         
         features = np.asarray(features).reshape(len(mfccs), frames, bands*2)
         #print(features.shape)
         return np.array(features), np.array(labels,dtype = np.int)
@@ -77,19 +86,18 @@ class CUAV_Model:
                 logspec = librosa.amplitude_to_db(melspec)
                 logspec = logspec.T.flatten()[:, np.newaxis].T
                 log_specgrams.append(logspec)
-                
+
                 mfcc = librosa.feature.mfcc(y=signal, sr=s, n_mfcc = bands).T.flatten()[:, np.newaxis].T
                 mfccs.append(mfcc)
-                features = np.hstack((mfccs, log_specgrams))
-        
-        features = np.asarray(features).reshape(len(mfccs), frames, bands*2)
+                features = np.hstack((mfccs, log_specgrams))      
 
+        features = np.asarray(features).reshape(len(mfccs), frames, bands*2)
+        #print(features.shape)
         return np.array(features)
 
     def one_hot_encode(self, labels):
         n_labels = len(labels)
         n_unique_labels = len(np.unique(labels))
-        print(n_labels, n_unique_labels)
         one_hot_encode = np.zeros((n_labels,n_unique_labels))
         one_hot_encode[np.arange(n_labels), labels] = 1
         return one_hot_encode
@@ -101,15 +109,16 @@ class CUAV_Model:
         tr_features = []
         tr_labels = []
         for f in file_list_training:
+            #print(f)
             file_label = f.split("_")[0]
-            #file_label = f.split('.')[0]
-            #if file_label=='person' or file_label=='car': ## 2개씩만 하는 코드
+            #if file_label=='drone' or file_label=='person': ## 2개씩만 하는 코드
              #   continue
             features_temp, labels_temp = self.extract_features(wav_file_path_training + f, file_label)
             for tr_f in features_temp:
                 tr_features.append(tr_f)
             for tr_l in labels_temp:
                 tr_labels.append(tr_l)
+
 
         tmp = [[x,y] for x,y in zip(tr_features, tr_labels)]
         random.shuffle(tmp)
@@ -124,12 +133,9 @@ class CUAV_Model:
         ts_labels = []
         for f in file_list_test:
             file_label = f.split("_")[0]
-            #file_label = f.split('.')[0]
-            #if file_label=='person' or file_label=='car': ## 2개씩만 하는 코드
+            #if file_label=='drone' or file_label=='person': ## 2개씩만 하는 코드
              #   continue
             features_temp, labels_temp = self.extract_features(wav_file_path_test + f, file_label)
-            #print('features_temp shape')
-            #print(features_temp.shape)
             for ts_f in features_temp:
                 ts_features.append(ts_f)
             for ts_l in labels_temp:
@@ -143,8 +149,6 @@ class CUAV_Model:
 
         self.ts_features = np.array(ts_features)
         self.ts_labels = np.array(ts_labels)
-        #print('tr_features')
-        #print(self.tr_features.shape)#2328 ,41, 40
         
         
     def RNN(self, x, weight, bias):
@@ -165,14 +169,19 @@ class CUAV_Model:
         n_input = 40
         n_steps = 41
         n_classes = 4
+        
+        #n_classes = 4  # 2라벨이면 2
 
         #앞에거는 hidden *2, 뒤에거는 n_input + n_hidden
 
         self.x = tf.placeholder("float", [None, n_steps, n_input])
         self.y = tf.placeholder("float", [None, n_classes])
 
-        weight = tf.Variable(tf.random_normal([self.n_hidden, n_classes]))
-        bias = tf.Variable(tf.random_normal([n_classes]))
+        
+        weight = tf.get_variable("W1", shape=[self.n_hidden, n_classes], initializer=tf.contrib.layers.xavier_initializer())
+        bias = tf.get_variable("b1", shape=[n_classes], initializer=tf.contrib.layers.xavier_initializer())
+        #weight = tf.Variable(tf.random_normal([self.n_hidden, n_classes]))
+        #bias = tf.Variable(tf.random_normal([n_classes]))
         
         self.prediction = self.RNN(self.x, weight, bias)
         self.prediction_str = tf.argmax(self.prediction, 1)
@@ -190,10 +199,9 @@ class CUAV_Model:
     def training(self):
         init = tf.global_variables_initializer()
         self.session.run(init)
-        
-        training_epochs = 1201
-    
-        batch_size = 108 #1188과 216의 최대공약수는 108
+
+        training_epochs = 101
+        batch_size = 54 #1188과 216의 최대공약수는 54
         
         for epoch in range(training_epochs):
             avg_cost = 0
@@ -203,16 +211,15 @@ class CUAV_Model:
                 start = ((i+1) * batch_size) - batch_size
                 end = ((i+1) * batch_size)
                 batch_x = self.tr_features[start:end]
-                #print(batch_x.shape)
                 batch_y = self.tr_labels[start:end]
 
                 _, c = self.session.run([self.optimizer, self.loss_f], feed_dict={self.x: batch_x, self.y : batch_y})
                 avg_cost += c / total_batch
-                
 
             print('Epoch:', '%04d' % (epoch + 1), 'cost =', '{:.9f}'.format(avg_cost), end='')
             if epoch % 10 == 0:
                 print('Test accuracy: ',round(self.session.run(self.accuracy, feed_dict={self.x: self.ts_features, self.y: self.ts_labels}) , 3))
+                print('')
             if epoch % 100 == 0:
                 self.save_network(epoch)
             print('')
@@ -221,26 +228,23 @@ class CUAV_Model:
         
     def save_network(self, step):
         saver = tf.train.Saver()
-        saver.save(self.session, 'C://Users//승윤//Desktop//purdue//연구자료//extractwav//rnn_graph_save//cuav_rnn.ckpt', step)
-        print('Graph Saved')
+        saver.save(self.session, 'C://Users//승윤//Desktop//purdue//연구자료//extractwav//rnn_graph_save_2//cuav_rnn.ckpt', step)
+        print('Graph Saved! ')
         
         
     def predict(self, file_source):
         print(file_source)
         data_label = file_source.split('/')[-1].split('_')[0]
-        if data_label == 'other':
-            data_label = 'others'
         data_to_predict = self.extract_features_for_predict(file_source)
         print(data_to_predict.shape)
         result_list = self.session.run(self.prediction_str, feed_dict={self.x: data_to_predict})
         print(result_list)
         result_list = list(result_list)
-        label_count = {'others': 0, 'person': 0, 'car': 0, 'drone': 0,}
-
+        #label_count = {'other': 0, 'others': 0, 'person': 0, 'car': 0, 'drone': 0,}
+        label_count = {'other': 0, 'person': 0, 'car': 0, 'drone': 0,}
+        
         total = 0
         for i, key in enumerate(list(label_count.keys())):
-            if key == 'other':
-                key = 'others'
             label_count[key] = (result_list.count(i))
             print(key, int(label_count[key])/data_to_predict.shape[0])
         
@@ -263,9 +267,10 @@ class CUAV_Model:
             #print(temp_output)
         
     def restore_graph(self, step):
-        save_file = './rnn_graph_save/cuav_rnn.ckpt' + '-' + str(step)
+        save_file = './rnn_graph_save_2/cuav_rnn.ckpt' + '-' + str(step)
         saver = tf.train.Saver()
-        saver.restore(self.session, save_file)        
+        saver.restore(self.session, save_file)
+        
 
         #sess = tf.InteractiveSession()
         #saver = tf.train.import_meta_graph('./cuav_rnn.ckpt.meta')
@@ -274,8 +279,7 @@ class CUAV_Model:
         #graph = tf.get_default_graph()
         #self.X =  self.sess.graph.get_tensor_by_name("Placeholder:0")
         #self.Y =  self.sess.graph.get_tensor_by_name("Placeholder_1:0")
-    
-
+  
 m1 = CUAV_Model()
 '''
 m1.make_data()
@@ -286,7 +290,8 @@ print('training end')
 '''
 print('angsangble start')
 m1.graph_setting()
-m1.restore_graph(3200)
+m1.restore_graph(1200)
+
 
 wav_file_path_test = 'C://Users//승윤//Desktop//purdue//연구자료//extractwav//slice_wav_data//testing//'
 test_file_list = os.listdir(wav_file_path_test)
@@ -297,25 +302,36 @@ for file in test_file_list:
     test_label_list.append(file.split('_')[0])
 print(test_label_list)
 
+
 result_list = []
 for file in test_file_list:
     temp_tf = m1.predict(wav_file_path_test + file)
-    print(m1.total_label_count)
     result_list.append(temp_tf)
+
+
+true_count = 0
+for i in range(len(result_list)):
+    if result_list[i] == test_label_list[i] or result_list[i][:-1] == test_label_list[i]:
+        true_count += 1
 
 total_result = []
 for i in range(0,2001,100):
     m1.graph_setting()
-    m1.restore_graph(500+i)
+    m1.restore_graph(1100+i)
     result_temp = []
     for file in test_file_list:
         temp_ = m1.predict(wav_file_path_test + file)
         result_temp.append(temp_)
     total_result.append(result_temp) 
+    
+total_result_np = np.array(total_result)
 
+#total_dict = [{'other': 0, 'person': 0, 'car': 0, 'drone': 0,} for _ in range(len(result_list))]
 total_dict = [{'others': 0, 'person': 0, 'car': 0, 'drone': 0,} for _ in range(len(result_list))]
-for one_result in total_result:
+print(total_dict)
+for one_result in (total_result):
     for i, label in enumerate(one_result):
+        print(i, one_result)
         total_dict[i][label] += 1
 
 sorted_total_dict = []
@@ -330,8 +346,6 @@ for i, labels in enumerate(sorted_total_dict):
     if labels[0][1] == result_list[i] or labels[0][1] == result_list[i][:-1]:
         count+=1
 
-
 for i, key in enumerate(m1.total_label_count.keys()):
     #print(key,':' + int(m1.total_label_count[key][0]) / (int(m1.total_label_count[key][0]) + int(m1.total_label_count[key][1])) +  +'%')
-    print(key,':{}'.format( int(m1.total_label_count[key][0]) / (int(m1.total_label_count[key][0]) + int(m1.total_label_count[key][1]))))
-    
+    print(key,':{}'.format(int(m1.total_label_count[key][0]) / (int(m1.total_label_count[key][0]) + int(m1.total_label_count[key][1])))
