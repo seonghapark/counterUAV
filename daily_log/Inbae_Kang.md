@@ -4,7 +4,7 @@ Inbae Kang
 
 ## 2019-09-05
 
-1. <An Approach for Reducing Computational Time for Real-Time Autonomous Vehicle Tracking> 논문 읽고 팀원들과 내용 공유.
+1. An Approach for Reducing Computational Time for Real-Time Autonomous Vehicle Tracking 논문 읽고 팀원들과 내용 공유.
 
 
 * * *
