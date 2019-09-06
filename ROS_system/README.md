@@ -4,39 +4,39 @@ ROS_system
 
 ###  install in Ubuntu
 ```
-wget https://raw.githubusercontent.com/orocapangyo/meetup/master/190830/install_ros_melodic.sh && chmod 755 ./install_ros_melodic.sh && bash ./install_ros_melodic.sh
+$ wget https://raw.githubusercontent.com/orocapangyo/meetup/master/190830/install_ros_melodic.sh && chmod 755 ./install_ros_melodic.sh && bash ./install_ros_melodic.sh
 ```
 
 ### NTP(Network Time Protocol) 설정
 ```
-sudo apt-get install -y chrony ntpdate
-sudo ntpdate -q ntp.ubuntu.com
+$ sudo apt-get install -y chrony ntpdate
+$ sudo ntpdate -q ntp.ubuntu.com
 ```
 
 ### 소스 리스트 추가 
 ```
-sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+$ sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
 ```
 
 ### 키 설정
 ```
-sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+$ sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
 ```
 
 ### 패키지 인덱스 업데이트
 ```
-sudo apt-get update && sudo apt-get upgrade -y
+$ sudo apt-get update && sudo apt-get upgrade -y
 ```
 
 ### ROS Kinetic Kame 설치
 ```
-sudo apt-get install ros-kinetic-desktop-full
-rosdep update
+$ sudo apt-get install ros-kinetic-desktop-full
+$ rosdep update
 ```
 
 ### rosinstall 설치
 ```
-sudo apt-get install python-rosinstall
+$ sudo apt-get install python-rosinstall
 ```
 
 ### bashrc 설정
@@ -54,25 +54,31 @@ export ROS_MASTER_URI=http://localhost:11311
 export ROS_HOSTNAME=localhost
 ```
 
+### 패키지 설치
+```
+$ pip3 install scipy
+```
+
+
 ### ros make
 
 catkin_ws 폴더에 들어가서
 
 ```
-pip3 install empy
-catkin_make
+$ pip3 install empy
+$ catkin_make
 ```
 
 ### ros 실행
 
 ```
-roscore
+$ roscore
 ```
 
 새로운 터미널을 연 뒤
 `/home/project/counterUAV/ROS_system/catkin_ws` 에서
 ```
-rosrun ros_counteruav scripts/start.sh
+$ rosrun ros_counteruav scripts/start.sh
 ```
 
 
