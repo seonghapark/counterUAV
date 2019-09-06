@@ -54,9 +54,11 @@ export ROS_MASTER_URI=http://localhost:11311
 export ROS_HOSTNAME=localhost
 ```
 
-### 패키지 설치
+### 파이썬 패키지 설치
 ```
 $ pip3 install scipy
+$ pip3 install librosa
+$ pip3 install tensorflow
 ```
 
 
@@ -69,7 +71,7 @@ $ pip3 install empy
 $ catkin_make
 ```
 
-### ros 실행
+### ros 실행 >> 오류날경우 bashrc 다시 설정
 
 ```
 $ roscore
