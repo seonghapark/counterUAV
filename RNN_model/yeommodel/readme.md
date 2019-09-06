@@ -1,4 +1,4 @@
-5sec_slice_wav_data<t>: training, testing data 모음 폴더이다. cut_wav(Jiny_yeom) 파이썬 코드를 실행시킨 결과이다.<br>
+5sec_slice_wav_data<t>: training, testing data 들을 모은 폴더이다. cut_wav(Jiny_yeom) 파이썬 코드를 실행시킨 결과이다.<br>
 5sec_slice_wav_data_backup<t>: 아무런 변환을 가하지 않은 5초 wav 파일들 백업<br>
 5sec_slice_wav_data_noise<t>: 노이즈 추가한 5초 wav 파일들 백업<br>
 5sec_slice_wav_data_time_stretch<t>: 시간 변환한 5초 wav 파일들 백업<br>
