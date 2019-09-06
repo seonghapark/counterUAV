@@ -12,4 +12,7 @@
 ### 2019-09-05
 * 논문 읽기: Accessible Synthetic Aperture Radar System for Autonomous Vehicle Sensing
 
+### 2019-09-06
+* windows10에서 파일을 실행하려고 시도했으나, 오류가 나서 노트북에 우분투 18.04 LTS버전을 새로 설치함 
+
 ## 2019-09-07 ~ 2019-09-15
