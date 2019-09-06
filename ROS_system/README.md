@@ -59,6 +59,7 @@ export ROS_HOSTNAME=localhost
 catkin_ws 폴더에 들어가서
 
 ```
+pip3 install empy
 catkin_make
 ```
 
