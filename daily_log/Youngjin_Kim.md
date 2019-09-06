@@ -7,3 +7,7 @@ Youngjin Kim
 - 나에게 배정된 논문 : Object Classification raw radar data using Convolutionl neural networks
 2. 내일 해야할 일 : github 에 올라와 있는 sample code들 돌려보고 review 하기
 
+2019.09.06
+1. 저번 팀이 했던 코드 및 작업물 실행을 위해 코드 분석 및 실행
+2. Ubuntu 에서 실행이 가능하다고 판단하여 Ubuntu설치를 시도하였으나 맥북에 설치가 잘 되지 않음
+
