@@ -27,9 +27,9 @@ export ROS_HOSTNAME=localhost<br>
 sudo apt-get install python3-pip python3-yaml
 pip3 install rospkg catkin_pkg
 pip3 install pika
-sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -sc` main" > /etc/apt/sources.list.d/ros-latest.list`
-wget http://packages.ros.org/ros.key -O - | sudo apt-key add -`
-sudo apt-get update`
+sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -sc` main" > /etc/apt/sources.list.d/ros-latest.list'
+wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
+sudo apt-get update
 sudo apt-get install python-catkin-tools
 sudo apt-get install python-catkin-tools python3-dev python3-numpy
 catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3 -DPYTHON_INCLUDE_DIR=/usr/include/python3.6m -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.6m.so
