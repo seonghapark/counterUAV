@@ -38,8 +38,9 @@ catkin config --install
 
 #### .py 파일 첫줄에 
 ```
-#!/usr/bin/env python3 입력
+#!/usr/bin/env python3 
 ```
+입력
 
 ### 
 byte array를 쓰고 싶어요<br>
