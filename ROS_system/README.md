@@ -54,7 +54,7 @@ export ROS_MASTER_URI=http://localhost:11311
 export ROS_HOSTNAME=localhost
 ```
 
-### ros 실행
+### ros make
 
 catkin_ws 폴더에 들어가서
 
@@ -63,11 +63,17 @@ pip3 install empy
 catkin_make
 ```
 
+### ros 실행
+
+```
+roscore
+```
+
+새로운 터미널을 연 뒤
 `/home/project/counterUAV/ROS_system/catkin_ws` 에서
 ```
 rosrun ros_counteruav scripts/start.sh
 ```
-
 
 
 
