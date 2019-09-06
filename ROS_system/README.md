@@ -37,9 +37,7 @@ catkin config --install
 ```
 
 #### .py 파일 첫줄에 
-```
-#!/usr/bin/env python3 
-```
+`#!/usr/bin/env python3`
 입력
 
 ### 
