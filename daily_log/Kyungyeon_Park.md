@@ -1,6 +1,6 @@
 # Daily log of Kyungyeon Park
 
-## 2019-09-04 ~ 2019-09-10
+## 2019-09-04 ~ 2019-09-06
 
 ### 2019-09-04
 - 구체적인 주제 회의
@@ -22,3 +22,11 @@
 - `ROS_system` 파일 실행
   - `$ rosrun ros_counteruav scripts/start.sh` 명령어를 통해 `ROS_system`를 실행시켜 봄
   - [결과](https://ibb.co/0hWLjYv) >> 이렇게 뜨는게 맞는지 모르겠음
+
+<br/>
+
+## 2019-09-09 ~ 2019-09-13
+
+### 2019-09-09
+- `start.sh`안의 프로그램 실행 구조 파악
+- `visualizer.py`, `data_analyzer.py`, `data_receiver.py`, `fake_data_sender.py`안의 코드들을 분석해봄
