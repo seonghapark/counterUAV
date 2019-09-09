@@ -1,6 +1,26 @@
 ROS_system
 =======
-## How to install ROS
+## How to start counterUAV
+
+### Download and set permission
+```
+$ sudo mkdir -p /home/project
+$ sudo chmod 777 /home/project
+$ cd /home/project/
+```
+
+전체 프로젝트를 다운받으려면
+
+```
+$ git clone https://github.com/seonghapark/counterUAV.git
+$ git checkout fall2019
+```
+
+이 브랜치만 다운받으려면
+```
+$ git clone -b fall2019 --single-branch https://github.com/seonghapark/counterUAV.git
+```
+
 
 ###  install in Ubuntu
 ```
@@ -20,7 +40,7 @@ $ sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) ma
 
 ### 키 설정
 ```
-sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+$ sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
 ```
 
 ### 패키지 인덱스 업데이트
@@ -48,7 +68,7 @@ $ sudo apt-get install python-rosinstall
 ```
 
 ### bashrc 설정
-vi ~/.bashrc
+`vi ~/.bashrc`에 들어가서
 
 ```
 #ROS
@@ -63,12 +83,15 @@ export ROS_PACKAGE_PATH=/home/project/counterUAV/ROS_system/catkin_ws/src/:/opt/
 export ROS_MASTER_URI=http://localhost:11311
 export ROS_HOSTNAME=localhost
 ```
+입력
 
-source ~/.bashrc
+```
+$ source ~/.bashrc
+```
 
 ### 파이썬 패키지 설치
 ```
-sudo apt install python-rosinstall python-rosinstall-generator python-wstool build-essential
+$ sudo apt install python-rosinstall python-rosinstall-generator python-wstool build-essential
 $ pip3 install scipy librosa tensorflow flask pika rospkg catkin_pkg matplotlib
 ```
 
@@ -102,42 +125,7 @@ $ rosrun ros_counteruav scripts/start.sh
 ## counter UAV ROS system 입니다
 
 ### 반드시 우분투 기준 
-> sudo mkdir -p /home/project <br>
-> sudo chmod 777 /home/project <br>
-> cd /home/project/ <br>
 
-> git clone https://github.com/seonghapark/counterUAV.git<br>
-> git checkout sum2019<br>
-
-# bashrc 설정
->alias eb='nano ~/.bashrc' <br>
-alias sb='source ~/.bashrc'<br>
-alias cw='cd /home/project/counterUAV/ROS_system/catkin_ws'<br>
-alias cs='cd /home/project/counterUAV/ROS_system/catkin_ws/src'<br>
-alias cm='cd /home/project/counterUAV/ROS_system/catkin_ws && catkin_make'<br>
-source /opt/ros/melodic/setup.bash<br>
-source /home/project/counterUAV/ROS_system/catkin_ws/devel/setup.bash<br>
-export ROS_PACKAGE_PATH=/home/project/counterUAV/ROS_system/catkin_ws/src/:/opt/ros/melodic/share<br>
-export ROS_MASTER_URI=http://localhost:11311<br>
-export ROS_HOSTNAME=localhost<br>
-
-### python3 적용(불완전)
-```
-sudo apt-get install python3-pip python3-yaml
-pip3 install rospkg catkin_pkg
-pip3 install pika
-sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -sc` main" > /etc/apt/sources.list.d/ros-latest.list'
-wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
-sudo apt-get update
-sudo apt-get install python-catkin-tools
-sudo apt-get install python-catkin-tools python3-dev python3-numpy
-catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3 -DPYTHON_INCLUDE_DIR=/usr/include/python3.6m -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.6m.so
-catkin config --install
-```
-
-#### .py 파일 첫줄에 
-`#!/usr/bin/env python3`
-입력
 
 ### 
 byte array를 쓰고 싶어요<br>
@@ -148,9 +136,3 @@ byte array를 쓰고 싶어요<br>
 5. message.some_int = read_line // 메시지에 데이터 저장 testdata.msg 안에 uint8[] <변수명> 요거 적어주면 된다.<br>
 6. rospy.Subscriber('radar_send', testdata, callback) // subscriber <br>
 링크를 클릭해 보심 더 빠릅니다.
-
-
-# 최종 실행 코드 경로
->counterUAV/ROS_system/catkin_ws/src/ros_counteruav/scripts/
-
->위의 경로의 readme에 코드 설명
