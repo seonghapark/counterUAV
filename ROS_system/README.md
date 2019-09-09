@@ -40,6 +40,9 @@ $ sudo apt-get install python-rosinstall
 ```
 
 ### bashrc 설정
+
+`/home/project/counterUAV/ROS_system/catkin_ws`에서
+
 ```
 alias eb='nano ~/.bashrc'
 alias sb='source ~/.bashrc'
