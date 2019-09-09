@@ -10,3 +10,7 @@
 2. ros 설치 시도	
 	- mac OS에 설치 시도
 	- ubuntn vm에 설치 시도
+
+### 2019.09.09
+1. vmware Fusion에 ubuntu 18.04, ROS melodic 설치 후 실행
+2. ROS 공부
