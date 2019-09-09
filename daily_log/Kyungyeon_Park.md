@@ -28,5 +28,6 @@
 ## 2019-09-09 ~ 2019-09-13
 
 ### 2019-09-09
-- `start.sh`안의 프로그램 실행 구조 파악
-- `visualizer.py`, `data_analyzer.py`, `data_receiver.py`, `fake_data_sender.py`안의 코드들을 분석해봄
+- 코드 분석
+  - `start.sh`안의 프로그램 실행 구조 파악
+  - `visualizer.py`, `data_analyzer.py`, `data_receiver.py`, `fake_data_sender.py`안의 코드들을 분석해봄
