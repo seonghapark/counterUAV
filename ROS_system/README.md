@@ -51,6 +51,7 @@ $ sudo apt-get install python-rosinstall
 vi ~/.bashrc
 
 ```
+#ROS
 alias eb='nano ~/.bashrc'
 alias sb='source ~/.bashrc'
 alias cw='cd /home/project/counterUAV/ROS_system/catkin_ws'
