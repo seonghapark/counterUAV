@@ -40,8 +40,7 @@ $ sudo apt-get install python-rosinstall
 ```
 
 ### bashrc 설정
-
-`home`에서
+vi ~/.bashrc
 
 ```
 alias eb='nano ~/.bashrc'
@@ -55,6 +54,8 @@ export ROS_PACKAGE_PATH=/home/project/counterUAV/ROS_system/catkin_ws/src/:/opt/
 export ROS_MASTER_URI=http://localhost:11311
 export ROS_HOSTNAME=localhost
 ```
+
+source ~/.bashrc
 
 ### 파이썬 패키지 설치
 ```
