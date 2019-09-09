@@ -20,17 +20,25 @@ $ sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) ma
 
 ### 키 설정
 ```
-$ sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
 ```
 
 ### 패키지 인덱스 업데이트
 ```
-$ sudo apt-get update && sudo apt-get upgrade -y
+$ sudo apt-get update
 ```
 
-### ROS Kinetic Kame 설치
+### ROS Melodic 설치
 ```
-$ sudo apt-get install ros-kinetic-desktop-full
+$ sudo apt install ros-melodic-desktop-full
+
+# 설치 확인
+$ apt search ros-melodic
+```
+
+### Initialize rosdep
+```
+$ sudo rosdep init
 $ rosdep update
 ```
 
@@ -59,6 +67,7 @@ source ~/.bashrc
 
 ### 파이썬 패키지 설치
 ```
+sudo apt install python-rosinstall python-rosinstall-generator python-wstool build-essential
 $ pip3 install scipy librosa tensorflow flask pika rospkg catkin_pkg matplotlib
 ```
 
