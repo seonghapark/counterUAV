@@ -59,6 +59,11 @@ export ROS_HOSTNAME=localhost
 $ pip3 install scipy
 $ pip3 install librosa
 $ pip3 install tensorflow
+$ pip3 install flask
+$ pip3 install pika
+$ pip3 install rospkg
+$ pip3 install rospkg catkin_pkg
+$ pip3 install matplotlib
 ```
 
 
