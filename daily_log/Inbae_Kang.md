@@ -18,5 +18,5 @@ Inbae Kang
 2. therefore I reinstall ubuntu and project files and I install and execute successfully.
 
 - Executed Screen
-!(https://i.imgur.com/cuur6FX.png)
+![executed screen](https://i.imgur.com/cuur6FX.png)
 * * *
