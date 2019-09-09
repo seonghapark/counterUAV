@@ -17,5 +17,10 @@
 * 기존 코드 run해보기
   - ROS_system에 있는 코드 run하기 위해 환경설정하기
   - VMWare로 Ubuntu 설치
+  
+### 2019-09-09
+  - VMWare Ubuntu에 설치 완료
+  - ROS_system에 있는 코드 run 완료
+  - docker로 ROS 설치 
 
 
