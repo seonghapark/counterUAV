@@ -284,8 +284,8 @@ fals = 0
 def estimate(who, when):
     global true
     global fals
-    time_list = np.load('time_list.npy', allow_pickle=True)#[[파일 하나],[[start, finish],..],..]
-    label_list = np.load('label_list.npy', allow_pickle=True)#[person,person,car,dron,..]
+    time_list = np.load('/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/scripts/time_list.npy', allow_pickle=True)#[[파일 하나],[[start, finish],..],..]
+    label_list = np.load('/home/project/counterUAV/ROS_system/catkin_ws/src/ros_counteruav/scripts/label_list.npy', allow_pickle=True)#[person,person,car,dron,..]
     answer = label_list[file_num]
     i = 0
     while i <= len(time_list[file_num]):
