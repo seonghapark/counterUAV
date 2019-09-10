@@ -31,3 +31,9 @@
 - 코드 분석
   - `start.sh`안의 프로그램 실행 구조 파악
   - `visualizer.py`, `data_analyzer.py`, `data_receiver.py`, `fake_data_sender.py`안의 코드들을 분석해봄
+  
+### 2019-09-10
+- 논문 읽기
+  - Combination of Radar and Audio Sensors for Identification of Rotor-type Unmanned Aerial Vehicles
+- ROSpy 공부
+
