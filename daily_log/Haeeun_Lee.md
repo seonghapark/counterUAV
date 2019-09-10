@@ -14,3 +14,7 @@
 ### 2019.09.09
 1. vmware Fusion에 ubuntu 18.04, ROS melodic 설치 후 실행
 2. ROS 공부
+
+### 2019.09.10
+1. radar_audio 논문 읽기
+2. 코드 분석
