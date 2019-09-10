@@ -25,7 +25,7 @@
   
 ### 2019-09-10
   - docker로 ROS 설치 및 코드 클론 성공, 그러나 코드 run 실패
-  - Combination of Radar and Audio Sensors for Identification of Rotor-type Unmanned Aerial Vehicles (UAVs) 논문 
+  - Combination of Radar and Audio Sensors for Identification of Rotor-type Unmanned Aerial Vehicles (UAVs) 논문 읽기
 
 
 
