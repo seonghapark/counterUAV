@@ -19,4 +19,9 @@ Inbae Kang
 
 - Executed Screen
 ![executed screen](https://i.imgur.com/cuur6FX.png)
+
+## 2019-09-10
+
+1. Read Paper "Combination of Radar and Audio Sensors for Identification of Rotor-type Unmanned Aerial Vehicles (UAVs)"
+
 * * *
