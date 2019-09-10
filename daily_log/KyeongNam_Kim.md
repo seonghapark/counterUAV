@@ -13,7 +13,7 @@
 |날짜|내용|
 |:--:|:--:|
 |2019-09-09 **Mon**|Ubuntu에서 파일 실행 성공: 실행 시 bashrc설정 > rosrun|
-|2019-09-10 **Tue**||
+|2019-09-10 **Tue**|**논문 읽기**<br>Combination of Radar and Audio Sensors for Identification of Rotor-type Unmanned Aerial Vehicles (UAVs)<br><br>ROS_system 코드 분석|
 |2019-09-11 **Wed**||
 |2019-09-12 **Thr**||
 |2019-09-13 **Fri**||
