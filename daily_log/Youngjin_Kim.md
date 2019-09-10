@@ -15,3 +15,7 @@ Youngjin Kim
 1. Mac에서 Ubuntu 사용하기 위해 VMware 설치 후 Ubuntu및 실행환경 Setup
 2. 지난 코드 실행 및 결과 확인
 
+2019.09.10
+1. radar_audio 논문 읽고 분석 및 토론
+2. 내일 있을 화상 미팅에서 이야기할 주제 정리 및 앞으로의 방향 탐색.
+
